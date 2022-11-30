@@ -8,6 +8,8 @@ import {
   make_invoke,
 } from "./commands";
 
+process.removeAllListeners("warning");
+
 const program = new Commander.Command();
 
 make_generate_identity(program);
