@@ -69,8 +69,7 @@ async function invokeLigoMain(
     const hash = await onChainContract.invokeLigo(
       contract.lang,
       contract.code,
-      ligo,
-      ligoUri
+      ligo
     );
     console.log("Operation hash:", hash);
   } catch (e: any) {
@@ -113,7 +112,7 @@ export default function make(command: Commander.Command) {
     )
     .action((walletPath, contractAddress, contractPath, ligo, options) => {
       const apiUri = options.endpoint ?? default_.api;
-      const ligoUri = options.ligoApi ?? default_.ligoApi;
+      const ligoUri = options.ligo_uri ?? default_.ligoApi;
       invokeLigoMain(
         apiUri,
         ligoUri,
