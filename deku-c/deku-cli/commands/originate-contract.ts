@@ -54,7 +54,7 @@ export default function make(command: Commander.Command) {
     )
     .action((walletPath, contractPath, initialStorage, options) => {
       const apiUri = options.endpoint ?? default_.api;
-      const ligoUri = options.ligoApi ?? default_.ligoApi;
+      const ligoUri = options.ligo_uri ?? default_.ligoApi;
       main(apiUri, ligoUri, walletPath, contractPath, initialStorage);
     });
   return command;
