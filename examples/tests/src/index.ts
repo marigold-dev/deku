@@ -5,7 +5,8 @@ import Invokation from "./invokation";
 import MakingProgress from "./making-progress";
 import IsSync from "./is-sync";
 import Deposit from "./deposit";
-import { DEKU_COUNTER_CONTRACT, DEKU_RPC, DEKU_RPC_0, DEKU_RPC_1, DEKU_RPC_2, DEKU_RPC_3, DUMMY_TICKET_CONTRACT, EMPTY_SECRET, EVE_SECRET, LIGO_RPC, TEZOS_RPC } from './defaults';
+import Transfer from './transfer';
+import { ALICE_SECRET, BOB_SECRET, DEKU_COUNTER_CONTRACT, DEKU_RPC, DEKU_RPC_0, DEKU_RPC_1, DEKU_RPC_2, DEKU_RPC_3, DUMMY_TICKET_CONTRACT, EMPTY_SECRET, EVE_SECRET, LIGO_RPC, TEZOS_RPC } from './defaults';
 
 const program = new Command();
 
@@ -43,6 +44,13 @@ program.command("deposit")
     .addOption(new Option('-t, --tezosRpc <secret>').default(TEZOS_RPC, TEZOS_RPC).env("TEZOS_RPC"))
     .addOption(new Option('-c, --ticketer <ticketer>').default(DUMMY_TICKET_CONTRACT, DUMMY_TICKET_CONTRACT).env("DUMMY_TICKET_CONTRACT"))
     .action(handleResult(Deposit.run));
-// TODO: transfer, withdraw, withdraw-proof, all(command which does everything)
+// TODO: withdraw, withdraw-proof, all(command which does everything)
+
+program.command("transfer")
+    .addOption(new Option('-d, --dekuRpc <deku>').default(DEKU_RPC, DEKU_RPC).env("DEKU_RPC"))
+    .addOption(new Option('-a, --alice-secret <aliceSecret>').default(ALICE_SECRET, ALICE_SECRET).env("ALICE_SECRET"))
+    .addOption(new Option('-b, --bobSecret <bobSecret>').default(BOB_SECRET, BOB_SECRET).env("BOB_SECRET"))
+    .addOption(new Option('-t, --ticketer <ticketer>').default(DUMMY_TICKET_CONTRACT, DUMMY_TICKET_CONTRACT).env("DUMMY_TICKET_CONTRACT"))
+    .action(handleResult(Transfer.run));
 
 program.parse()
