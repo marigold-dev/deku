@@ -1,3 +1,4 @@
+import { DekuCClient } from ".";
 import { DekuPClient } from "../deku-p/index";
 import { compileExpression, compileLigoExpression } from "./utils";
 
@@ -79,7 +80,7 @@ const parseContractState = (json: JSONType): JSONType => {
 };
 
 export class Contract {
-  private deku: DekuPClient;
+  private deku: DekuCClient;
   private address: string;
   private fetchInterval: NodeJS.Timer | null;
 
@@ -87,7 +88,7 @@ export class Contract {
     deku,
     contractAddress,
   }: {
-    deku: DekuPClient;
+    deku: DekuCClient;
     contractAddress: string;
   }) {
     this.deku = deku;
@@ -112,8 +113,8 @@ export class Contract {
     return hash;
   }
 
-  async invoke(expression: string, address: string): Promise<string> {
-    const parameter = { expression, address };
+  async invoke(expression: string): Promise<string> {
+    const parameter = { expression, address: this.address };
     const invoke = await compileExpression(this.deku.dekuRpc, parameter);
     const hash = await this.deku.submitVmOperation(invoke);
     return hash;
@@ -124,11 +125,7 @@ export class Contract {
    * @param parameter the parameter of the contract, in Ligo // FIXME lang
    * @returns the hash of the operation
    */
-  async invokeLigo(
-    code: string,
-    expression: string,
-    ligoRpc: string
-  ): Promise<string> {
+  async invokeLigo(code: string, expression: string): Promise<string> {
     // FIXME the need for the two RPCs stinks (also they're strings)
     const parameter = {
       kind: "jsligo",
@@ -136,13 +133,19 @@ export class Contract {
       ligoExpression: expression,
       address: this.address,
     };
-    const invoke = await compileLigoExpression(
-      ligoRpc,
-      this.deku.dekuRpc,
-      parameter
-    );
-    const hash = await this.deku.submitVmOperation(invoke);
-    return hash;
+    if (this.deku.ligoRpc) {
+      const invoke = await compileLigoExpression(
+        this.deku.ligoRpc,
+        this.deku.dekuRpc,
+        parameter
+      );
+      const hash = await this.deku.submitVmOperation(invoke);
+      return hash;
+    } else {
+      throw new Error(
+        "Ligo functionality invoked in DekuCClient without a Ligo RPC address given. "
+      );
+    }
   }
 
   /**

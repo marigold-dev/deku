@@ -15,16 +15,11 @@ export type Settings = {
 };
 
 export class DekuCClient extends DekuPClient {
-  private deku: DekuPClient;
-  private ligoRpc?: string;
+  readonly ligoRpc?: string;
 
   constructor(settings: Settings) {
     super(settings);
     this.ligoRpc = settings.ligoRpc;
-    this.deku = new DekuPClient({
-      dekuRpc: this.dekuRpc,
-      dekuSigner: settings.dekuSigner,
-    });
   }
 
   assertHasSigner(): DekuSigner {
@@ -63,7 +58,7 @@ export class DekuCClient extends DekuPClient {
       code,
       initialStorage,
     });
-    const hash = await this.deku.submitVmOperation(operation);
+    const hash = await this.submitVmOperation(operation);
     const address = await operationHashToContractAddress(this.dekuRpc, hash);
 
     return { operation: hash, address };
@@ -87,7 +82,7 @@ export class DekuCClient extends DekuPClient {
       code,
       initialStorage,
     });
-    const hash = await this.deku.submitVmOperation(operation);
+    const hash = await this.submitVmOperation(operation);
     const address = await operationHashToContractAddress(this.dekuRpc, hash);
 
     return { operation: hash, address };
@@ -99,7 +94,7 @@ export class DekuCClient extends DekuPClient {
    * @returns the contract associated to the given contract address
    */
   contract(contractAddress: string): Contract {
-    return new Contract({ deku: this.deku, contractAddress });
+    return new Contract({ deku: this, contractAddress });
   }
 }
 
