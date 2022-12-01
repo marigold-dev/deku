@@ -3,6 +3,10 @@ file="$2"
 basename=$(basename "$file")
 extension="${basename##*.}"
 
+if [ "$extension" = "tz" ]; then
+    extension="michelson"
+fi
+
 case $1 in
 compile-contract)
     storage="$3"
