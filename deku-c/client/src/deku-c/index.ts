@@ -66,6 +66,7 @@ export class DekuCClient extends DekuPClient {
     source: string;
     initialStorage: string;
   }): Promise<{ operation: string; address: string }> {
+    const ligoRpc = this.assertHasLigoRpc();
     this.assertHasSigner();
 
     const { operation, tickets } = await LigoRpc.originate(this.ligoRpc, {
