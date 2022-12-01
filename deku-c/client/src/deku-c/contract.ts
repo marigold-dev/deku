@@ -1,21 +1,8 @@
+import { assert } from "console";
 import { DekuCClient } from ".";
 import { DekuPClient } from "../deku-p/index";
-import { compileExpression, compileLigoExpression } from "./utils";
-
-export type JSONType =
-  | string
-  | number
-  | boolean
-  | { [x: string]: JSONType }
-  | Array<JSONType>
-  | null;
-
-export enum LigoLanguages {
-  JSLIGO = "jsligo",
-  MLIGO = "mligo",
-}
-
-export type ligo_kind = `${LigoLanguages}`;
+import * as LigoRpc from "./ligoRpc";
+import { JSONType } from "./utils";
 
 const parseContractState = (json: JSONType): JSONType => {
   if (json === null) return null;
@@ -86,21 +73,28 @@ const parseContractState = (json: JSONType): JSONType => {
   }
 };
 
+const NO_LIGO_RPC =
+  "You must initialize the DekuCClient with a ligo rpc URL to use this method.";
+
 export class Contract {
   private deku: DekuCClient;
   private address: string;
   private fetchInterval: NodeJS.Timer | null;
+  private code?: { source: string; kind: LigoRpc.SupportedLang };
 
-  constructor({
-    deku,
-    contractAddress,
-  }: {
-    deku: DekuCClient;
-    contractAddress: string;
-  }) {
-    this.deku = deku;
-    this.address = contractAddress;
+  constructor(
+    params: {
+      deku: DekuCClient;
+      contractAddress: string;
+    } & ({ source: string; kind: LigoRpc.SupportedLang } | {})
+  ) {
+    this.deku = params.deku;
+    this.address = params.contractAddress;
     this.fetchInterval = null;
+    this.code =
+      "source" in params
+        ? { source: params.source, kind: params.kind }
+        : undefined;
   }
 
   /**
@@ -120,11 +114,18 @@ export class Contract {
     return hash;
   }
 
-  async invoke(expression: string): Promise<string> {
-    const parameter = { expression, address: this.address };
-    const invoke = await compileExpression(this.deku.dekuRpc, parameter);
-    const hash = await this.deku.submitVmOperation(invoke);
-    return hash;
+  async invokeMichelson(expression: string): Promise<string> {
+    if (this.deku.ligoRpc) {
+      const invoke = await LigoRpc.invoke(this.deku.ligoRpc, {
+        kind: "michelson",
+        expression,
+        address: this.address,
+      });
+      const hash = await this.deku.submitVmOperation(invoke);
+      return hash;
+    } else {
+      throw new Error(NO_LIGO_RPC);
+    }
   }
 
   /**
@@ -132,30 +133,27 @@ export class Contract {
    * @param parameter the parameter of the contract, in Ligo // FIXME lang
    * @returns the hash of the operation
    */
-  async invokeLigo(
-    kind: ligo_kind,
-    code: string,
-    expression: string
-  ): Promise<string> {
-    // FIXME the need for the two RPCs stinks (also they're strings)
-    const parameter = {
-      kind,
-      code,
-      ligoExpression: expression,
-      address: this.address,
-    };
-    if (this.deku.ligoRpc) {
-      const invoke = await compileLigoExpression(
-        this.deku.ligoRpc,
-        this.deku.dekuRpc,
-        parameter
-      );
-      const hash = await this.deku.submitVmOperation(invoke);
-      return hash;
-    } else {
-      throw new Error(
-        "Ligo functionality invoked in DekuCClient without a Ligo RPC address given. "
-      );
+  async invokeLigo(expression: string): Promise<string> {
+    switch (true) {
+      case !this.deku.ligoRpc:
+        throw new Error(NO_LIGO_RPC);
+      case !this.code:
+        throw new Error(
+          "You must initialize the Contract class with Ligo source code to use the Ligo functionality"
+        );
+      case this.code!.kind == "michelson":
+        throw new Error(
+          "Can't use Ligo functionality when the provided source code is Michelson. Did you mean to use `invoke` instead of `invokeLigo`?"
+        );
+      default:
+        const invoke = await LigoRpc.invoke(this.deku.ligoRpc!, {
+          source: this.code!.source,
+          kind: this.code!.kind,
+          expression,
+          address: this.address,
+        });
+        const hash = await this.deku.submitVmOperation(invoke);
+        return hash;
     }
   }
 

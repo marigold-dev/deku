@@ -12,7 +12,8 @@ You'll learn how to:
 
 - Write a simple smart contract in [Ligo](https://ligolang.org/).
 - Compile and deploy it to Deku-C
-- Interact with the contract via [`@marigold-dev/deku`](https://www.npmjs.com/package/@marigold-dev/deku)
+- Interact with the contract via
+  [`@marigold-dev/deku`](https://www.npmjs.com/package/@marigold-dev/deku)
 
 ## Installing the Tools
 
@@ -21,8 +22,8 @@ tools.
 
 However, to follow along on along on the command line and to start developing
 your own contracts, you'll need to install the LIGO compiler - check the
-[installation instructions](https://ligolang.org/docs/intro/installation) for your
-platform. This tutorial requires version 0.53.0 or higher.
+[installation instructions](https://ligolang.org/docs/intro/installation) for
+your platform. This tutorial requires version 0.53.0 or higher.
 
 You'll also need to install the Deku CLI:
 
@@ -30,8 +31,7 @@ You'll also need to install the Deku CLI:
 npm install -g @marigold-dev/deku-cli
 ```
 
-:::tip
-See the [Deku CLI Tutorial](./deku_c_cli.md) for more on using the CLI!
+:::tip See the [Deku CLI Tutorial](./deku_c_cli.md) for more on using the CLI!
 :::
 
 ## Our First Smart Contract
@@ -62,9 +62,11 @@ for more on developing with Ligo, and don't hesitate to
 
 ## Deploying Our Contract
 
-We can originate our contract using `@marigold-dev/deku`, a Deku-C client written in Typescript package.
-The client depends on [Taquito](https://tezostaquito.io/) for signing interactions with Deku chain. Taquito provides options for using a variety
-of browser-based and hardware wallets, but for convenience we'll use the in-memory signer.
+We can originate our contract using `@marigold-dev/deku`, a Deku-C client
+written in Typescript package. The client depends on
+[Taquito](https://tezostaquito.io/) for signing interactions with Deku chain.
+Taquito provides options for using a variety of browser-based and hardware
+wallets, but for convenience we'll use the in-memory signer.
 
 ```js
 import { DekuCClient } from "@marigold-dev/deku"
@@ -83,15 +85,16 @@ const dekuC = new DekuCClient({
 });
 ```
 
-With a connection to Deku-C established, we're ready to deploy our contract!
-Try running the example.
+With a connection to Deku-C established, we're ready to deploy our contract! Try
+running the example.
 
 ```js live noInline
 const params = {
   kind: "jsligo",
-  initialStorage: 1,
   // The deku client will compile your jsligo code for you
-  code: incrementLigoCode,
+  source: incrementLigoCode,
+  // Give the initial storage as a Ligo expression string
+  initialStorage: "1",
 };
 
 println(
@@ -107,21 +110,23 @@ dekuC.originateLigo(params).then(({ operation, address }) => {
 
 <br/>
 
-:::tip
-In addition to using `deku-toolkit` and/or command-line tools, you can also develop Deku-C contract
-directly from your browser with the [LIGO Playground](https://ide.ligolang.org/)!
+:::tip In addition to using `deku-toolkit` and/or command-line tools, you can
+also develop Deku-C contract directly from your browser with the
+[LIGO Playground](https://ide.ligolang.org/)!
 :::
 
 ## Interacting with our Contract
 
-Once deployed, we can use the Deku-C client to query and subscribe to our contract's state,
-as well as invoke operations. In the live editor below, we've hard-coded the address of a contract
-on Deku-C, but you can replace it with the DK1 address of the contract you deployed above.
+Once deployed, we can use the Deku-C client to query and subscribe to our
+contract's state, as well as invoke operations. In the live editor below, we've
+hard-coded the address of a contract on Deku-C, but you can replace it with the
+DK1 address of the contract you deployed above.
 
 <!-- TODO: what happens when there are errors -->
 
 ```js live noInline
-const myContract = dekuC.contract("DK14bVHNFE7QMQtQ8qdscz7w88RDsWoj7gqJ"); // 👈 Replace with your contract address
+const code = { source: incrementLigoCode, kind: "jsligo" };
+const myContract = dekuC.contract("DK14bVHNFE7QMQtQ8qdscz7w88RDsWoj7gqJ", code); // 👈 Replace with your contract address
 
 println("Getting contract state...");
 myContract
@@ -135,20 +140,6 @@ myContract
       )
     );
 
-    // Calling the Increment endpoint with parameter 3
-    myContract.invokeRaw([
-      "Union",
-      ["Left", ["Union", ["Right", ["Int", "3"]]]],
-    ]);
+    myContract.invokeLigo("Increment(3)");
   });
 ```
-
-:::tip
-
-You can determine an invocation payload with the Ligo compiler:
-
-```
-ligo compile parameter ./increment.jsligo 'Increment (2)'
-```
-
-:::
