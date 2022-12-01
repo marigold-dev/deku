@@ -19,7 +19,11 @@ let block ~default_block_size =
   Producer.produce ~identity ~default_block_size ~above ~withdrawal_handles_hash
     producer
 
-let uri = Uri.of_string "sqlite3:/tmp/database.db"
+let file_hash =
+  let randn = Stdlib.Random.int 230 in
+  Deku_crypto.BLAKE2b.hash (Int.to_string randn) |> BLAKE2b.to_hex
+
+let uri = Uri.of_string (Format.sprintf "sqlite3:/tmp/%s.db" file_hash)
 
 let make_block_storage env sw =
   let domains = Eio.Stdenv.domain_mgr env in
