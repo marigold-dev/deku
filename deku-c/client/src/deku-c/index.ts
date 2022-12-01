@@ -1,12 +1,8 @@
 import { DekuPClient } from "../deku-p";
-import { Contract, JSONType, ligo_kind } from "./contract";
+import { Contract } from "./contract";
 import { DekuSigner } from "../deku-p/utils/signers";
-import {
-  originateLigo,
-  originateTz,
-  operationHashToContractAddress,
-  isDefined,
-} from "./utils";
+import { operationHashToContractAddress, isDefined } from "./utils";
+import * as LigoRpc from "./ligoRpc";
 
 export type Settings = {
   dekuRpc: string;
@@ -43,20 +39,21 @@ export class DekuCClient extends DekuPClient {
    */
   async originateLigo({
     kind,
-    code,
+    source,
     initialStorage,
   }: {
-    kind: ligo_kind;
-    code: string;
-    initialStorage: JSONType;
+    kind: LigoRpc.LigoSyntax;
+    source: string;
+    initialStorage: string;
   }): Promise<{ operation: string; address: string }> {
     const ligoRpc = this.assertHasLigoRpc();
     this.assertHasSigner();
 
-    const operation = await originateLigo(ligoRpc, this.dekuRpc, {
+    const operation = await LigoRpc.originate(ligoRpc, {
       kind,
-      code,
+      source,
       initialStorage,
+      target: "wasm",
     });
     const hash = await this.submitVmOperation(operation);
     const address = await operationHashToContractAddress(this.dekuRpc, hash);
@@ -70,17 +67,20 @@ export class DekuCClient extends DekuPClient {
    * @returns the address of the contract
    */
   async originateTz({
-    code,
+    source,
     initialStorage,
   }: {
-    code: string;
-    initialStorage: JSONType;
+    source: string;
+    initialStorage: string;
   }): Promise<{ operation: string; address: string }> {
+    const ligoRpc = this.assertHasLigoRpc();
     this.assertHasSigner();
 
-    const operation = await originateTz(this.dekuRpc, {
-      code,
+    const operation = await LigoRpc.originate(ligoRpc, {
+      kind: "michelson",
+      source,
       initialStorage,
+      target: "wasm",
     });
     const hash = await this.submitVmOperation(operation);
     const address = await operationHashToContractAddress(this.dekuRpc, hash);
@@ -93,8 +93,11 @@ export class DekuCClient extends DekuPClient {
    * @param contractAddress address of the contract / the hash of the origination operation
    * @returns the contract associated to the given contract address
    */
-  contract(contractAddress: string): Contract {
-    return new Contract({ deku: this, contractAddress });
+  contract(
+    contractAddress: string,
+    code?: { source: string; kind: LigoRpc.SupportedLang }
+  ): Contract {
+    return new Contract({ deku: this, contractAddress, ...code });
   }
 }
 

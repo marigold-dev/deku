@@ -22,9 +22,10 @@ async function main(
   });
 
   try {
-    const contract = read(contractPath);
+    const { source, kind } = read(contractPath);
     const { operation, address } = await originate(
-      contract,
+      source,
+      kind,
       initialStorage,
       deku
     );
@@ -32,7 +33,7 @@ async function main(
     console.log("Contract originated at address", address);
   } catch (e: any) {
     console.error("An error occurred:");
-    console.error(e.message);
+    console.error(e.toString()); // TODO: is there a better way to serialize this?
     process.exit(1);
   }
 }

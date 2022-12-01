@@ -168,7 +168,11 @@ module Compile_invocation : HANDLERS = struct
   type response =
     | Michelson_expression of string
     | Wasm_payload of Operation_payload.t
-  [@@deriving yojson_of]
+
+  let yojson_of_response = function
+    | Michelson_expression str -> (`String str : Yojson.Safe.t)
+    | Wasm_payload operation_payload ->
+        Operation_payload.yojson_of_t operation_payload
 
   let meth = `POST
   let path = Routes.(version / s "compile-invocation" /? nil)
