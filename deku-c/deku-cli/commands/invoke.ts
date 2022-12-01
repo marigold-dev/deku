@@ -1,17 +1,19 @@
 import { fromMemorySigner } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
-import { DekuCClient } from "@marigold-dev/deku";
+import { DekuCClient, isLigo } from "@marigold-dev/deku";
 import { load } from "../core/wallet";
 import * as Commander from "commander";
-import { read, isLigo } from "../core/contract";
+import { read } from "../core/contract";
 import * as default_ from "./default-parameters";
 
 function getContract(
   apiUri: string,
   walletPath: string,
   contractAddress: string,
-  ligoUri?: string
+  ligoUri: string,
+  contractPath?: string
 ) {
+  const code = contractPath ? read(contractPath) : undefined;
   const wallet = load(walletPath);
   const dekuSigner = fromMemorySigner(new InMemorySigner(wallet.priv_key));
   const deku = new DekuCClient({
@@ -19,24 +21,24 @@ function getContract(
     ligoRpc: ligoUri,
     dekuSigner,
   });
-  return deku.contract(contractAddress);
+  return deku.contract(contractAddress, code);
 }
 
 async function invokeMain(
   apiUri: string,
+  ligoUri: string,
   walletPath: string,
   contractAddress: string,
   parameter: string,
   options: { raw?: boolean }
 ) {
   try {
-    const contract = getContract(apiUri, walletPath, contractAddress);
+    const contract = getContract(apiUri, walletPath, contractAddress, ligoUri);
     if (options.raw !== undefined) {
-      const parameter_parsed = JSON.parse(parameter);
       const hash = await contract.invokeRaw(parameter);
       console.log("Operation hash:", hash);
     } else {
-      const hash = await contract.invoke(parameter);
+      const hash = await contract.invokeMichelson(parameter);
       console.log("operation hash:", hash);
     }
   } catch (e: any) {
@@ -48,29 +50,25 @@ async function invokeMain(
 
 async function invokeLigoMain(
   apiUri: string,
-  ligoUri: string | undefined,
+  ligoUri: string,
   walletPath: string,
   contractAddress: string,
   contractPath: string,
-  ligo: string
+  expression: string
 ) {
   try {
     const onChainContract = getContract(
       apiUri,
       walletPath,
       contractAddress,
-      ligoUri
+      ligoUri,
+      contractPath
     );
-    const contract = read(contractPath);
-
-    if (!isLigo(contract.lang)) {
+    const { kind } = read(contractPath);
+    if (!isLigo(kind)) {
       throw Error("Bad language: please use Ligo as input");
     }
-    const hash = await onChainContract.invokeLigo(
-      contract.lang,
-      contract.code,
-      ligo
-    );
+    const hash = await onChainContract.invokeLigo(expression);
     console.log("Operation hash:", hash);
   } catch (e: any) {
     console.error("An error occurred:");
@@ -92,9 +90,21 @@ export default function make(command: Commander.Command) {
       "--endpoint <endpoint>",
       `URI of the deku API to use (default ${default_.api})`
     )
+    .option(
+      "--ligoRpc <endpoint>",
+      `URI of the ligo RPC API to use (default ${default_.ligoApi})`
+    )
     .action((walletPath, contractAddress, parameter, options) => {
       const apiUri = options.endpoint ?? default_.api;
-      invokeMain(apiUri, walletPath, contractAddress, parameter, options);
+      const ligoApiUri = options.ligoRpc ?? default_.ligoApi;
+      invokeMain(
+        apiUri,
+        ligoApiUri,
+        walletPath,
+        contractAddress,
+        parameter,
+        options
+      );
     });
 
   invokeLigo
