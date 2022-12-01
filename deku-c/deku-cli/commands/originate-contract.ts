@@ -6,7 +6,13 @@ import { load } from "../core/wallet";
 import { originate, read } from "../core/contract";
 import * as default_ from "./default-parameters";
 
-async function main(apiUri, ligoUri, walletPath, contractPath, initialStorage) {
+async function main(
+  apiUri: string,
+  ligoUri: string,
+  walletPath: string,
+  contractPath: string,
+  initialStorage: string
+) {
   const wallet = load(walletPath);
   const dekuSigner = fromMemorySigner(new InMemorySigner(wallet.priv_key));
   const deku = new DekuCClient({
@@ -24,7 +30,7 @@ async function main(apiUri, ligoUri, walletPath, contractPath, initialStorage) {
     );
     console.log("operation hash:", operation);
     console.log("Contract originated at address", address);
-  } catch (e) {
+  } catch (e: any) {
     console.error("An error occurred:");
     console.error(e.message);
     process.exit(1);

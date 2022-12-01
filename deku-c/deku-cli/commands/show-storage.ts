@@ -2,7 +2,14 @@ import { Contract, DekuCClient } from "@marigold-dev/deku";
 import * as Commander from "commander";
 import * as default_ from "./default-parameters";
 
-async function main(apiUri, contractAddress, options) {
+type ShowStorageOptions = {
+  raw?: boolean;
+};
+async function main(
+  apiUri: string,
+  contractAddress: string,
+  options: ShowStorageOptions
+) {
   const deku = new DekuCClient({ dekuRpc: apiUri });
   const contract = deku.contract(contractAddress);
   try {
@@ -16,7 +23,7 @@ async function main(apiUri, contractAddress, options) {
       throw Error("Couldn't find the smart contract state");
     }
     console.log(state);
-  } catch (e) {
+  } catch (e: any) {
     console.error("An error occurred:");
     console.error(e.message);
     process.exit(1);
