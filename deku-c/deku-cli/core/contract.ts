@@ -44,8 +44,8 @@ export async function originate(
 export function read(path: string): contract {
   const code = fs.readFileSync(path).toString();
   const extension = path.split(".").pop();
-  let lang: lang;
-  if (validateLang(extension)) lang = extension;
-  else lang = "unknown";
-  return { code, lang };
+  return {
+    code,
+    lang: validateLang(extension ?? "") ? (extension as lang) : "unknown",
+  };
 }
