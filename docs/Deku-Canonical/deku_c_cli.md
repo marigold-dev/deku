@@ -9,6 +9,10 @@ new smart contracts, inspect their state or send transactions to call their entr
 
 To use the client, first install it with `npm install -g @marigold-dev/deku-cli`.
 
+:::info
+The Deku CLI requires the `fetch` API and thus only works with NodeJS version 18 and above
+:::
+
 ## Basic usage
 
 ### Generating an identity

@@ -8,7 +8,7 @@ const signer = new InMemorySigner(
 );
 const dekuSigner = fromMemorySigner(signer);
 const dekuC = new DekuCClient({
-  dekuRpc: "http://0.0.0.0:8080",
+  dekuRpc: "https://deku-canonical-vm0.deku-v1.marigold.dev/",
   ligoRpc: "http://0.0.0.0:9090",
   dekuSigner,
 });
@@ -17,7 +17,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // How to originate a contract;
 const originate = async () => {
-  const code = `
+  const source = `
         type storage = int;
 
         type parameter =
@@ -42,8 +42,8 @@ const originate = async () => {
 
   const { operation, address } = await dekuC.originateLigo({
     kind: "jsligo",
-    initialStorage: 1,
-    code,
+    initialStorage: "1",
+    source,
   });
   console.log(`success, addr: ${address}`);
   return { operation, address };
@@ -73,7 +73,9 @@ const getState = async (contract: Contract): Promise<unknown> => {
 // Decrement the counter by 3
 const test = async () => {
   // const address = "DK1SheQfNGZ2QY5QWdAEF6KDXBAJTjBJBirh";
+  console.log("originating contract...");
   const { address } = await originate();
+  console.log("operation submitted...");
   const contract: Contract = getContract(address);
 
   contract.onNewState((state) => {
