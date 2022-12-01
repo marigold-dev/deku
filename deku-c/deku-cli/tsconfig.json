@@ -3,7 +3,7 @@
   "exclude": ["node_modules", "**/*.spec.ts"],
   "compilerOptions": {
     "outDir": "dist",
-    "moduleResolution": "node",
+    "moduleResolution": "Node16",
     "target": "es6",
     "module": "es2015",
     "lib": ["es2021", "dom"],
