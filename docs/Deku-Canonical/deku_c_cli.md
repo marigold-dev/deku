@@ -34,6 +34,21 @@ This will create a new file called `wallet.json`, containing something like
 }
 ```
 
+### Displaying the balance of an account
+
+Unlike Tezos, Deku does not use a native currency. Instead, accounts directly own tickets, which can
+be either Tezos-originated and deposited via the bridge, or Deku-originated tickets.
+
+To display the balance of a given account, use the following command:
+
+```bash
+deku-cli show-balance address [ticket ID]
+```
+where
+- `address` is the account's address
+- `ticket ID` is an optional parameter to get the result for a specific ticket ID, given with the
+  form `ticketer bytes`
+
 ### Originating a contract
 
 Deku-C uses a WASM virtual machine, for which you can target with a variety of languages. In particular, you can
@@ -104,7 +119,7 @@ the contract and the raw code of the contract.
 The `invoke` command allows to call an entrypoint with a specific parameter. Usage:
 
 ```bash
-deku-cli wallet contract_address parameter
+deku-cli wallet contract_address parameter [ticket ID and amount]
 ```
 
 where
@@ -112,6 +127,8 @@ where
 - `wallet` is a path towards a wallet file
 - `contract_address` is the address of the smart contract on the Deku-C chain
 - `parameter` is the Michelson expression of the entrypoint and its argument
+- `ticket ID and amount` is an optional parameter which allows Deku to send tickets when calling an
+  entrypoint which consumes tickets.
 
 The `parameter` can be provided by the Ligo compiler using the `ligo compile parameter` command.
 
@@ -125,3 +142,7 @@ where
 - `contract_path` is the path towards the contract source code, which is required to compile the
   expression
 - `expression` is the Ligo expression to compile
+
+Finally, when calling a contract entrypoint which expects tickets, it is necessary to add the ticket
+ID and the amount transferred as the last arguments, for security reasons. The next chapter gives
+several examples of tickets usage on Deku.
