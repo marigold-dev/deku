@@ -3,7 +3,9 @@ open Deku_concepts
 open Deku_consensus
 open Deku_gossip
 
-type storage
+type storage = private
+  | Storage of { worker : Parallel.Worker.t; pool : Query.pool }
+
 type t = storage
 
 val make : worker:Parallel.Worker.t -> uri:Uri.t -> storage
