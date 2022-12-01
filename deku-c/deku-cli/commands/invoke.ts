@@ -1,12 +1,17 @@
 import { fromMemorySigner } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
-import { Contract, DekuCClient } from "@marigold-dev/deku";
+import { DekuCClient } from "@marigold-dev/deku";
 import { load } from "../core/wallet";
 import * as Commander from "commander";
 import { read } from "../core/contract";
 import * as default_ from "./default-parameters";
 
-function getContract(apiUri, walletPath, contractAddress, ligoUri?) {
+function getContract(
+  apiUri: string,
+  walletPath: string,
+  contractAddress: string,
+  ligoUri?: string
+) {
   const wallet = load(walletPath);
   const dekuSigner = fromMemorySigner(new InMemorySigner(wallet.priv_key));
   const deku = new DekuCClient({
@@ -18,11 +23,11 @@ function getContract(apiUri, walletPath, contractAddress, ligoUri?) {
 }
 
 async function invokeMain(
-  apiUri,
-  walletPath,
-  contractAddress,
-  parameter,
-  options
+  apiUri: string,
+  walletPath: string,
+  contractAddress: string,
+  parameter: string,
+  options: { raw?: boolean }
 ) {
   try {
     const contract = getContract(apiUri, walletPath, contractAddress);
@@ -31,10 +36,10 @@ async function invokeMain(
       const hash = await contract.invokeRaw(parameter);
       console.log("Operation hash:", hash);
     } else {
-      const hash = await contract.invoke(parameter, contractAddress);
+      const hash = await contract.invoke(parameter);
       console.log("operation hash:", hash);
     }
-  } catch (e) {
+  } catch (e: any) {
     console.error("An error occurred:");
     console.error(e.message);
     process.exit(1);
@@ -42,20 +47,20 @@ async function invokeMain(
 }
 
 async function invokeLigoMain(
-  apiUri,
-  ligoUri,
-  walletPath,
-  contractAddress,
-  contractPath,
-  ligo
+  apiUri: string,
+  ligoUri: string | undefined,
+  walletPath: string,
+  contractAddress: string,
+  contractPath: string,
+  ligo: string
 ) {
   try {
     const contract = getContract(apiUri, walletPath, contractAddress, ligoUri);
     const code = read(contractPath).code;
 
-    const hash = await contract.invokeLigo(code, ligo, ligoUri);
+    const hash = await contract.invokeLigo(code, ligo);
     console.log("Operation hash:", hash);
-  } catch (e) {
+  } catch (e: any) {
     console.error("An error occurred:");
     console.error(e.message);
     process.exit(1);
