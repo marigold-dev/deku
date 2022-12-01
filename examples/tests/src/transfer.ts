@@ -2,15 +2,15 @@ import { DekuPClient, fromMemorySigner } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
 import { wait } from "./utils";
 
-const run = async ({dekuRpc, aliceSecret, bobSecret, ticketer}) => {
+const run = async ({dekuRpc, secret1WithTickets, secret2WithTickets, ticketer}) => {
     const data = "0x0505050505";
     const ticketId= {ticketer, data };
     // Instanciate deku toolkit for Alice
-    const aliceSigner = fromMemorySigner(new InMemorySigner(aliceSecret));
+    const aliceSigner = fromMemorySigner(new InMemorySigner(secret1WithTickets));
     const aliceAddr = await aliceSigner.publicKeyHash();
     const dekuA = new DekuPClient({dekuRpc, dekuSigner: aliceSigner});
     // Instanciate deku toolkit for Bob
-    const bobSigner = fromMemorySigner(new InMemorySigner(bobSecret));
+    const bobSigner = fromMemorySigner(new InMemorySigner(secret2WithTickets));
     const bobAddr = await bobSigner.publicKeyHash();
     const dekuB = new DekuPClient({dekuRpc, dekuSigner: bobSigner});
     // Get the previous balance of Alice and Bob
