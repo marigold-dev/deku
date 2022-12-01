@@ -112,3 +112,15 @@ export const BLOCKS = option({
     parser: string => Number.parseInt(string),
     default: 5
 });
+
+export const TICKET_DATA = option({
+    arg: "--data <data>",
+    env: "TICKET_DATA",
+    description: "The data of your ticket",
+    parser: string => {
+        if(!string.startsWith("0x")) throw "The data should start with 0x"
+        if(string.length % 2 !== 0) throw "Invalid bytes"
+        return string
+    },
+    default: "0x0505050505"
+})

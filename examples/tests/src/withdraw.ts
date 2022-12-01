@@ -4,9 +4,9 @@ import { TezosToolkit } from "@taquito/taquito";
 import Deposit from "./deposit";
 import { toBytes, wait } from "./utils";
 
-const run = async ({dekuRpc, secret, tezosRpc, ticketer}) => {
+const run = async ({dekuRpc, secret, tezosRpc, ticketer, data}) => {
     // Make a deposit to so that the account have some tickets
-    await Deposit.run({dekuRpc, secret, tezosRpc, ticketer});
+    await Deposit.run({dekuRpc, secret, tezosRpc, ticketer, data});
     
     const signer = new InMemorySigner(secret);
     const address = await signer.publicKeyHash();
@@ -16,7 +16,7 @@ const run = async ({dekuRpc, secret, tezosRpc, ticketer}) => {
     tezos.setSignerProvider(signer);
 
     // Withdraw 5 tickets
-    const op = await deku.withdrawTo(address, 5, ticketer, "0505050505");
+    const op = await deku.withdrawTo(address, 5, ticketer, data.slice(2));
     await wait(dekuRpc, op);
     // Get the proof of the withdraw
     const proof = await deku.getProof(op);
@@ -30,7 +30,7 @@ const run = async ({dekuRpc, secret, tezosRpc, ticketer}) => {
     const withdrawOperation = await contract.methods.withdraw(
       `${ticketer}%burn_callback`,
       proof.handle.id,
-      "0505050505",
+      data.slice(2),
       Number.parseInt(proof.handle.amount),
       address,
       ticketer,

@@ -9,7 +9,7 @@ import Transfer from './transfer';
 import Withdraw from './withdraw';
 import ContractLevel from './contract-level';
 import IsCommiting from './is-commiting';
-import {ALL_DEKU_RPC, CANONICAL_CONTRACT_ADDRESS, DEKU_RPC, LIGO_RPC, SECRET, TICKETER, TEZOS_RPC, SECRET_1_WITH_TICKETS, SECRET_2_WITH_TICKETS, SECRET_WITH_TEZ, BLOCKS} from "./options";
+import {ALL_DEKU_RPC, CANONICAL_CONTRACT_ADDRESS, DEKU_RPC, LIGO_RPC, SECRET, TICKETER, TEZOS_RPC, SECRET_1_WITH_TICKETS, SECRET_2_WITH_TICKETS, SECRET_WITH_TEZ, BLOCKS, TICKET_DATA} from "./options";
 
 const program = new Command();
 
@@ -48,6 +48,7 @@ program.command("deposit")
     .addOption(SECRET) // Share secret between deku and tezos.
     .addOption(TEZOS_RPC)
     .addOption(TICKETER)
+    .addOption(TICKET_DATA)
     .action(handleResult(Deposit.run));
 
 program.command("transfer")
@@ -56,6 +57,7 @@ program.command("transfer")
     .addOption(SECRET_1_WITH_TICKETS)
     .addOption(SECRET_2_WITH_TICKETS)
     .addOption(TICKETER)
+    .addOption(TICKET_DATA)
     .action(handleResult(Transfer.run));
 
 program.command("withdraw")
@@ -64,6 +66,7 @@ program.command("withdraw")
     .addOption(SECRET_WITH_TEZ)
     .addOption(TICKETER)
     .addOption(TEZOS_RPC)
+    .addOption(TICKET_DATA)
     .action(handleResult(Withdraw.run));
 
 program.command("contract-level")

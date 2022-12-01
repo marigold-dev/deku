@@ -2,14 +2,13 @@ import { DekuPClient } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
 import { TezosToolkit } from "@taquito/taquito";
 
-const run = async ({dekuRpc, secret, tezosRpc, ticketer }) => {
+const run = async ({dekuRpc, secret, tezosRpc, ticketer, data }) => {
     const signer = new InMemorySigner(secret);
     const deku = new DekuPClient({dekuRpc});
     const tezos = new TezosToolkit(tezosRpc);
     tezos.setProvider({signer});
     const address = await signer.publicKeyHash();
     const { consensus } = await deku.info();
-    const data = "0x0505050505";
     const contract = await tezos.contract.at(ticketer);
     // Get the previous balance on deku side
     const previousBalance = await deku.getBalance(address, {ticketer, data});
