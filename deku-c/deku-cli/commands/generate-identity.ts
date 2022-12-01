@@ -14,7 +14,7 @@ export default function make(command: Commander.Command) {
           if (args.output !== undefined) {
             save(wallet, args.output);
           }
-        } catch (e) {
+        } catch (e: any) {
           console.error("An error occurred:");
           console.error(e.message);
           process.exit(1);
