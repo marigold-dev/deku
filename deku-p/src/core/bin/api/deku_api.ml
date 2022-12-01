@@ -55,6 +55,8 @@ let apply_block ~sw ~state ~block =
         initial)
       payload
   in
+  Logs.info (fun m ->
+      m "Applying level %a at time %.3f" Level.pp level (Unix.gettimeofday ()));
   let protocol, receipts, _ =
     Protocol.apply ~current_level:level ~payload ~tezos_operations
       state.protocol
@@ -79,21 +81,27 @@ let apply_block ~sw ~state ~block =
   (* TODO: how do we clear the list of receipts ?*)
   state.protocol <- protocol;
   state.is_sync <- true;
+  Logs.info (fun m -> m "Writing state for level %a" Level.pp level);
   state.dump ~current_block:block ~protocol ~receipts
 
 let on_accepted_block ~sw ~state ~block =
   let (Block.Block { level = api_level; _ }) = state.current_block in
   let (Block.Block { level; _ }) = block in
-  match Level.equal (Level.next api_level) level with
-  | true -> apply_block ~sw ~state ~block
-  | false ->
-      (*This case should not happened thanks to on_connection*)
-      ()
+  match Level.compare (Level.next api_level) level with
+  | 0 -> apply_block ~sw ~state ~block
+  | x when x < 0 ->
+      Logs.warn (fun m ->
+          m "API desynchronized: state at level %a, block at level %a" Level.pp
+            api_level Level.pp level);
+      state.is_sync <- false
+  | _ -> ()
 
 let on_connection ~connection state =
   let (Block.Block { level = api_level; _ }) = state.current_block in
   let (Request.Request { network; _ }) = Request.encode ~above:api_level in
   let (Request.Network.Network_request { raw_header; raw_content }) = network in
+  Logs.info (fun m ->
+      m "on_connection: sending request for level %a" Level.pp api_level);
   Network_manager.send_request ~connection ~raw_header ~raw_content
     state.network
 
@@ -158,7 +166,24 @@ type params = {
 }
 [@@deriving cmdliner]
 
-let main params =
+let setup_log ?style_renderer ?log_level () =
+  (* Without this call, Logs is not thread safe, and causes crashes inside Eio
+     when debug logging is enabled. *)
+  Logs_threaded.enable ();
+  Fmt_tty.setup_std_outputs ?style_renderer ();
+  Logs.set_level log_level;
+  Logs.set_reporter (Logs_fmt.reporter ());
+  (* disable all non-deku logs *)
+  List.iter
+    (fun src ->
+      let src_name = Logs.Src.name src in
+      if
+        (not (String.starts_with ~prefix:"deku" src_name))
+        && not (String.equal src_name "application")
+      then Logs.Src.set_level src (Some Logs.Error))
+    (Logs.Src.list ())
+
+let main params style_renderer log_level =
   let {
     consensus_address;
     node_uri;
@@ -170,6 +195,7 @@ let main params =
   } =
     params
   in
+  setup_log ?style_renderer ?log_level ();
   Eio_main.run @@ fun env ->
   Eio.Switch.run @@ fun sw ->
   Parallel.Pool.run ~env ~domains @@ fun () ->
@@ -181,7 +207,7 @@ let main params =
     | [ node_host; node_port ] -> (node_host, node_port |> int_of_string)
     | _ -> failwith "wrong node uri"
   in
-
+  Logs.info (fun m -> m "API listening on host %s, port %d" node_host node_port);
   let identity =
     let secret =
       Deku_crypto.Secret.Ed25519 (Deku_crypto.Ed25519.Secret.generate ())
@@ -205,12 +231,17 @@ let main params =
         let protocol = Protocol.initial_with_vm_state ~vm_state in
         let current_block = Genesis.block in
         let receipts = Operation_hash.Map.empty in
+        let (Block { level; _ }) = current_block in
+        Logs.info (fun m ->
+            m "Starting API with a new state at level %a" Level.pp level);
         Api_state.make ~consensus_address ~indexer ~network ~identity ~protocol
           ~current_block ~receipts ~dump
     | Some state_data ->
         let Api_state.Storage.{ protocol; current_block; receipts } =
           state_data
         in
+        let (Block { level; _ }) = current_block in
+        Logs.info (fun m -> m "Loading API state at level %a" Level.pp level);
         Api_state.make ~consensus_address ~indexer ~network ~identity ~protocol
           ~current_block ~receipts ~dump
   in
@@ -230,6 +261,11 @@ let main params =
 let () =
   let open Cmdliner in
   let info = Cmd.info "deku-api" in
-  let term = Term.(const main $ params_cmdliner_term ()) in
+  let term =
+    Term.(
+      const main $ params_cmdliner_term ()
+      $ Fmt_cli.style_renderer ~env:(Cmd.Env.info "DEKU_LOG_COLORS") ()
+      $ Logs_cli.level ~env:(Cmd.Env.info "DEKU_API_LOG_VERBOSITY") ())
+  in
   let cmd = Cmd.v info term in
   exit (Cmd.eval ~catch:true cmd)
