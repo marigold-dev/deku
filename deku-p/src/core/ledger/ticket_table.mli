@@ -9,6 +9,9 @@ val encoding : t Data_encoding.t
 val empty : t
 val balance : sender:Address.t -> ticket_id:Ticket_id.t -> t -> Amount.t option
 
+val balances_all_tickets :
+  sender:Address.address -> t -> (Ticket_id.ticket_id * Amount.t) Seq.t
+
 val deposit :
   destination:Address.t -> ticket_id:Ticket_id.t -> amount:Amount.t -> t -> t
 

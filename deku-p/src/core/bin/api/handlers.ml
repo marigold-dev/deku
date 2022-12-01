@@ -126,7 +126,7 @@ module Get_proof : NO_BODY_HANDLERS = struct
         Ok { withdrawal_handles_hash; handle; proof }
 end
 
-module Get_balance : NO_BODY_HANDLERS = struct
+module Get_balance_for_ticket : NO_BODY_HANDLERS = struct
   open Api_path
 
   type path = {
@@ -155,6 +155,33 @@ module Get_balance : NO_BODY_HANDLERS = struct
     let amount = Deku_ledger.Ledger.balance address ticket_id ledger in
     let amount = Amount.to_n amount |> N.to_z |> Z.to_int in
     Ok { balance = amount }
+end
+
+module Get_balance : NO_BODY_HANDLERS = struct
+  open Api_path
+
+  type path = Deku_ledger.Address.t
+
+  type ledger_entry = { ticket_id : Deku_ledger.Ticket_id.t; amount : int }
+  [@@deriving yojson_of]
+
+  type response = { ledger : ledger_entry list } [@@deriving yojson_of]
+
+  let meth = `GET
+  let path = Routes.(version / s "balance" / Address.parser /? nil)
+  let route = Routes.(path @--> fun address -> address)
+
+  let handler ~path:address ~state =
+    let Api_state.{ protocol; _ } = state in
+    let (Protocol { ledger; _ }) = protocol in
+    let amounts = Deku_ledger.Ledger.balances address ledger in
+    let amounts =
+      let to_int amount = Amount.to_n amount |> N.to_z |> Z.to_int in
+      Seq.map
+        (fun (ticket_id, amount) -> { ticket_id; amount = to_int amount })
+        amounts
+    in
+    Ok { ledger = List.of_seq amounts }
 end
 
 module Get_chain_info : NO_BODY_HANDLERS = struct

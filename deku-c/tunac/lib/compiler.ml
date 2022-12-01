@@ -385,6 +385,27 @@ let compile code =
           get_entrypoints prim )
   | _ -> Error `Unexpected_error
 
+let decode_ticketer ticketer =
+  let ticketer =
+    Deku_repr.decode_variant
+      [
+        (fun x ->
+          Deku_ledger.Contract_address.of_b58 x
+          |> Option.map (fun x -> Deku_ledger.Ticket_id.Deku x));
+        (fun x ->
+          Deku_tezos.Contract_hash.of_b58 x
+          |> Option.map (fun x -> Deku_ledger.Ticket_id.Tezos x));
+      ]
+      ticketer
+    |> Option.get
+ in
+ ticketer
+
+let decode_amount amount =
+  Deku_stdlib.N.of_z amount
+  |> Option.map (fun x -> Deku_concepts.Amount.of_n x)
+  |> Option.get
+
 let rec compile_value ~tickets parsed :
     (Values.t, [> `Unexpected_error ]) result =
   let open Helpers.Result.Let_syntax in
@@ -414,7 +435,16 @@ let rec compile_value ~tickets parsed :
           (fun x acc -> Pair (compile_value ~tickets x |> Result.get_ok, acc))
           values end_
       in
-      Ok (Pair (fst, snd))
+      (* FIXME not great, will have to check how Michelson evolves with M *)
+      begin match (fst, snd) with
+        | (String contract, (Pair (Bytes data, Int amount))) ->
+          let ticketer = decode_ticketer contract in
+          let amount = decode_amount amount in
+          let ticket_id = Deku_ledger.Ticket_id.make ticketer data in
+          Ok (Ticket { ticket_id; amount })
+        | _ ->
+          Ok (Pair (fst, snd))
+      end
   | Int (_, z) -> Ok (Values.Int z)
   | String (_, s) -> Ok (Values.String s)
   | Bytes (_, b) -> Ok (Values.Bytes b)
@@ -443,23 +473,9 @@ let rec compile_value ~tickets parsed :
                              Pair (Values.Bytes data, Values.Int amount) )) =
         result
       in
-      let ticketer =
-        Deku_repr.decode_variant
-          [
-            (fun x ->
-              Deku_ledger.Contract_address.of_b58 x
-              |> Option.map (fun x -> Deku_ledger.Ticket_id.Deku x));
-            (fun x ->
-              Deku_tezos.Contract_hash.of_b58 x
-              |> Option.map (fun x -> Deku_ledger.Ticket_id.Tezos x));
-          ]
-          ticketer
-        |> Option.get
+      let ticketer = decode_ticketer ticketer
       in
-      let amount =
-        Deku_stdlib.N.of_z amount
-        |> Option.map (fun x -> Deku_concepts.Amount.of_n x)
-        |> Option.get
+      let amount = decode_amount amount
       in
       tickets := (Deku_ledger.Ticket_id.make ticketer data, amount) :: !tickets;
       Ok

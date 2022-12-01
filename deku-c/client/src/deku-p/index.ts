@@ -7,6 +7,7 @@ import { Block as BlockType } from "./core/block";
 import { KeyHash as KeyHashType } from "./core/key-hash";
 import Level, { Level as LevelType } from "./core/level";
 import Nonce, { Nonce as NonceType } from "./core/nonce";
+import Balances, { Balances as BalancesType } from "./core/balances";
 import { Operation as OperationType } from "./core/operation";
 import Operation from "./core/operation";
 import { OperationHash as OperationHashType } from "./core/operation-hash";
@@ -158,6 +159,11 @@ export class DekuPClient {
   async getCurrentBlock(): Promise<BlockType> {
     const block = await get(this.endpoints["GET_CURRENT_BLOCK"]);
     return block;
+  }
+
+  async getBalances(address: string): Promise<BalancesType> {
+    const balances = await get(this.endpoints["GET_BALANCES"](address));
+    return balances;
   }
 
   async getBalance(
@@ -351,11 +357,15 @@ export class DekuPClient {
     return this.submitOperation(noopOperation);
   }
 
-  async wait(operationHash: OperationHashType): Promise<LevelType> {
-    console.log(operationHash);
+  async wait(_operationHash: OperationHashType): Promise<LevelType> {
     throw "Feature not yet implemented"; // TODO: implement this feature
   }
 }
+
+export const parseTicketID = TicketID.parseTicketID;
+export const makeTicketID = TicketID.createTicketID;
+export const parseTicketAmount = Balances.parseTicketAmount;
+// TODO export type too?
 
 export {
   fromBeaconSigner,

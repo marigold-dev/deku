@@ -113,6 +113,9 @@ let balance address ticket_id (Ledger { table; _ }) =
   Ticket_table.balance ~sender:address ~ticket_id table
   |> Option.value ~default:Amount.zero
 
+let balances address (Ledger { table; _ }) =
+  Ticket_table.balances_all_tickets ~sender:address table
+
 let deposit destination amount ticket_id (Ledger { table; withdrawal_handles })
     =
   let table = Ticket_table.deposit ~destination ~ticket_id ~amount table in
