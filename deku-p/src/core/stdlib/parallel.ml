@@ -47,25 +47,43 @@ module Pool = struct
 end
 
 module Worker = struct
-  type worker = (unit -> unit) Eio.Stream.t
+  type worker = {
+    worker : (unit -> unit) Eio.Stream.t;
+    resolver : unit Eio.Promise.u;
+  }
+
   type t = worker
 
-  let rec loop ~sw stream =
+  let rec loop ~(stop : unit Eio.Promise.t) ~sw stream =
     (* TODO: this may leak workers *)
-    let task = Eio.Stream.take stream in
-    Eio.Fiber.fork ~sw task;
-    loop ~sw stream
+    match
+      Eio.Fiber.first
+        (fun () ->
+          Eio.Promise.await stop;
+          `Stopped)
+        (fun () -> `Task (Eio.Stream.take stream))
+    with
+    | `Task task ->
+        Eio.Fiber.fork ~sw task;
+        loop ~stop ~sw stream
+    | `Stopped ->
+        Format.eprintf "stopped\n%!";
+        ()
 
   let make ~domains ~sw =
     let stream = Eio.Stream.create 0 in
-    let spawn () =
+    let spawn stop () =
       Eio.Domain_manager.run domains (fun () ->
-          Eio.Switch.run @@ fun sw -> loop ~sw stream)
+          Eio.Switch.run @@ fun sw -> loop ~stop ~sw stream)
     in
-    Eio.Fiber.fork ~sw spawn;
-    stream
+    let stop, resolve_stop = Eio.Promise.create () in
+    Eio.Fiber.fork ~sw (spawn stop);
+    { worker = stream; resolver = resolve_stop }
+
+  let teardown worker = Eio.Promise.resolve worker.resolver ()
 
   let schedule worker task =
+    let worker = worker.worker in
     let promise, resolver = Eio.Promise.create () in
     let task () =
       match task () with

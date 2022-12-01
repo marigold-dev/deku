@@ -7,6 +7,7 @@ module Worker : sig
   type t = worker
 
   val make : domains:#Eio.Domain_manager.t -> sw:Eio.Switch.t -> worker
+  val teardown : worker -> unit
   val schedule : worker -> (unit -> 'a) -> 'a
 end
 
