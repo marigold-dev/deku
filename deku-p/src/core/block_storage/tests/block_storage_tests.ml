@@ -19,11 +19,7 @@ let block ~default_block_size =
   Producer.produce ~identity ~default_block_size ~above ~withdrawal_handles_hash
     producer
 
-let file_hash =
-  let randn = Stdlib.Random.int 230 in
-  Deku_crypto.BLAKE2b.hash (Int.to_string randn) |> BLAKE2b.to_hex
-
-let uri = Uri.of_string (Format.sprintf "sqlite3:/tmp/%s.db" file_hash)
+let uri = Uri.of_string "sqlite3:/tmp/database.db"
 
 let make_block_storage env sw =
   let domains = Eio.Stdenv.domain_mgr env in
@@ -42,7 +38,7 @@ let test_empty_block_load env () =
         Deku_block_storage.Block_storage.find_block_by_hash ~block_hash:hash
           block_storage
       with
-      | Some json -> Block.t_of_yojson json
+      | Some block -> block
       | None -> Genesis.block
     in
     Alcotest.(check' block_testable)
@@ -51,18 +47,16 @@ let test_empty_block_load env () =
     Eio.Switch.fail sw Test_finished
   with _ -> ()
 
-let eio_test_case : (Eio.Stdenv.t -> unit -> unit) -> unit -> unit =
- fun f () -> Eio_main.run (fun env -> f env ())
-
 let run () =
-  let open Alcotest in
-  run "Block_storage" ~and_exit:false
-    [
-      ( "simple",
+  Eio_main.run (fun env ->
+      let open Alcotest in
+      run "Block_storage" ~and_exit:false
         [
-          test_case "empty_block is returned" `Quick
-            (eio_test_case test_empty_block_load);
-        ] );
-    ]
+          ( "simple",
+            [
+              test_case "empty_block is returned" `Quick
+                (test_empty_block_load env);
+            ] );
+        ])
 
 let () = run ()
