@@ -1,4 +1,43 @@
 (executable
- (public_name ligo-deku-rpc)
  (name ligo_deku_rpc)
- (libraries piaf logs logs.fmt fmt.tty routes mirage-crypto yojson))
+ (public_name ligo-deku-rpc)
+ (modules ligo_deku_rpc server)
+ (libraries
+  handlers
+  ocaml_wasm_vm
+  tunac
+  eio
+  piaf
+  logs
+  logs.fmt
+  fmt.tty
+  routes
+  cmdliner
+  mirage-crypto
+  data-encoding)
+ (preprocess
+  (pps ppx_deriving_cmdliner ppx_deriving.show)))
+
+(library
+ (name handlers)
+ (modules :standard \ ligo_deku_rpc server)
+ (wrapped false)
+ (inline_tests)
+ (libraries
+  ocaml_wasm_vm
+  tunac
+  eio
+  piaf
+  logs
+  logs.fmt
+  fmt.tty
+  routes
+  cmdliner
+  mirage-crypto
+  data-encoding)
+ (preprocess
+  (pps
+   ppx_deriving_cmdliner
+   ppx_deriving.show
+   ppx_deriving_encoding
+   ppx_expect)))
