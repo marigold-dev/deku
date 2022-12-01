@@ -29,6 +29,7 @@ let block ~default_block_size =
     producer
 
 (* NOTE: These tests generate new databases in /tmp/ for every test, for every run. *)
+(* TODO: change to an in-memory databse *)
 let uri () =
   let file_hash =
     let randn = Stdlib.Random.int 230 in
