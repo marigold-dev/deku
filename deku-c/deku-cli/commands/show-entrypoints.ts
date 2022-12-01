@@ -2,7 +2,11 @@ import { Contract, DekuCClient } from "@marigold-dev/deku";
 import * as Commander from "commander";
 import * as default_ from "./default-parameters";
 
-async function main(apiUri, contractAddress, { verbose }) {
+async function main(
+  apiUri: string,
+  contractAddress: string,
+  { verbose }: { verbose: boolean }
+) {
   const deku = new DekuCClient({ dekuRpc: apiUri });
   const contract = deku.contract(contractAddress);
   const entrypoints = await contract.getEntrypoints();
@@ -11,10 +15,10 @@ async function main(apiUri, contractAddress, { verbose }) {
       if (verbose) {
         console.log(entrypoints);
       } else {
-        console.log(Object.keys(entrypoints)); // FIXME can't call .keys() for some reason
+        console.log(Object.keys(entrypoints as any)); // FIXME can't call .keys() for some reason
       }
     }
-  } catch (e) {
+  } catch (e: any) {
     console.error("An error occurred:");
     console.error(e.message);
     process.exit(1);
