@@ -95,6 +95,17 @@ with super; {
                 "(name wasm) (public_name wasm)"
             '';
           };
+          ppx_deriving_encoding = oself.buildDunePackage {
+            pname = "ppx_deriving_encoding";
+            version = "n/a";
+            src = fetchFromGitLab {
+              owner = "o-labs";
+              repo = "ppx_deriving_encoding";
+              rev = "d302c0eaccd51c49c44c6972e909e11428b8baf3";
+              sha256 = "sha256-MmNsMRvGtiEudWf8/XDfGvSi18CWFwggd6l8VEAY4Wc=";
+            };
+            propagatedBuildInputs = with oself; [ppxlib data-encoding];
+          };
         });
     });
 }

@@ -31,7 +31,8 @@ type error =
   | Unknown_primitive_name of string
   | Invalid_case of string
   | Invalid_primitive_name of
-      string Micheline.canonical * Micheline.canonical_location
+      ((string Micheline.canonical * Micheline.canonical_location)[@opaque])
+[@@deriving show]
 
 type prim =
   | K_parameter
