@@ -114,11 +114,10 @@ let on_message ~sw ~raw_header ~raw_content state =
       on_accepted_block ~sw ~state ~block
   | _ -> ()
 
-let listen_to_node ~net ~clock ~port ~state =
+let listen_to_node ~net ~clock ~on_message ~port ~state =
   let Api_state.{ network; _ } = state in
   let on_connection ~connection = on_connection state ~connection in
   let on_request ~connection:_ ~raw_header:_ ~raw_content:_ = () in
-  let on_message ~raw_header:_ ~raw_content:_ = () in
   let () =
     Network_manager.listen ~net ~clock ~port ~on_connection ~on_request
       ~on_message network
@@ -246,6 +245,8 @@ let main params style_renderer log_level =
           ~current_block ~receipts ~dump
   in
 
+  let on_message = on_message ~sw state in
+
   Eio.Fiber.all
     [
       (fun () ->
@@ -253,9 +254,9 @@ let main params style_renderer log_level =
           ~nodes:[ (node_host, node_port) ]
           ~on_connection:(on_connection state)
           ~on_request:(fun ~connection:_ ~raw_header:_ ~raw_content:_ -> ())
-          ~on_message:(on_message ~sw state) network);
+          ~on_message network);
       (fun () -> start_api ~env ~sw ~port ~state);
-      (fun () -> listen_to_node ~net ~clock ~port:tcp_port ~state);
+      (fun () -> listen_to_node ~net ~clock ~on_message ~port:tcp_port ~state);
     ]
 
 let () =
