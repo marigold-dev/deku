@@ -112,6 +112,24 @@ let test_empty_block_and_votes env () =
     Eio.Switch.fail sw Test_finished
   with _ -> ()
 
+let test_200k_block_load env () =
+  try
+    Eio.Switch.run @@ fun sw ->
+    let block_storage = make_block_storage env sw in
+    let (Block { hash; _ } as block) = block ~default_block_size:200_000 in
+    Block_storage.save_block ~block block_storage;
+    let retrieved_block =
+      match Block_storage.find_block_by_hash ~block_hash:hash block_storage with
+      | Some block -> block
+      | None -> Genesis.block
+    in
+    Alcotest.(check' block_testable)
+      ~msg:"hash loaded block is equal to saved block" ~expected:block
+      ~actual:retrieved_block;
+
+    Eio.Switch.fail sw Test_finished
+  with _ -> ()
+
 let run () =
   Eio_main.run (fun env ->
       let open Alcotest in
@@ -123,6 +141,8 @@ let run () =
                 (test_empty_block_load env);
               test_case "empty block and one vote is returned" `Quick
                 (test_empty_block_and_votes env);
+              test_case "200k_block is returned" `Slow
+                (test_200k_block_load env);
             ] );
         ])
 
