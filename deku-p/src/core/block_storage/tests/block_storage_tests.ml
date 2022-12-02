@@ -116,7 +116,9 @@ let test_200k_block_load env () =
   try
     Eio.Switch.run @@ fun sw ->
     let block_storage = make_block_storage env sw in
-    let (Block { hash; _ } as block) = block ~default_block_size:200_000 in
+    let (Block { hash; level; _ } as block) =
+      block ~default_block_size:200_000
+    in
     Block_storage.save_block ~block block_storage;
     let retrieved_block =
       match Block_storage.find_block_by_hash ~block_hash:hash block_storage with
@@ -127,8 +129,23 @@ let test_200k_block_load env () =
       ~msg:"hash loaded block is equal to saved block" ~expected:block
       ~actual:retrieved_block;
 
+    let retrieved_block =
+      match Block_storage.find_block_by_level ~level block_storage with
+      | Some json ->
+          Data_encoding.Json.destruct Deku_consensus.Block.encoding json
+      | None -> Genesis.block
+    in
+
+    Alcotest.(check' block_testable)
+      ~msg:"level loaded block is equal to saved block" ~expected:block
+      ~actual:retrieved_block;
+
     Eio.Switch.fail sw Test_finished
   with _ -> ()
+
+(* TODO: Add tests with only one env threaded through all tests *)
+let eio_test_case : (Eio.Stdenv.t -> unit -> unit) -> unit -> unit =
+ fun f () -> Eio_main.run (fun env -> f env ())
 
 let run () =
   Eio_main.run (fun env ->
