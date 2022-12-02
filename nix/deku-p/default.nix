@@ -60,6 +60,10 @@
         type = "app";
         program = "${deku}/bin/deku-generate-identity";
       };
+      ligo-deku-rpc = {
+        type = "app";
+        program = "${deku}/bin/ligo-deku-rpc";
+      };
     };
   };
 }
