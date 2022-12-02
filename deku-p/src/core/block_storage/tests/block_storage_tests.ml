@@ -28,17 +28,18 @@ let block ~default_block_size =
   Producer.produce ~identity ~default_block_size ~above ~withdrawal_handles_hash
     producer
 
-let file_hash =
-  let randn = Stdlib.Random.int 230 in
-  Deku_crypto.BLAKE2b.hash (Int.to_string randn) |> BLAKE2b.to_hex
-
-(* TODO: change to an in-memory databse *)
-let uri = Uri.of_string (Format.sprintf "sqlite3:/tmp/%s.db" file_hash)
+(* NOTE: These tests generate new databases in /tmp/ for every test, for every run. *)
+let uri () =
+  let file_hash =
+    let randn = Stdlib.Random.int 230 in
+    Deku_crypto.BLAKE2b.hash (Int.to_string randn) |> BLAKE2b.to_hex
+  in
+  Uri.of_string (Format.sprintf "sqlite3:/tmp/%s.db" file_hash)
 
 let make_block_storage env sw =
   let domains = Eio.Stdenv.domain_mgr env in
   let worker = Parallel.Worker.make ~domains ~sw in
-  let storage = Block_storage.make ~worker ~uri in
+  let storage = Block_storage.make ~worker ~uri:(uri ()) in
   storage
 
 let test_empty_block_load env () =
