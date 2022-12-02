@@ -1,6 +1,7 @@
 {
   pkgs,
   deku,
+  ligo,
 }: let
   baseImage = pkgs.dockerTools.pullImage {
     imageName = "node";
@@ -10,14 +11,21 @@
     finalImageName = "node";
   };
   script =
-    pkgs.writeScriptBin "deku-node"
+    pkgs.writeScriptBin "run-deku"
     ''
       #!/usr/bin/env bash
-      mkdir -p /var/lib/deku
-      mkdir -p /run/deku
-      test -e /run/deku/pipe_read || mkfifo /run/deku/pipe_read
-      test -e /run/deku/pipe_write || mkfifo /run/deku/pipe_write
-      ${deku}/bin/deku-node
+      case $1 in
+        ligo-deku-rpc)
+          ${deku}/bin/ligo-deku-rpc
+        ;;
+        *)
+        esac
+          mkdir -p /var/lib/deku
+          mkdir -p /run/deku
+          test -e /run/deku/pipe_read || mkfifo /run/deku/pipe_read
+          test -e /run/deku/pipe_write || mkfifo /run/deku/pipe_write
+          ${deku}/bin/deku-node
+        ;;
     '';
 in
   pkgs.dockerTools.buildImage {
@@ -29,7 +37,7 @@ in
     copyToRoot = pkgs.buildEnv {
       name = "image-root";
       pathsToLink = ["/app" "/bin" "/var/lib/deku"];
-      paths = [script pkgs.bash pkgs.curl];
+      paths = [script pkgs.bash pkgs.curl ligo];
     };
     config = {
       author = "marigold.dev";
@@ -41,6 +49,6 @@ in
         "NIX_SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
       ];
       WorkingDir = "/app";
-      Entrypoint = "${script}/bin/deku-node";
+      Entrypoint = "${script}/bin/run-deku";
     };
   }
