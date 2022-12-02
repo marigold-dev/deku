@@ -41,7 +41,7 @@
 
     ligo = inputs.ligo.packages.${system}.ligoLight;
 
-    docker = pkgs.callPackage ./docker.nix {inherit deku;};
+    docker = pkgs.callPackage ./docker.nix {inherit deku ligo;};
   in {
     packages = {
       default = deku;
