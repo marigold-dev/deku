@@ -31,7 +31,8 @@ You'll also need to install the Deku CLI:
 npm install -g @marigold-dev/deku-cli
 ```
 
-:::tip See the [Deku CLI Tutorial](./deku_c_cli.md) for more on using the CLI!
+:::tip
+See the [Deku CLI Tutorial](./deku_c_cli.md) for more on using the CLI!
 :::
 
 ## Our First Smart Contract
@@ -110,7 +111,8 @@ dekuC.originateLigo(params).then(({ operation, address }) => {
 
 <br/>
 
-:::tip In addition to using `deku-toolkit` and/or command-line tools, you can
+:::tip
+In addition to using `deku-toolkit` and/or command-line tools, you can
 also develop Deku-C contract directly from your browser with the
 [LIGO Playground](https://ide.ligolang.org/)!
 :::
