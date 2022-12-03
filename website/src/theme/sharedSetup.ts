@@ -1,4 +1,4 @@
-import { InMemorySigner } from "@taquito/signer"
+import { InMemorySigner } from "@taquito/signer";
 import { DekuCClient } from "@marigold-dev/deku";
 import { fromMemorySigner } from "@marigold-dev/deku";
 
@@ -12,8 +12,12 @@ const signer = fromMemorySigner(memory);
 // TODO: remove this when ligoRpc and dekuRpc are reployed
 
 const isLocalhost = window.location.hostname === "localhost";
-const dekuRpc = isLocalhost ? "http://0.0.0.0:8080" : "https://deku-canonical-vm0.deku-v1.marigold.dev";
-const ligoRpc = isLocalhost ? "http://0.0.0.0:9090" : "https://ghostnet.tezos.marigold.dev"
+const dekuRpc = isLocalhost
+  ? "http://0.0.0.0:8080"
+  : "https://deku-canonical-vm0.deku-v1.marigold.dev";
+const ligoRpc = isLocalhost
+  ? "http://0.0.0.0:9090"
+  : "https://ghostnet.tezos.marigold.dev";
 
 const dekuC = new DekuCClient({
   dekuRpc,
@@ -43,5 +47,5 @@ const main = (action: parameter, store: storage): return_ => {
 
 export default {
   incrementLigoCode,
-  dekuC
-}
+  dekuC,
+};

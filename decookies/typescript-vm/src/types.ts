@@ -44,50 +44,50 @@ export const initialIdleverseCost: bigint = BigInt(12e21);
 export const initialCordexCost: bigint = BigInt(1.9e23);
 
 export type cookieBaker = {
-    cookies: bigint,
-    cursors: bigint,
-    grandmas: bigint,
-    farms: bigint,
-    mines: bigint,
-    factories: bigint,
-    banks: bigint,
-    temples: bigint;
-    wizards: bigint,
-    shipments: bigint,
-    alchemies: bigint,
-    portals: bigint,
-    timeMachines: bigint,
-    antimatters: bigint,
-    prisms: bigint,
-    chanceMakers: bigint,
-    fractals: bigint,
-    javaScripts: bigint,
-    idleverses: bigint,
-    cordexs: bigint,
+  cookies: bigint;
+  cursors: bigint;
+  grandmas: bigint;
+  farms: bigint;
+  mines: bigint;
+  factories: bigint;
+  banks: bigint;
+  temples: bigint;
+  wizards: bigint;
+  shipments: bigint;
+  alchemies: bigint;
+  portals: bigint;
+  timeMachines: bigint;
+  antimatters: bigint;
+  prisms: bigint;
+  chanceMakers: bigint;
+  fractals: bigint;
+  javaScripts: bigint;
+  idleverses: bigint;
+  cordexs: bigint;
 
-    cursorCost: bigint,
-    grandmaCost: bigint,
-    farmCost: bigint,
-    mineCost: bigint,
-    factoryCost: bigint,
-    bankCost: bigint,
-    templeCost: bigint;
-    wizardCost: bigint,
-    shipmentCost: bigint,
-    alchemyCost: bigint,
-    portalCost: bigint,
-    timeMachineCost: bigint,
-    antimatterCost: bigint,
-    prismCost: bigint,
-    chanceMakerCost: bigint,
-    fractalCost: bigint,
-    javaScriptCost: bigint,
-    idleverseCost: bigint,
-    cordexCost: bigint,
+  cursorCost: bigint;
+  grandmaCost: bigint;
+  farmCost: bigint;
+  mineCost: bigint;
+  factoryCost: bigint;
+  bankCost: bigint;
+  templeCost: bigint;
+  wizardCost: bigint;
+  shipmentCost: bigint;
+  alchemyCost: bigint;
+  portalCost: bigint;
+  timeMachineCost: bigint;
+  antimatterCost: bigint;
+  prismCost: bigint;
+  chanceMakerCost: bigint;
+  fractalCost: bigint;
+  javaScriptCost: bigint;
+  idleverseCost: bigint;
+  cordexCost: bigint;
 
-    /* Cookie per second*/
-    passiveCPS: bigint,
+  /* Cookie per second*/
+  passiveCPS: bigint;
 
-    /* total burnt for leaderboard */
-    eatenCookies: bigint
-}
+  /* total burnt for leaderboard */
+  eatenCookies: bigint;
+};

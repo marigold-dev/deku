@@ -1,20 +1,20 @@
 {
-    "name": "deku-c-nodejs-example",
-    "version": "0.0.1",
-    "type":"module",
-    "description": "Example script for interacting with Deku-C in NodeJs",
-    "scripts": {
-        "start": "ts-node --esm ./index.ts",
-        "build": "tsc"
-    },
-    "author": "contact@marigold.dev",
-    "license": "ISC",
-    "dependencies": {
-        "@marigold-dev/deku": "0.1.0"
-    },
-    "devDependencies": {
-        "@taquito/signer": "^14.0.0",
-        "ts-node": "^10.9.1",
-        "typescript": "^4.8.4"
-    }
+  "name": "deku-c-nodejs-example",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Example script for interacting with Deku-C in NodeJs",
+  "scripts": {
+    "start": "ts-node --esm ./index.ts",
+    "build": "tsc"
+  },
+  "author": "contact@marigold.dev",
+  "license": "ISC",
+  "dependencies": {
+    "@marigold-dev/deku": "0.1.0"
+  },
+  "devDependencies": {
+    "@taquito/signer": "^14.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.4"
+  }
 }
