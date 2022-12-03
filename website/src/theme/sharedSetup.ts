@@ -12,7 +12,7 @@ const signer = fromMemorySigner(memory);
 // TODO: remove this when ligoRpc and dekuRpc are reployed
 
 const dekuRpc = "https://deku-canonical-vm0.deku-v1.marigold.dev";
-const ligoRpc = "http://0.0.0.0:9090"; // FIXME: don't merge with this
+const ligoRpc = "http://ligo-deku-rpc.marigold.dev:9090";
 
 const dekuC = new DekuCClient({
   dekuRpc,
