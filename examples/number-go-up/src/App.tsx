@@ -87,7 +87,7 @@ export const App = () => {
             let { address, signer } = await connectBeaconWallet().then();
             const dekuC = new DekuCClient({
               dekuRpc: apiURL,
-              ligoRpc: "http://0.0.0.0:9090",
+              ligoRpc: "http://ligo-deku-rpc.marigold.dev:9090",
               dekuSigner: signer,
             });
 
