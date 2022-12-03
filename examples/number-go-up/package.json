@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@airgap/beacon-sdk": "^3.3.0",
-    "@marigold-dev/deku": "0.1.0",
+    "@marigold-dev/deku": "0.1.1",
     "@taquito/signer": "14.0.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
@@ -47,7 +47,7 @@
     ]
   },
   "devDependencies": {
-    "@marigold-dev/deku-cli": "0.0.1",
+    "@marigold-dev/deku-cli": "0.0.2",
     "os-browserify": "^0.3.0",
     "postcss-normalize": "^10.0.1",
     "stream-browserify": "^3.0.0",
