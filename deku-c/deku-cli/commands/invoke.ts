@@ -1,10 +1,14 @@
 import { fromMemorySigner } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
-import { DekuCClient, isLigo } from "@marigold-dev/deku";
+import {
+  DekuCClient,
+  isLigo,
+  DEKU_API_URL,
+  LIGO_DEKU_RPC_URL,
+} from "@marigold-dev/deku";
 import { load } from "../core/wallet";
 import * as Commander from "commander";
 import { read } from "../core/contract";
-import * as default_ from "./default-parameters";
 
 function getContract(
   apiUri: string,
@@ -88,15 +92,15 @@ export default function make(command: Commander.Command) {
     .option("--raw", "raw expression for the WASM VM")
     .option(
       "--endpoint <endpoint>",
-      `URI of the deku API to use (default ${default_.api})`
+      `URI of the deku API to use (default ${DEKU_API_URL})`
     )
     .option(
       "--ligoRpc <endpoint>",
-      `URI of the ligo RPC API to use (default ${default_.ligoApi})`
+      `URI of the ligo RPC API to use (default ${LIGO_DEKU_RPC_URL})`
     )
     .action((walletPath, contractAddress, parameter, options) => {
-      const apiUri = options.endpoint ?? default_.api;
-      const ligoApiUri = options.ligoRpc ?? default_.ligoApi;
+      const apiUri = options.endpoint ?? DEKU_API_URL;
+      const ligoApiUri = options.ligoRpc ?? LIGO_DEKU_RPC_URL;
       invokeMain(
         apiUri,
         ligoApiUri,
@@ -114,15 +118,15 @@ export default function make(command: Commander.Command) {
     .argument("<ligo_expression>", "Ligo expression")
     .option(
       "--endpoint <endpoint>",
-      `URI of the deku API to use (default ${default_.api})`
+      `URI of the deku API to use (default ${DEKU_API_URL})`
     )
     .option(
       "--ligo-endpoint <ligo_uri>",
-      `URI of the Ligo RPC API to use (default ${default_.ligoApi})`
+      `URI of the Ligo RPC API to use (default ${LIGO_DEKU_RPC_URL})`
     )
     .action((walletPath, contractAddress, contractPath, ligo, options) => {
-      const apiUri = options.endpoint ?? default_.api;
-      const ligoUri = options.ligo_uri ?? default_.ligoApi;
+      const apiUri = options.endpoint ?? DEKU_API_URL;
+      const ligoUri = options.ligo_uri ?? LIGO_DEKU_RPC_URL;
       invokeLigoMain(
         apiUri,
         ligoUri,
