@@ -11,3 +11,4 @@ export {
   isValidLang,
   isLigo,
 } from "./deku-c/ligoRpc";
+export { DEKU_API_URL, LIGO_DEKU_RPC_URL } from "./deku-c/default-parameters";
