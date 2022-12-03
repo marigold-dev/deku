@@ -1,10 +1,9 @@
 import { fromMemorySigner } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
-import { Contract, DekuCClient } from "@marigold-dev/deku";
+import { Contract, DekuCClient, DEKU_API_URL, LIGO_DEKU_RPC_URL } from "@marigold-dev/deku";
 import * as Commander from "commander";
 import { load } from "../core/wallet";
 import { originate, read } from "../core/contract";
-import * as default_ from "./default-parameters";
 
 async function main(
   apiUri: string,
@@ -47,15 +46,15 @@ export default function make(command: Commander.Command) {
     .argument("<initial_storage>", "initial storage")
     .option(
       "--endpoint <endpoint>",
-      `URI of the deku API to use (default ${default_.api})`
+      `URI of the deku API to use (default ${DEKU_API_URL})`
     )
     .option(
       "--ligo-endpoint <ligo_uri>",
-      `URI of the Ligo RPC API to use (default ${default_.ligoApi})`
+      `URI of the Ligo RPC API to use (default ${LIGO_DEKU_RPC_URL})`
     )
     .action((walletPath, contractPath, initialStorage, options) => {
-      const apiUri = options.endpoint ?? default_.api;
-      const ligoUri = options.ligo_uri ?? default_.ligoApi;
+      const apiUri = options.endpoint ?? DEKU_API_URL;
+      const ligoUri = options.ligo_uri ?? LIGO_DEKU_RPC_URL;
       main(apiUri, ligoUri, walletPath, contractPath, initialStorage);
     });
   return command;
