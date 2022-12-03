@@ -9,7 +9,7 @@ const signer = new InMemorySigner(
 const dekuSigner = fromMemorySigner(signer);
 const dekuC = new DekuCClient({
   dekuRpc: "https://deku-canonical-vm0.deku-v1.marigold.dev/",
-  ligoRpc: "http://ligo-deku-rpc.marigold.dev:9090",
+  ligoRpc: "https://ligo-deku-rpc.marigold.dev",
   dekuSigner,
 });
 
