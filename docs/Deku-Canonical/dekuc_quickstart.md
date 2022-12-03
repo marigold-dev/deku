@@ -31,7 +31,8 @@ You'll also need to install the Deku CLI:
 npm install -g @marigold-dev/deku-cli
 ```
 
-:::tip See the [Deku CLI Tutorial](./deku_c_cli.md) for more on using the CLI!
+:::tip
+See the [Deku CLI Tutorial](./deku_c_cli.md) for more on using the CLI!
 :::
 
 ## Our First Smart Contract
