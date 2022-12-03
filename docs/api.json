@@ -1,785 +1,757 @@
 {
-    "openapi": "3.0.1",
-    "info": {
-        "title": "Deku",
-        "version": "v1",
-        "description": "API for deku v1."
-    },
-    "paths": {
-        "/chain/info": {
-            "get": {
-                "description": "Gets the consensus and discovery contract address from the chain.",
-                "tags": [
-                    "chain"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "consensus and discovery address",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ChainInfo"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/chain/level": {
-            "get": {
-                "description": "Returns the current level of the chain.",
-                "tags": [
-                    "chain"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Gets the string representation of the level (an int64) of the current chain level.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "level": {
-                                            "$ref": "#/components/schemas/BlockLevel"
-                                        }
-                                    }
-                                },
-                                "examples": {
-                                    "level": {
-                                        "$ref": "#/components/examples/level-response"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/chain/blocks": {
-            "get": {
-                "description": "Streams blocks starting at the current level of the chain",
-                "tags": [
-                    "chain"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "blocks",
-                        "headers": {
-                            "Transfer-Encoding": {
-                                "schema": {
-                                    "type": "string",
-                                    "description": "Used to stream blocks.",
-                                    "example": "chunked"
-                                }
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Block"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/chain/blocks/{block_hash}": {
-            "get": {
-                "description": "Returns the block of the given hash.",
-                "tags": [
-                    "chain"
-                ],
-                "parameters": [
-                    {
-                        "name": "block_hash",
-                        "in": "path",
-                        "schema": {
-                            "$ref": "#/components/schemas/BlockHash"
-                        },
-                        "required": true,
-                        "description": "The hash of the block to find"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Block for the given hash has been found.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Block"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "The block wasn't found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                },
-                                "examples": {
-                                    "block not found": {
-                                        "$ref": "#/components/examples/block-not-found-error"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Non valid block_hash",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                },
-                                "examples": {
-                                    "invalid block hash": {
-                                        "$ref": "#/components/examples/invalid-block-hash-error"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/chain/blocks/{level}": {
-            "get": {
-                "description": "Returns the block at the given level.",
-                "tags": [
-                    "chain"
-                ],
-                "parameters": [
-                    {
-                        "name": "level",
-                        "in": "path",
-                        "schema": {
-                            "$ref": "#/components/schemas/BlockLevel"
-                        },
-                        "required": true,
-                        "description": "The level of the block to find"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Block is retrieved.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Block"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "The block wasn't found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                },
-                                "examples": {
-                                    "block not found": {
-                                        "$ref": "#/components/examples/block-not-found-error"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Non-valid level. The level should represents a int64.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                },
-                                "examples": {
-                                    "invalid block level": {
-                                        "$ref": "#/components/examples/invalid-block-level-error"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/chain/blocks/head": {
-            "get": {
-                "description": "Returns the last applied block.",
-                "tags": [
-                    "chain"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Current block retrieved.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Block"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/chain/blocks/genesis": {
-            "get": {
-                "description": "Returns the genesis block of the chain.",
-                "tags": [
-                    "chain"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Genesis block has been retrieved.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Block"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/operations": {
-            "post": {
-                "description": "Sends an operation.",
-                "tags": [
-                    "operations"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Operation"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "202": {
-                        "description": "The commit has been accepted (but not yet processed)",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "hash": {
-                                            "$ref": "#/components/schemas/BlockHash"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "The request is malformed.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                },
-                                "examples": {
-                                    "invalid-packet-hash-error": {
-                                        "$ref": "#/components/examples/invalid-packet-hash-error"
-                                    },
-                                    "invalid-message-error": {
-                                        "$ref": "#/components/examples/invalid-message-error"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/403-response"
-                    }
-                }
-            }
-        },
-        "/states/ledger/balance/{deku_address}/{ticketer}/{ticket_data}": {
-            "get": {
-                "description": "Returns the current balance of someone for a given ticket, returns 0 by default.",
-                "tags": [
-                    "ledger"
-                ],
-                "parameters": [
-                    {
-                        "name": "deku_address",
-                        "in": "path",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "required": true,
-                        "description": "the address of the ticket owner"
-                    },
-                    {
-                        "name": "ticketer",
-                        "in": "path",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "required": true,
-                        "description": "the address of the ticketer",
-                        "example": "KT1Ue4LG7323KyW6SHEoVD1Z77zbuxFqRG9T"
-                    },
-                    {
-                        "name": "ticket_data",
-                        "in": "path",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "required": true,
-                        "description": "the hexa representation of the ticket data",
-                        "example": "0x00"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Balance retrieved.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Balance"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Non valid deku address.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                },
-                                "examples": {
-                                    "invalid deku address": {
-                                        "$ref": "#/components/examples/invalid-deku-address-error"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/states/wasm": {
-            "get": {
-                "description": "Returns the whole state of the wasm vm.",
-                "tags": [
-                    "wasm"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Wasm state retrieved",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/states/unix": {
-            "get": {
-                "description": "Returns the whole state of the deku-p state",
-                "tags": [
-                    "deku-p"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Deku-p state retrieved",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/states/unix/{key}": {
-            "get": {
-                "description": "Returns a subpart of the state of deku-p, default is null",
-                "tags": [
-                    "deku-p"
-                ],
-                "parameters": [
-                    {
-                        "name": "key",
-                        "in": "path",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "required": true,
-                        "description": "the key of the json state",
-                        "example": "custom_key"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Deku-p state retrieved.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/helpers/operation-messages": {
-            "post": {
-                "description": "Returns the hash of the given operation content.",
-                "tags": [
-                    "helpers"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Operation"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "The hash of the operation.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "hash": {
-                                            "type": "string"
-                                        },
-                                        "content": {
-                                            "$ref": "#/components/schemas/Operation"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/helpers/hash-operation": {
-            "post": {
-                "description": "Returns the hash of the given packet. It can be any json.",
-                "tags": [
-                    "helpers"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Operation"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "The hash of the operation.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "hash": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    },
-    "components": {
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Deku",
+    "version": "v1",
+    "description": "API for deku v1."
+  },
+  "paths": {
+    "/chain/info": {
+      "get": {
+        "description": "Gets the consensus and discovery contract address from the chain.",
+        "tags": ["chain"],
         "responses": {
-            "403-response": {
-                "description": "The signature does not match",
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "$ref": "#/components/schemas/Error"
-                        },
-                        "examples": {
-                            "invalid signature": {
-                                "$ref": "#/components/examples/invalid-signature-error"
-                            }
-                        }
-                    }
+          "200": {
+            "description": "consensus and discovery address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChainInfo"
                 }
+              }
             }
-        },
-        "examples": {
-            "invalid-block-hash-error": {
-                "value": {
-                    "code": "INVALID_BLOCK_HASH",
-                    "msg": "The given block hash cannot be deserialized."
-                }
-            },
-            "block-not-found-error": {
-                "value": {
-                    "code": "BLOCK_NOT_FOUND",
-                    "msg": "The block was not found."
-                }
-            },
-            "invalid-block-level-error": {
-                "value": {
-                    "code": "INVALID_BLOCK_LEVEL",
-                    "msg": "The given level cannot be deserialized. The level should be an int64 serialized as a string."
-                }
-            },
-            "invalid-signature-error": {
-                "value": {
-                    "code": "INVALID_SIGNATURE",
-                    "msg": "The signature does not match the given payload."
-                }
-            },
-            "invalid-packet-hash-error": {
-                "value": {
-                    "code": "INVALID_PACKET_HASH",
-                    "msg": "The hash of the given message does not match."
-                }
-            },
-            "invalid-message-error": {
-                "value": {
-                    "code": "INVALID_MESSAGE",
-                    "msg": "This is not the expected message, please verify the type of your message by refering to the API."
-                }
-            },
-            "invalid-deku-address-error": {
-                "value": {
-                    "code": "INVALID_DEKU_ADDRESS",
-                    "msg": "This is not a valid deku address."
-                }
-            },
-            "level-response": {
-                "value": {
-                    "level": "123456"
-                }
-            },
-            "block": {
-                "value": {
-                    "hash": "Db3VbLn9cPHdxdddXf1nbsYxUckworUY7bbamZFJjzwy1twXQ2DL",
-                    "level": "1234456",
-                    "round": "6543",
-                    "payload": []
-                }
-            }
-        },
-        "schemas": {
-            "InvalidPacketHashError": {
-                "type": "object",
-                "properties": {
-                    "code": {
-                        "type": "string",
-                        "example": "INVALID_PACKET_HASH"
-                    },
-                    "msg": {
-                        "type": "string",
-                        "example": "The hash of the packet does not correspond."
-                    }
-                },
-                "example": "WRONG_PACKET_HASH"
-            },
-            "InvalidSignatureError": {
-                "type": "object",
-                "properties": {
-                    "code": {
-                        "type": "string",
-                        "example": "INVALID_SIGNATURE"
-                    },
-                    "msg": {
-                        "type": "string",
-                        "example": "The signature of your message is invalid."
-                    }
-                }
-            },
-            "InvalidPayloadError": {
-                "type": "object",
-                "properties": {
-                    "code": {
-                        "type": "string",
-                        "example": "INVALID_PAYLOAD"
-                    },
-                    "msg": {
-                        "type": "string",
-                        "example": "Some fields are missing, or you are using the wrong type for some of them."
-                    }
-                }
-            },
-            "Error": {
-                "type": "object",
-                "properties": {
-                    "code": {
-                        "type": "string"
-                    },
-                    "msg": {
-                        "type": "string"
-                    }
-                }
-            },
-            "ChainInfo": {
-                "type": "object",
-                "properties": {
-                    "consensus": {
-                        "type": "string",
-                        "description": "tezos contract address.",
-                        "example": "KT1Ue4LG7323KyW6SHEoVD1Z77zbuxFqRG9T"
-                    },
-                    "discovery": {
-                        "type": "string",
-                        "description": "discovery contract address.",
-                        "example": "KT1FKj8GCYgHFyRLjzTdGhawKDS3iA7TQh2J"
-                    }
-                }
-            },
-            "Balance": {
-                "type": "object",
-                "properties": {
-                    "balance": {
-                        "type": "integer",
-                        "description": "balance"
-                    }
-                }
-            },
-            "BlockHash": {
-                "type": "string",
-                "description": "BLAKE2b hash string starting by 'B'."
-            },
-            "BlockLevel": {
-                "type": "string",
-                "description": "int64 as string."
-            },
-            "Round": {
-                "type": "string",
-                "description": "int64 as string"
-            },
-            "Block": {
-                "type": "object",
-                "properties": {
-                    "key": {
-                        "type": "string"
-                    },
-                    "signature": {
-                        "type": "string"
-                    },
-                    "block": {
-                        "type": "object",
-                        "properties": {
-                            "author": {
-                                "type": "string"
-                            },
-                            "level": {
-                                "$ref": "#/components/schemas/BlockLevel"
-                            },
-                            "previous": {
-                                "$ref": "#/components/schemas/BlockHash"
-                            },
-                            "payload": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                }
-                            },
-                            "tezos_operations": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "TicketId": {
-                "type": "array",
-                "items": {
-                    "oneOf": [
-                        {
-                            "type": "string",
-                            "example": "Ticket_id"
-                        },
-                        {
-                            "type": "object",
-                            "properties": {
-                                "ticketer": {
-                                    "type": "string",
-                                    "example": "KT..."
-                                },
-                                "amount": {
-                                    "type": "string",
-                                    "example": "200"
-                                }
-                            }
-                        }
-                    ]
-                }
-            },
-            "OperationContent": {
-                "type": "array",
-                "items": {
-                    "oneOf": [
-                        {
-                            "type": "string",
-                            "example": "Transaction"
-                        },
-                        {
-                            "type": "object",
-                            "properties": {
-                                "receiver": {
-                                    "type": "string"
-                                },
-                                "ticket_id": {
-                                    "$ref": "#/components/schemas/TicketId"
-                                },
-                                "amount": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    ]
-                },
-                "minItems": 1,
-                "maxItems": 2
-            },
-            "Operation": {
-                "type": "object",
-                "properties": {
+          }
+        }
+      }
+    },
+    "/chain/level": {
+      "get": {
+        "description": "Returns the current level of the chain.",
+        "tags": ["chain"],
+        "responses": {
+          "200": {
+            "description": "Gets the string representation of the level (an int64) of the current chain level.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
                     "level": {
-                        "type": "string"
-                    },
-                    "nonce": {
-                        "type": "string"
-                    },
-                    "source": {
-                        "type": "string"
+                      "$ref": "#/components/schemas/BlockLevel"
+                    }
+                  }
+                },
+                "examples": {
+                  "level": {
+                    "$ref": "#/components/examples/level-response"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chain/blocks": {
+      "get": {
+        "description": "Streams blocks starting at the current level of the chain",
+        "tags": ["chain"],
+        "responses": {
+          "200": {
+            "description": "blocks",
+            "headers": {
+              "Transfer-Encoding": {
+                "schema": {
+                  "type": "string",
+                  "description": "Used to stream blocks.",
+                  "example": "chunked"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Block"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chain/blocks/{block_hash}": {
+      "get": {
+        "description": "Returns the block of the given hash.",
+        "tags": ["chain"],
+        "parameters": [
+          {
+            "name": "block_hash",
+            "in": "path",
+            "schema": {
+              "$ref": "#/components/schemas/BlockHash"
+            },
+            "required": true,
+            "description": "The hash of the block to find"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Block for the given hash has been found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Block"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The block wasn't found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "block not found": {
+                    "$ref": "#/components/examples/block-not-found-error"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Non valid block_hash",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "invalid block hash": {
+                    "$ref": "#/components/examples/invalid-block-hash-error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chain/blocks/{level}": {
+      "get": {
+        "description": "Returns the block at the given level.",
+        "tags": ["chain"],
+        "parameters": [
+          {
+            "name": "level",
+            "in": "path",
+            "schema": {
+              "$ref": "#/components/schemas/BlockLevel"
+            },
+            "required": true,
+            "description": "The level of the block to find"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Block is retrieved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Block"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The block wasn't found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "block not found": {
+                    "$ref": "#/components/examples/block-not-found-error"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Non-valid level. The level should represents a int64.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "invalid block level": {
+                    "$ref": "#/components/examples/invalid-block-level-error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chain/blocks/head": {
+      "get": {
+        "description": "Returns the last applied block.",
+        "tags": ["chain"],
+        "responses": {
+          "200": {
+            "description": "Current block retrieved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Block"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chain/blocks/genesis": {
+      "get": {
+        "description": "Returns the genesis block of the chain.",
+        "tags": ["chain"],
+        "responses": {
+          "200": {
+            "description": "Genesis block has been retrieved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Block"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/operations": {
+      "post": {
+        "description": "Sends an operation.",
+        "tags": ["operations"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Operation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "The commit has been accepted (but not yet processed)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "hash": {
+                      "$ref": "#/components/schemas/BlockHash"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is malformed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "invalid-packet-hash-error": {
+                    "$ref": "#/components/examples/invalid-packet-hash-error"
+                  },
+                  "invalid-message-error": {
+                    "$ref": "#/components/examples/invalid-message-error"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/403-response"
+          }
+        }
+      }
+    },
+    "/states/ledger/balance/{deku_address}/{ticketer}/{ticket_data}": {
+      "get": {
+        "description": "Returns the current balance of someone for a given ticket, returns 0 by default.",
+        "tags": ["ledger"],
+        "parameters": [
+          {
+            "name": "deku_address",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "the address of the ticket owner"
+          },
+          {
+            "name": "ticketer",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "the address of the ticketer",
+            "example": "KT1Ue4LG7323KyW6SHEoVD1Z77zbuxFqRG9T"
+          },
+          {
+            "name": "ticket_data",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "the hexa representation of the ticket data",
+            "example": "0x00"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Balance retrieved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Balance"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Non valid deku address.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "invalid deku address": {
+                    "$ref": "#/components/examples/invalid-deku-address-error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/states/wasm": {
+      "get": {
+        "description": "Returns the whole state of the wasm vm.",
+        "tags": ["wasm"],
+        "responses": {
+          "200": {
+            "description": "Wasm state retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/states/unix": {
+      "get": {
+        "description": "Returns the whole state of the deku-p state",
+        "tags": ["deku-p"],
+        "responses": {
+          "200": {
+            "description": "Deku-p state retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/states/unix/{key}": {
+      "get": {
+        "description": "Returns a subpart of the state of deku-p, default is null",
+        "tags": ["deku-p"],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "the key of the json state",
+            "example": "custom_key"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deku-p state retrieved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/helpers/operation-messages": {
+      "post": {
+        "description": "Returns the hash of the given operation content.",
+        "tags": ["helpers"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Operation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The hash of the operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "hash": {
+                      "type": "string"
                     },
                     "content": {
-                        "$ref": "#/components/schemas/OperationContent"
+                      "$ref": "#/components/schemas/Operation"
                     }
+                  }
                 }
+              }
             }
+          }
         }
+      }
+    },
+    "/helpers/hash-operation": {
+      "post": {
+        "description": "Returns the hash of the given packet. It can be any json.",
+        "tags": ["helpers"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Operation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The hash of the operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "hash": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
+  },
+  "components": {
+    "responses": {
+      "403-response": {
+        "description": "The signature does not match",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "invalid signature": {
+                "$ref": "#/components/examples/invalid-signature-error"
+              }
+            }
+          }
+        }
+      }
+    },
+    "examples": {
+      "invalid-block-hash-error": {
+        "value": {
+          "code": "INVALID_BLOCK_HASH",
+          "msg": "The given block hash cannot be deserialized."
+        }
+      },
+      "block-not-found-error": {
+        "value": {
+          "code": "BLOCK_NOT_FOUND",
+          "msg": "The block was not found."
+        }
+      },
+      "invalid-block-level-error": {
+        "value": {
+          "code": "INVALID_BLOCK_LEVEL",
+          "msg": "The given level cannot be deserialized. The level should be an int64 serialized as a string."
+        }
+      },
+      "invalid-signature-error": {
+        "value": {
+          "code": "INVALID_SIGNATURE",
+          "msg": "The signature does not match the given payload."
+        }
+      },
+      "invalid-packet-hash-error": {
+        "value": {
+          "code": "INVALID_PACKET_HASH",
+          "msg": "The hash of the given message does not match."
+        }
+      },
+      "invalid-message-error": {
+        "value": {
+          "code": "INVALID_MESSAGE",
+          "msg": "This is not the expected message, please verify the type of your message by refering to the API."
+        }
+      },
+      "invalid-deku-address-error": {
+        "value": {
+          "code": "INVALID_DEKU_ADDRESS",
+          "msg": "This is not a valid deku address."
+        }
+      },
+      "level-response": {
+        "value": {
+          "level": "123456"
+        }
+      },
+      "block": {
+        "value": {
+          "hash": "Db3VbLn9cPHdxdddXf1nbsYxUckworUY7bbamZFJjzwy1twXQ2DL",
+          "level": "1234456",
+          "round": "6543",
+          "payload": []
+        }
+      }
+    },
+    "schemas": {
+      "InvalidPacketHashError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "INVALID_PACKET_HASH"
+          },
+          "msg": {
+            "type": "string",
+            "example": "The hash of the packet does not correspond."
+          }
+        },
+        "example": "WRONG_PACKET_HASH"
+      },
+      "InvalidSignatureError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "INVALID_SIGNATURE"
+          },
+          "msg": {
+            "type": "string",
+            "example": "The signature of your message is invalid."
+          }
+        }
+      },
+      "InvalidPayloadError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "INVALID_PAYLOAD"
+          },
+          "msg": {
+            "type": "string",
+            "example": "Some fields are missing, or you are using the wrong type for some of them."
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "msg": {
+            "type": "string"
+          }
+        }
+      },
+      "ChainInfo": {
+        "type": "object",
+        "properties": {
+          "consensus": {
+            "type": "string",
+            "description": "tezos contract address.",
+            "example": "KT1Ue4LG7323KyW6SHEoVD1Z77zbuxFqRG9T"
+          },
+          "discovery": {
+            "type": "string",
+            "description": "discovery contract address.",
+            "example": "KT1FKj8GCYgHFyRLjzTdGhawKDS3iA7TQh2J"
+          }
+        }
+      },
+      "Balance": {
+        "type": "object",
+        "properties": {
+          "balance": {
+            "type": "integer",
+            "description": "balance"
+          }
+        }
+      },
+      "BlockHash": {
+        "type": "string",
+        "description": "BLAKE2b hash string starting by 'B'."
+      },
+      "BlockLevel": {
+        "type": "string",
+        "description": "int64 as string."
+      },
+      "Round": {
+        "type": "string",
+        "description": "int64 as string"
+      },
+      "Block": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "block": {
+            "type": "object",
+            "properties": {
+              "author": {
+                "type": "string"
+              },
+              "level": {
+                "$ref": "#/components/schemas/BlockLevel"
+              },
+              "previous": {
+                "$ref": "#/components/schemas/BlockHash"
+              },
+              "payload": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "tezos_operations": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "TicketId": {
+        "type": "array",
+        "items": {
+          "oneOf": [
+            {
+              "type": "string",
+              "example": "Ticket_id"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "ticketer": {
+                  "type": "string",
+                  "example": "KT..."
+                },
+                "amount": {
+                  "type": "string",
+                  "example": "200"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "OperationContent": {
+        "type": "array",
+        "items": {
+          "oneOf": [
+            {
+              "type": "string",
+              "example": "Transaction"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "receiver": {
+                  "type": "string"
+                },
+                "ticket_id": {
+                  "$ref": "#/components/schemas/TicketId"
+                },
+                "amount": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        },
+        "minItems": 1,
+        "maxItems": 2
+      },
+      "Operation": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "string"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "content": {
+            "$ref": "#/components/schemas/OperationContent"
+          }
+        }
+      }
+    }
+  }
 }

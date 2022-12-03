@@ -11,8 +11,9 @@ with ocamlPackages;
     inputsFrom = [deku tuna];
     packages = [
       # Formatters
-      nixfmt
+      alejandra
       ocamlformat
+      nodePackages.prettier
 
       # Typescript for decookie
       nodePackages.typescript

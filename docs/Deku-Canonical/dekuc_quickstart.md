@@ -25,7 +25,6 @@ your own contracts, you'll need to install the LIGO compiler - check the
 [installation instructions](https://ligolang.org/docs/intro/installation) for your
 platform. This tutorial requires version 0.53 or higher.
 
-
 You can also deploy contracts to Deku-C from the command line - see the
 [Deku-C CLI Tutorial](./deku_c_cli.md) for more.
 
@@ -34,24 +33,20 @@ You can also deploy contracts to Deku-C from the command line - see the
 Let's write a simple counter, accepting the commands `Increment`, `Decrement`,
 `Reset`.
 
-
 ```js
 type storage = int;
 
-type parameter =
-  | ["Increment", int]
-  | ["Decrement", int]
-  | ["Reset"];
+type parameter = ["Increment", int] | ["Decrement", int] | ["Reset"];
 
-type return_ = [list<operation>,storage];
+type return_ = [list<operation>, storage];
 
 const main = (action: parameter, store: storage): return_ => {
   let storage = match(action, {
-    Increment: n => store + n,
-    Decrement: n => store - n,
-    Reset: () => 0
+    Increment: (n) => store + n,
+    Decrement: (n) => store - n,
+    Reset: () => 0,
   });
-  return [list([]), storage]
+  return [list([]), storage];
 };
 ```
 
@@ -68,6 +63,7 @@ For example:
 ```bash
 ligo compile contract ./increment.jsligo --wasm > increment.wat
 ```
+
 In the case of our increment contract, this will produce the following
 WebAssembly:
 
@@ -95,7 +91,7 @@ WebAssembly:
   (export "closures" (table $closures))
   (export "call_callback" (func $call_callback))
   (export "call_callback_unit" (func $call_callback_unit))
-  ) 
+  )
 ```
 
 ## Deploying Our Contract
@@ -133,13 +129,17 @@ const params = {
   code: incrementLigoCode,
 };
 
-println(`Deploying contract with initial storage ${JSON.stringify(params.initialStorage)}...`);
-dekuC.originateContract(params)
-  .then(({operation, address}) => {
-    println(`Operation successful! Operation hash: ${operation}`);
-    println(`Deployment successful! New contract address: ${address}`);
-  });
+println(
+  `Deploying contract with initial storage ${JSON.stringify(
+    params.initialStorage
+  )}...`
+);
+dekuC.originateContract(params).then(({ operation, address }) => {
+  println(`Operation successful! Operation hash: ${operation}`);
+  println(`Deployment successful! New contract address: ${address}`);
+});
 ```
+
 <br/>
 
 :::tip
@@ -158,22 +158,29 @@ on Deku-C, but you can replace it with the DK1 address of the contract you deplo
 ```js live noInline
 const myContract = dekuC.contract("DK1..."); // 👈 Replace with your contract address
 
-println("Getting contract state...")
-myContract.getState()
-  .then(state => println(`Current state is ${JSON.stringify(state)}`))
+println("Getting contract state...");
+myContract
+  .getState()
+  .then((state) => println(`Current state is ${JSON.stringify(state)}`))
   .then(() => {
     // subscribe to changes
-    myContract.onNewState((newState) => println(`Contract state updated, next state is: ${JSON.stringify(newState)}`));
+    myContract.onNewState((newState) =>
+      println(
+        `Contract state updated, next state is: ${JSON.stringify(newState)}`
+      )
+    );
 
     // Calling the Increment endpoint with parameter 3
-    myContract.invoke(["Union", ["Left", ["Union", ["Right", ["Int", "3" ]]]]])
+    myContract.invoke(["Union", ["Left", ["Union", ["Right", ["Int", "3"]]]]]);
   });
 ```
 
 :::tip
 
 You can determine an invocation payload with the Ligo compiler:
+
 ```
 ligo compile parameter ./increment.jsligo 'Increment (2)'
 ```
+
 :::

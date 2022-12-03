@@ -26,6 +26,7 @@ To develop DApps and client-side applications for Deku networks, see [the client
 To get started developing your own Deku network, you can fork the [Deku template](https://github.com/marigold-dev/deku-template).
 
 ## Development
+
 ### Building from Source
 
 We currently support building from source on Linux x86_64 and MacOS M1 systems.
@@ -34,6 +35,7 @@ Deku is packaged with Nix. See the [Nix docs](https://nixos.org/download.html) f
 Additionally, ensure [Nix flakes are enabled](https://nixos.wiki/wiki/Flakes#Enable_flakes).
 
 Once Nix is installed, the dev environment can build built with:
+
 ```
 nix develop .
 ```
@@ -41,6 +43,7 @@ nix develop .
 ### Tests and Benchmarks
 
 Tests and benchmarks can be run with the respective commands:
+
 ```
 nix develop -c dune build @runtest
 nix run .#benchmark
@@ -52,20 +55,22 @@ Our sandbox network uses [Flextesa](https://tezos.gitlab.io/flextesa/) to run a 
 via `docker compose`. Additionally, our compose file includes a local instance of https://better-call.dev
 that can be used to inspect and interact with any contracts you deploy to the Tezos sandbox network.
 
-
 First, start the Flextesa sandbox. You'll need to login it the Github container registery
 which you can do by following [these instructions](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
+
 ```
 docker compose up -d
 ```
 
 Deku chains are CPU-intensive, so depending on your available resources you may
 want to lower the default block size (default is 10000 operations/block):
+
 ```
 export DEKU_DEFAULT_BLOCK_SIZE=100
 ```
 
 You can start the chain with:
+
 ```
 ./start.sh
 ```

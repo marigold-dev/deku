@@ -28,7 +28,7 @@ and only the blocks with a 2/3rds supermajority of signatures from these parties
 contract on Tezos acts as an oracle by which users can identify who the current validators are for a particular
 sidechain at any given moment.
 
-While the bridge contract mechanism works similarly to rollups, Deku-P sidechains require a greater trust 
+While the bridge contract mechanism works similarly to rollups, Deku-P sidechains require a greater trust
 threshold (supermajority, as opposed to any-trust). However, unlike with rollups, a sidechain's
 block production is decoupled from Tezos, unlocking much greater bandwidth and lower latency (you can read more
 about this in [the architecture doc](./architecture.md)).
@@ -46,7 +46,7 @@ and finalize their withdraw on Tezos.
 
 In exchange for requiring less trust, withdraws from interactive rollups are bound to the
 worst-case latency of the interactive refutation game and can take weeks to finalize. Withdraws from Deku-P sidechains
-are finalized and available on Tezos in two Tezos blocks (about a minute). 
+are finalized and available on Tezos in two Tezos blocks (about a minute).
 
 Virtually any Tezos asset can be wrapped in a ticket and deposited to Deku. [TzPortal](https://ghostnet.tzportal.marigold.dev/)
 provides a user-friendly interface automating the process of wrapping FA1.2 and FA2 tokens in tickets and depositing to/withdrawing from
@@ -71,7 +71,7 @@ for more.
 It's useful to compare/contrast Deku-P sidechains with Tezos itself and with rollups:
 
 |                               | Tezos                 | Rollups                | Deku-P              |
-|-------------------------------|-----------------------|------------------------|---------------------|
+| ----------------------------- | --------------------- | ---------------------- | ------------------- |
 | Additional Trust Beyond Tezos | N/A                   | any-trust              | 2/3rd supermajority |
 | Block Latency                 | 30s                   | 30s (coupled to Tezos) | 2s                  |
 | Throughput                    | 200 tx/s              | 1000 tx/s              | 50,000 tx/s         |

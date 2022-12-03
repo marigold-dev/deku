@@ -245,6 +245,27 @@
         "type": "github"
       }
     },
+    "flake-parts_2": {
+      "inputs": {
+        "nixpkgs": [
+          "treefmt",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1663686189,
+        "narHash": "sha256-cgWGo0SLM4RX0DqodeFHsU0PRGlmz6AOSF1lmX21bvg=",
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "rev": "f17e9dba098c0a7bca10029bec5384fd6425c157",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "type": "github"
+      }
+    },
     "flake-utils": {
       "locked": {
         "lastModified": 1659877975,
@@ -524,6 +545,22 @@
         "type": "github"
       }
     },
+    "nixpkgs_7": {
+      "locked": {
+        "lastModified": 1663819708,
+        "narHash": "sha256-nKyJpwzGoV+5BNLHlrEMawsDxR1i6WOXqTcHWrWE8y4=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "f586d35a11ec07ced41d9d62c125c6ca0006141f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixpkgs-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "poetry2nix": {
       "flake": false,
       "locked": {
@@ -574,7 +611,8 @@
         "ligo": "ligo",
         "nix-filter": "nix-filter_2",
         "nixpkgs": "nixpkgs_5",
-        "tezos": "tezos"
+        "tezos": "tezos",
+        "treefmt": "treefmt"
       }
     },
     "rust-analyzer-src": {
@@ -668,6 +706,25 @@
         "owner": "tezos",
         "repo": "tezos",
         "type": "gitlab"
+      }
+    },
+    "treefmt": {
+      "inputs": {
+        "flake-parts": "flake-parts_2",
+        "nixpkgs": "nixpkgs_7"
+      },
+      "locked": {
+        "lastModified": 1669982764,
+        "narHash": "sha256-gp8n7CrpjCX5tb5gAW4o0EJN04OEuEQA/VPdm6/wAUE=",
+        "owner": "numtide",
+        "repo": "treefmt",
+        "rev": "4800bf537336024a612eba9adc8754fae5a708bf",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "treefmt",
+        "type": "github"
       }
     },
     "utils": {

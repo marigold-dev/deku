@@ -6,13 +6,15 @@ sidebar_position: 1
 
 In this 20-minute tutorial, we'll get you up and running with Deku-P sidechains.
 You'll learn how to:
-- Write a Deku-P virtual machine in NodeJS 
+
+- Write a Deku-P virtual machine in NodeJS
 - Deploy a Deku-P network locally using Docker
 - Interact with the network via the `deku-cli`
 
 ## Installing the Tools
 
 For this example you'll need the following tools installed:
+
 - [NodeJS](https://nodejs.org/en/download/) and npm.
 - [Docker](https://docs.docker.com/engine/install/) and Docker Compose (ships with Docker in recent versions, check the [installation guide](https://docs.docker.com/compose/install/) for more info)
 - The `deku-cli` (see footnote for OSX[^1]):
@@ -31,9 +33,10 @@ is up to you, the VM developer, to determine what these transactions mean.
 A Deku VM is a program that receives transactions submitted by users and
 responds with a series of writes and reads to the Deku data store using
 the SDK. Deku VM's must be deterministic to ensure consistency across all nodes,
-but beyond that there is no restriction on their behavior. 
+but beyond that there is no restriction on their behavior.
 
 To get started, we'll first need the NodeJS SDK.
+
 ```bash
 npm init -y
 npm install @marigold-dev/deku-p-sdk
@@ -46,38 +49,37 @@ decremented. Create a file called `vm.js` and add the following:
 const { main, get, set } = require("@marigold-dev/deku-p-sdk");
 
 const transition = (tx) => {
-    // Parse the operation data
-    const operation = JSON.parse(tx.operation);
-    console.log("Parsed operation:", operation);
-    const [operationKind, value] = operation;
-    
-    // Retrieve the current state of the 'counter' key.
-    // This is an in-memory lookup - no IO required.
-    const counter = JSON.parse(get("counter"));
-    console.log("Current state:", counter);
+  // Parse the operation data
+  const operation = JSON.parse(tx.operation);
+  console.log("Parsed operation:", operation);
+  const [operationKind, value] = operation;
 
-    switch (operation[0]) {
-        case "Increment":
-            set("counter", JSON.stringify(counter + value))
-            break;
-        case "Decrement":
-            set("counter", JSON.stringify(counter - value));
-        default:
-            const error = `Unrecognized operation kind: ${operationKind}`;
-            console.error(error)
-            // Signal an error to the user by returning a string
-            return error
-    }
-}
+  // Retrieve the current state of the 'counter' key.
+  // This is an in-memory lookup - no IO required.
+  const counter = JSON.parse(get("counter"));
+  console.log("Current state:", counter);
+
+  switch (operation[0]) {
+    case "Increment":
+      set("counter", JSON.stringify(counter + value));
+      break;
+    case "Decrement":
+      set("counter", JSON.stringify(counter - value));
+    default:
+      const error = `Unrecognized operation kind: ${operationKind}`;
+      console.error(error);
+      // Signal an error to the user by returning a string
+      return error;
+  }
+};
 
 // Here we define the initial state of blockchain's key-value
-// store on the genesis block. 
+// store on the genesis block.
 const initialState = {
-  counter: JSON.stringify(42)
-}
+  counter: JSON.stringify(42),
+};
 
 main(initialState, transition);
-
 ```
 
 ### Testing the VM
@@ -85,6 +87,7 @@ main(initialState, transition);
 During development we can use the `deku-cli` to test our VM.
 
 First we'll need to create an identity for the user that will run the transaction:
+
 ```bash
 deku-cli generate-identity --output ./wallet.json
 ```
@@ -101,6 +104,7 @@ deku-cli mock-transaction ./wallet.json '["Increment", 3]' 'node ./vm.js'
 To simplify running the chain locally, we'll package our sidechain with Docker.
 
 First create a file called ./start.sh:
+
 ```bash
 #!/usr/bin/env bash
 
@@ -136,11 +140,13 @@ node ./vm.js /run/deku/pipe
 ```
 
 Make ./start.sh executable:
+
 ```
 chmod +x ./start.sh
 ```
 
 Next, create a file called `Dockerfile` and add the following:
+
 ```dockerfile
 # We'll use the official nodejs
 # image as our base, but you should be able
@@ -164,6 +170,7 @@ CMD /app/start.sh
 ```
 
 Build and tag the image as `my-sidechain`:
+
 ```
 docker build . -t my-sidechain
 ```
@@ -209,30 +216,31 @@ services:
     environment:
       - DEKU_SECRET=edsk2mbL2Z7bAmRnuYbmsRe8Yu9rgAq1h993SDxoZncmqyMHDECyBa
       - DEKU_PORT=4441
-    network_mode: "host" 
+    network_mode: "host"
   deku-node-2:
     container_name: deku-node-2
     image: my-sidechain
     environment:
       - DEKU_SECRET=edsk3dx8ZfcaBXsuLsk8fawS1qxjHbZtEoEdpAwxhsjmYTQhoEUxFk
       - DEKU_PORT=4442
-    network_mode: "host"  
+    network_mode: "host"
   deku-node-3:
     container_name: deku-node-3
     image: my-sidechain
     environment:
       - DEKU_SECRET=edsk3MwFfcGp5FsZgrX8FGiBiDutX2kfAuPzU6VdZpKYLyDRVPb879
       - DEKU_PORT=4443
-    network_mode: "host"  
+    network_mode: "host"
 ```
 
 You can now run your chain with `docker compose`:
+
 ```
 docker compose up
 ```
 
 :::caution
-Shutting down the chain quickly during development can cause the chain 
+Shutting down the chain quickly during development can cause the chain
 to hard-fork and get stuck. Use `docker compose up --force-recreate` until
 [this is fixed](https://github.com/marigold-dev/deku/issues/911)
 :::
@@ -240,12 +248,14 @@ to hard-fork and get stuck. Use `docker compose up --force-recreate` until
 ## Interacting with the Chain
 
 We can submit transactions with deku-cli using the wallet we created earlier:
+
 ```bash
 deku-cli submit-transaction --api-uri http://localhost:8080 ./wallet.json '["Increment", 3]'
 ```
 
 Once the operation is included, you can verify the result by querying the `counter` key of
 blockchain state via the REST API:
+
 ```bash
 curl http://localhost:8080/api/v1/state/unix/counter
 ```
@@ -257,7 +267,7 @@ for an end-to-end example.
 ## Next Steps
 
 With just a few lines of Javascript, you created an application-specific blockchain
-distributed across 4 nodes. 
+distributed across 4 nodes.
 
 However, blockchains are still intrinsically complex distributed systems, and there's lots
 more to cover!

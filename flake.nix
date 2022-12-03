@@ -22,6 +22,7 @@
       flake-parts.follows = "flake-parts";
     };
     deploy-rs.url = "github:serokell/deploy-rs";
+    treefmt.url = "github:numtide/treefmt";
   };
 
   outputs = {
@@ -33,6 +34,7 @@
     tezos,
     deploy-rs,
     ligo,
+    treefmt,
     ...
   }:
     flake-parts.lib.mkFlake {inherit self;} {
@@ -81,6 +83,39 @@
             tuna = self'.packages.tuna;
             deploy-rs = deploy-rs.packages.${system}.default;
           };
+          formatter = builtins.trace system treefmt.legacyPackages.${system}.withConfig {
+            settings = with pkgs; {
+              excludes = ["_build" "node_modules" "result" ".direnv"];
+              formatter = {
+                nix = {
+                  command = "${alejandra}/bin/alejandra";
+                  includes = ["*.nix"];
+                };
+                prettier = {
+                  command = "${nodePackages.prettier}/bin/prettier";
+                  options = ["--write"];
+                  includes = [
+                    "*.css"
+                    "*.html"
+                    "*.js"
+                    "*.json"
+                    "*.jsx"
+                    "*.md"
+                    "*.mdx"
+                    "*.scss"
+                    "*.ts"
+                    "*.yaml"
+                  ];
+                };
+                ocaml = {
+                  command = "ocamlformat";
+                  options = ["-i"];
+                  includes = ["*.ml" ".mli"];
+                };
+              };
+            };
+            projectRootFile = "flake.nix";
+          };
         };
       };
       flake = {
@@ -97,8 +132,6 @@
         };
 
         checks = builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
-        formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;
-        formatter.aarch64-darwin = nixpkgs.legacyPackages.x86_64-linux.alejandra;
       };
     };
 }

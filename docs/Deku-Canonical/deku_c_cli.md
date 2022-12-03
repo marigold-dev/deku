@@ -41,8 +41,9 @@ node index.js originate wallet.json contract.tz initial_expression
 ```
 
 where
+
 - `wallet.json` is the path to a wallet file;
-- `contract.tz` is the  path to a contract file, in Michelson;
+- `contract.tz` is the path to a contract file, in Michelson;
 - `initial_expression` is the initial state of the storage at origination, in Michelson.
 
 The command provides the hash of the origination operation as well as the address of the contract.
@@ -103,6 +104,7 @@ node index.js wallet contract_address parameter
 ```
 
 where
+
 - `wallet` is a path towards a wallet file
 - `contract_address` is the address of the smart contract on the Deku-C chain
 - `parameter` is the Michelson expression of the entrypoint and its argument
