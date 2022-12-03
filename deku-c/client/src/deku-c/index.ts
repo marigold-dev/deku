@@ -2,20 +2,21 @@ import { DekuPClient } from "../deku-p";
 import { Contract } from "./contract";
 import { DekuSigner } from "../deku-p/utils/signers";
 import { operationHashToContractAddress, isDefined } from "./utils";
+import { DEKU_API_URL, LIGO_DEKU_RPC_URL } from "./default-parameters";
 import * as LigoRpc from "./ligoRpc";
 
 export type Settings = {
-  dekuRpc: string;
+  dekuRpc?: string;
   ligoRpc?: string;
   dekuSigner?: DekuSigner;
 };
 
 export class DekuCClient extends DekuPClient {
-  readonly ligoRpc?: string;
+  readonly ligoRpc: string;
 
   constructor(settings: Settings) {
-    super(settings);
-    this.ligoRpc = settings.ligoRpc;
+    super({ ...settings, dekuRpc: settings.dekuRpc ?? DEKU_API_URL });
+    this.ligoRpc = settings.ligoRpc ?? LIGO_DEKU_RPC_URL;
   }
 
   assertHasSigner(): DekuSigner {
@@ -23,13 +24,6 @@ export class DekuCClient extends DekuPClient {
       throw new Error("Tezos wallet required");
     }
     return this._dekuSigner;
-  }
-
-  assertHasLigoRpc(): string {
-    if (!isDefined(this.ligoRpc)) {
-      throw new Error("Ligo RPC required");
-    }
-    return this.ligoRpc;
   }
 
   /**
@@ -46,10 +40,9 @@ export class DekuCClient extends DekuPClient {
     source: string;
     initialStorage: string;
   }): Promise<{ operation: string; address: string }> {
-    const ligoRpc = this.assertHasLigoRpc();
     this.assertHasSigner();
 
-    const operation = await LigoRpc.originate(ligoRpc, {
+    const operation = await LigoRpc.originate(this.ligoRpc, {
       kind,
       source,
       initialStorage,
@@ -73,10 +66,9 @@ export class DekuCClient extends DekuPClient {
     source: string;
     initialStorage: string;
   }): Promise<{ operation: string; address: string }> {
-    const ligoRpc = this.assertHasLigoRpc();
     this.assertHasSigner();
 
-    const operation = await LigoRpc.originate(ligoRpc, {
+    const operation = await LigoRpc.originate(this.ligoRpc, {
       kind: "michelson",
       source,
       initialStorage,

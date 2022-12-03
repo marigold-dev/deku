@@ -1,6 +1,5 @@
-import { Contract, DekuCClient } from "@marigold-dev/deku";
+import { Contract, DekuCClient, DEKU_API_URL } from "@marigold-dev/deku";
 import * as Commander from "commander";
-import * as default_ from "./default-parameters";
 
 async function main(
   apiUri: string,
@@ -32,11 +31,11 @@ export default function make(command: Commander.Command) {
     .argument("<contract_address>", "contract address")
     .option(
       "--endpoint <endpoint>",
-      `URI of the deku API to use (default ${default_.api})`
+      `URI of the deku API to use (default ${DEKU_API_URL})`
     )
     .option("-v, --verbose", "Prints the entrypoints with their Michelson form")
     .action((contractAddress, options) => {
-      const apiUri = options.endpoint ?? default_.api;
+      const apiUri = options.endpoint ?? DEKU_API_URL;
       main(apiUri, contractAddress, options);
     });
   return command;
