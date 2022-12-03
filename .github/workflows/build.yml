@@ -16,6 +16,20 @@ jobs:
             system-features = nixos-test benchmark big-parallel kvm
             extra-substituters = https://anmonteiro.nix-cache.workers.dev
             extra-trusted-public-keys = ocaml.nix-cache.com-1:/xI2h2+56rwFfKyyFVbkJSeGqSIYMC/Je+7XXqGKDIY=
+      - name: Cache nix store
+        id: cache-native
+        uses: actions/cache@v3
+        with:
+          path: cache
+          key: ${{ runner.os }}-devshell-${{ hashFiles('flake.lock') }}
+      # We don't check the signature because we're the one that created the cache
+      - name: Restore cache
+        if: steps.cache-native.outputs.cache-hit == 'true'
+        run: |
+          for narinfo in ./cache/*.narinfo; do
+            path=$(head -n 1 "$narinfo" | awk '{print $2}')
+            nix copy --no-check-sigs --from "file://$(pwd)/cache" "$path"
+          done
       - name: Check formatting
         run: nix fmt -- --fail-on-change
       - name: Build default
@@ -38,6 +52,12 @@ jobs:
         run: |
           echo "::set-output name=date::$(date +%Y-%m-%d)"
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      - name: "Copy store to cache"
+        run: |
+          mkdir -p ./cache
+          nix copy --to "file://$(pwd)/cache" .#devShells.x86_64-linux.default
+          nix copy --to "file://$(pwd)/cache" .#deku
+          nix copy --to "file://$(pwd)/cache" .#deku-static
       - name: "Build docker image"
         run: nix build .#docker
       - name: "Load docker image"
