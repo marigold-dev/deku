@@ -90,13 +90,13 @@
                 "node_modules"
                 "result"
                 ".direnv"
-                # TODO: is there a way we can format betanets locally but not in CI?
-                "networks"
               ];
               formatter = {
                 nix = {
                   command = "${alejandra}/bin/alejandra";
                   includes = ["*.nix"];
+                  # TODO: is there a way we can format betanets locally but not in CI?
+                  excludes = ["networks/**"];
                 };
                 prettier = {
                   command = "${nodePackages.prettier}/bin/prettier";
