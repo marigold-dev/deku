@@ -8,7 +8,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc --outDir dist index.ts",
+    "build": "tsc --outDir dist index.ts && chmod +x ./dist/index.js",
     "lint": "eslint ."
   },
   "author": "",
