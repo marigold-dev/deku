@@ -47,7 +47,7 @@
     ]
   },
   "devDependencies": {
-    "@marigold-dev/deku-cli": "0.0.2",
+    "@marigold-dev/deku-cli": "0.0.3",
     "os-browserify": "^0.3.0",
     "postcss-normalize": "^10.0.1",
     "stream-browserify": "^3.0.0",
