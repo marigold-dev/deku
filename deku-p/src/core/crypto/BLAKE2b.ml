@@ -18,16 +18,6 @@ struct
   let of_raw string = of_raw_string_opt string
   let to_raw hash = to_raw_string hash
 
-  let encoding =
-    let open Data_encoding in
-    conv
-      (fun hash -> to_raw_string hash)
-      (fun hash ->
-        match of_raw hash with
-        | Some str -> str
-        | None -> failwith "impossible to decode")
-      (tup1 string)
-
   let of_hex string =
     let size = digest_size * 2 in
     match String.length string = size with
@@ -91,3 +81,13 @@ end
 module BLAKE2b_160 = Make (Size_160)
 module BLAKE2b_256 = Make (Size_256)
 include BLAKE2b_256
+
+let encoding =
+  let open Data_encoding in
+  conv
+    (fun hash -> to_hex hash)
+    (fun hex ->
+      match of_hex hex with
+      | Some hash -> hash
+      | None -> failwith "impossible to decode")
+    string

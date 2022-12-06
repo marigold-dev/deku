@@ -26,7 +26,6 @@ module type S = sig
   val both : hash -> hash -> hash
   val all : hash list -> hash
   val digest_size : int
-  val encoding : hash Data_encoding.t
 
   (* TODO: better name for this*)
   module With_alg (Alg : Alg) : sig
