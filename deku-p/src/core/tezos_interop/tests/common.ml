@@ -163,8 +163,14 @@ module Net = struct
 
   let level_body_of_yojson json =
     let open Deku_concepts in
+    let level_response_encoding =
+      let open Data_encoding in
+      obj1 (req "level" Level.encoding)
+    in
     match Data_encoding.Json.from_string json with
-    | Ok level -> Data_encoding.Json.destruct Level.encoding level
+    | Ok json -> (
+        try Data_encoding.Json.destruct level_response_encoding json
+        with _ -> failwith "Cannot parse the body from level endpoint")
     | _ -> failwith "Wrong body received from level endpoint"
 end
 
