@@ -50,28 +50,13 @@ let save_message ~message storage =
   let timestamp = Unix.gettimeofday () |> Timestamp.of_float in
   await_or_fail (Query.insert_message ~message ~timestamp pool)
 
-let binary_block_to_yojson ~block =
-  Parallel.parallel @@ fun () ->
-  match
-    let block = Data_encoding.Binary.of_string_exn Block.encoding block in
-    Block.yojson_of_t block
-  with
-  | json -> Some json
-  | exception _exn -> None
-
 let find_block_by_level ~level storage =
-  let block =
-    with_pool storage @@ fun pool ->
-    await_or_fail (Query.find_block_by_level ~level pool)
-  in
-  match block with Some block -> binary_block_to_yojson ~block | None -> None
+  with_pool storage @@ fun pool ->
+  await_or_fail (Query.find_block_by_level ~level pool)
 
 let find_block_by_hash ~block_hash storage =
-  let block =
-    with_pool storage @@ fun pool ->
-    await_or_fail (Query.find_block_by_hash ~hash:block_hash pool)
-  in
-  match block with Some block -> binary_block_to_yojson ~block | None -> None
+  with_pool storage @@ fun pool ->
+  await_or_fail (Query.find_block_by_hash ~hash:block_hash pool)
 
 let find_block_and_votes_by_level ~level storage =
   with_pool storage @@ fun pool ->
