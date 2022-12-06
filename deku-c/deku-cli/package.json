@@ -1,11 +1,14 @@
 {
   "name": "@marigold-dev/deku-cli",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "CLI client for Deku-C blockchain",
   "bin": {
     "deku-cli": "./dist/index.js"
   },
   "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc --outDir dist index.ts && chmod +x ./dist/index.js",
