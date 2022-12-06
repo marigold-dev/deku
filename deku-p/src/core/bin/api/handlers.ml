@@ -327,12 +327,7 @@ module Post_operation : HANDLERS = struct
   type path = unit
   type body = Repr.Signed_operation.t
 
-  let body_encoding =
-    let open Data_encoding in
-    conv
-      (fun signed_operation -> signed_operation)
-      (fun signed_operation -> signed_operation)
-      (tup1 Repr.Signed_operation.encoding)
+  let body_encoding = Repr.Signed_operation.encoding
 
   type response = { hash : Operation_hash.t }
 
