@@ -15,7 +15,9 @@ module Signed_operation = struct
     conv
       (fun { key; signature; initial } -> (key, signature, initial))
       (fun (key, signature, initial) -> { key; signature; initial })
-      (tup3 Key.encoding Signature.encoding Operation.Initial.encoding)
+      (obj3 (req "key" Key.encoding)
+         (req "signature" Signature.encoding)
+         (req "initial" Operation.Initial.encoding))
 
   let of_signed signed =
     let (Operation.Signed.Signed_operation { key; signature; initial }) =

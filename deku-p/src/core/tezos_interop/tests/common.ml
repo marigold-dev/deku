@@ -109,7 +109,7 @@ let host =
   value & opt uri default & info [ "api-node" ] ~doc ~docv ~env
 
 (* Helpers to post/get json on the network*)
-
+(* TODO: copy pasted from repr.ml of the API*)
 module Operation_dto = struct
   open Deku_crypto
   open Deku_protocol
@@ -120,6 +120,15 @@ module Operation_dto = struct
     initial : Operation.Initial.t;
   }
 
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun { key; signature; initial } -> (key, signature, initial))
+      (fun (key, signature, initial) -> { key; signature; initial })
+      (obj3 (req "key" Key.encoding)
+         (req "signature" Signature.encoding)
+         (req "initial" Operation.Initial.encoding))
+
   let of_signed signed =
     let (Operation.Signed.Signed_operation { key; signature; initial }) =
       signed
@@ -129,13 +138,6 @@ module Operation_dto = struct
   let to_signed repr =
     let { key; signature; initial } = repr in
     Operation.Signed.make_with_signature ~key ~signature ~initial
-
-  let encoding =
-    let open Data_encoding in
-    conv
-      (fun { key; signature; initial } -> ((key, signature), initial))
-      (fun ((key, signature), initial) -> { key; signature; initial })
-      (tup2 Signature.key_encoding Operation.Initial.encoding)
 end
 
 module Net = struct
