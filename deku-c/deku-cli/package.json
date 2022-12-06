@@ -1,6 +1,6 @@
 {
   "name": "@marigold-dev/deku-cli",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "CLI client for Deku-C blockchain",
   "bin": {
     "deku-cli": "./dist/index.js"
@@ -14,7 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@marigold-dev/deku": "0.1.1",
+    "@marigold-dev/deku": "0.1.3",
     "@noble/ed25519": "^1.7.1",
     "@taquito/signer": "^14.0.0",
     "commander": "^9.4.1",
