@@ -19,16 +19,6 @@ module Withdrawal_handle = struct
       let name = "Ledger.Withdrawal_handle_hash"
       let prefix = Deku_repr.Prefix.deku_withdrawal_hash
     end)
-
-    let encoding =
-      let open Data_encoding in
-      conv
-        (fun hash -> BLAKE2b.to_hex hash)
-        (fun hash ->
-          match BLAKE2b.of_hex hash with
-          | Some hash -> hash
-          | None -> failwith "impossible to decode")
-        (tup1 string)
   end
 
   type hash = Withdrawal_handle_hash.t [@@deriving show]
