@@ -79,7 +79,7 @@ let vm_client_message_encoding =
         (list (tup2 Deku_ledger.Ticket_id.encoding N.encoding))
         (function Give_Tickets tickets -> Some tickets | _ -> None)
         (fun tickets -> Give_Tickets tickets);
-      case ~title:"Set_Initial_State" (Tag 4) State.encoding
+      case ~title:"Set_Initial_State" (Tag 5) State.encoding
         (function Set_Initial_State state -> Some state | _ -> None)
         (fun state -> Set_Initial_State state);
       case ~title:"Get" (Tag 6) string
