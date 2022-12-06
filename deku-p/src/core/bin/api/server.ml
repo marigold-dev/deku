@@ -38,11 +38,20 @@ let with_body (module Handler : HANDLERS) server =
   let route =
     Routes.map
       (fun path ~state ~body ->
-        let body = Data_encoding.Json.from_string body in
-        match body with
-        | Error err -> error_to_response (Api_error.invalid_body err)
+        let result =
+          body |> Data_encoding.Json.from_string
+          |> Result.map_error (fun err ->
+                 error_to_response (Api_error.invalid_body err))
+          |> fun res ->
+          Result.bind res (fun body ->
+              try Ok (Data_encoding.Json.destruct Handler.body_encoding body)
+              with exn ->
+                let err = Printexc.to_string exn in
+                Error (error_to_response (Api_error.invalid_body err)))
+        in
+        match result with
+        | Error err -> err
         | Ok body -> (
-            let body = Data_encoding.Json.destruct Handler.body_encoding body in
             let response = Handler.handler ~path ~body ~state in
             match response with
             | Error error -> handle_error error Handler.route
