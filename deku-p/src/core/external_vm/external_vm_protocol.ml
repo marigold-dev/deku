@@ -121,7 +121,7 @@ let vm_server_message_encoding =
           | Deposit_tickets { address; tickets } -> Some (address, tickets)
           | _ -> None)
         (fun (address, tickets) -> Deposit_tickets { address; tickets });
-      case ~title:"Error" (Tag 4) string
+      case ~title:"Error" (Tag 5) string
         (function Error message -> Some message | _ -> None)
         (fun message -> Error message);
     ]
