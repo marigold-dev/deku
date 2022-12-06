@@ -15,13 +15,17 @@ type api_response = {
 
 let encoding =
   let open Data_encoding in
+  let open Deku_ledger.Ledger in
   conv
     (fun { withdrawal_handles_hash; handle; proof } ->
       (withdrawal_handles_hash, handle, proof))
     (fun (withdrawal_handles_hash, handle, proof) ->
       { withdrawal_handles_hash; handle; proof })
-    (tup3 Ledger.Withdrawal_handle.Withdrawal_handle_hash.encoding
-       Ledger.Withdrawal_handle.encoding Ledger.withdraw_proof_encoding)
+    (obj3
+       (req "withdrawal_handles_hash"
+          Withdrawal_handle.Withdrawal_handle_hash.encoding)
+       (req "handle" Withdrawal_handle.encoding)
+       (req "proof" withdraw_proof_encoding))
 
 let main operation_hash verbose host =
   Eio_main.run @@ fun env ->
