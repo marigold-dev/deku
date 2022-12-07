@@ -46,8 +46,33 @@ let with_body (module Handler : HANDLERS) server =
           Result.bind res (fun body ->
               try Ok (Data_encoding.Json.destruct Handler.body_encoding body)
               with exn ->
-                let err = Printexc.to_string exn in
-                Error (error_to_response (Api_error.invalid_body err)))
+                let msg =
+                  match exn with
+                  | Data_encoding.Json.Bad_array_size _ -> "Wrong array size"
+                  | Data_encoding.Json.Cannot_destruct (paths, _) ->
+                      List.fold_left
+                        (fun acc path ->
+                          let err =
+                            match path with
+                            | `Field path ->
+                                Format.sprintf "cannot parse field: [%s]" path
+                            | `Index index ->
+                                Format.sprintf "wrong index of array: [%i]"
+                                  index
+                            | `Star -> "every fields"
+                            | `Next -> "next"
+                          in
+                          err ^ "," ^ acc)
+                        "" paths
+                  | Data_encoding.Json.No_case_matched _ -> "no case matched"
+                  | Data_encoding.Json.Unexpected (field, _) ->
+                      Format.sprintf "unexpected: [%s]" field
+                  | Data_encoding.Json.Unexpected_field field ->
+                      Format.sprintf "unexpected field: [%s]" field
+                  | exn -> Printexc.to_string exn
+                in
+                msg |> Api_error.invalid_body |> error_to_response
+                |> Result.error)
         in
         match result with
         | Error err -> err

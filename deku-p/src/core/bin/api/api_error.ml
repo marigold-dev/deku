@@ -111,7 +111,7 @@ module Repr = struct
     conv
       (fun { code; msg } -> (code, msg))
       (fun (code, msg) -> { code; msg })
-      (tup2 string string)
+      (obj2 (req "code" string) (req "msg" string))
 end
 
 let encoding error =
