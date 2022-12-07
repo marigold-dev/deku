@@ -41,6 +41,6 @@ in
         "NIX_SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
       ];
       WorkingDir = "/app";
-      Entrypoint = "${script}/bin/deku-node";
+      Entrypoint = [ "${script}/bin/deku-node" ];
     };
   }
