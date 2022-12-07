@@ -367,12 +367,9 @@ end
 
 module Get_vm_state : NO_BODY_HANDLERS = struct
   type path = unit
-  type response = Data_encoding.Json.t
+  type response = Ocaml_wasm_vm.State.t
 
-  let response_encoding =
-    let open Data_encoding in
-    conv (fun json -> json) (fun json -> json) Data_encoding.Json.encoding
-
+  let response_encoding = Ocaml_wasm_vm.State.api_encoding
   let meth = `GET
   let path = Routes.(version / s "state" / s "unix" /? nil)
   let route = Routes.(path @--> ())
@@ -380,8 +377,7 @@ module Get_vm_state : NO_BODY_HANDLERS = struct
   let handler ~path:_ ~state =
     let Api_state.{ protocol; _ } = state in
     let (Protocol.Protocol { vm_state; _ }) = protocol in
-    Data_encoding.Json.construct Ocaml_wasm_vm.State.encoding vm_state
-    |> Result.ok
+    Ok vm_state
 end
 
 module Get_vm_state_key : NO_BODY_HANDLERS = struct
@@ -545,7 +541,7 @@ module Helper_compile_origination : HANDLERS = struct
     conv
       (fun operation_payload -> operation_payload)
       (fun operation_payload -> operation_payload)
-      (tup1 Operation_payload.encoding)
+      Operation_payload.encoding
 
   let meth = `POST
   let path = Routes.(version / s "helpers" / s "compile-contract" /? nil)
