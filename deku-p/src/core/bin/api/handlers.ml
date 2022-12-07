@@ -457,10 +457,7 @@ module Get_receipt : NO_BODY_HANDLERS = struct
   type path = Operation_hash.t
   type response = Receipt.t
 
-  let response_encoding =
-    let open Data_encoding in
-    conv (fun receipt -> receipt) (fun receipt -> receipt) Receipt.encoding
-
+  let response_encoding = Receipt.encoding
   let meth = `GET
 
   let path =
