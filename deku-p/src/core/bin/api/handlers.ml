@@ -518,13 +518,7 @@ module Helper_compile_origination : HANDLERS = struct
 
   type response = Operation_payload.t
 
-  let response_encoding =
-    let open Data_encoding in
-    conv
-      (fun operation_payload -> operation_payload)
-      (fun operation_payload -> operation_payload)
-      Operation_payload.encoding
-
+  let response_encoding = Operation_payload.encoding
   let meth = `POST
   let path = Routes.(version / s "helpers" / s "compile-contract" /? nil)
   let route = Routes.(path @--> ())
