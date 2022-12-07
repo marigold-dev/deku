@@ -1455,6 +1455,18 @@ let none_ =
           ppt (__LINE_OF__ ());
           raise Type_error )
 
+let now =
+  let typ = [] -%> [ i64 ] in
+  ( to_utf8 "now",
+    typ,
+    fun inst args ->
+      Wasm.Instance.burn_gas !inst 100L;
+      match (args : Wasm.Values.value list) with
+      | [] -> wasm_i64 (Vec.alloc vec (Int Z.zero))
+      | _ ->
+          ppt (__LINE_OF__ ());
+          raise Type_error )
+
 let nil =
   let typ = [] -%> [ i64 ] in
   ( to_utf8 "nil",
@@ -1688,6 +1700,7 @@ let imports =
       false_;
       true_;
       empty_set;
+      now;
       nil;
       cons;
       none_;
