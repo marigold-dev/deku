@@ -50,10 +50,7 @@ module Get_head : NO_BODY_HANDLERS = struct
   type path = unit
   type response = Repr.Block.t
 
-  let response_encoding =
-    let open Data_encoding in
-    conv (fun block -> block) (fun block -> block) (tup1 Repr.Block.encoding)
-
+  let response_encoding = Repr.Block.encoding
   let meth = `GET
   let path = Routes.(version / s "chain" / s "blocks" / s "head" /? nil)
   let route = Routes.(path @--> ())
