@@ -102,10 +102,10 @@ export class Contract {
    */
   async invokeRaw(parameter: any): Promise<string> {
     const invoke = {
-      operation: JSON.stringify({
+      operation: {
         address: this.address,
         argument: parameter,
-      }),
+      },
       tickets: [],
     };
     const hash = await this.deku.submitVmOperation(invoke);
