@@ -122,8 +122,14 @@ module Block = struct
           payload_hash;
           tezos_operations;
         })
-      (tup10 Key.encoding Signature.encoding Block_hash.encoding
-         BLAKE2b.encoding Key_hash.encoding Level.encoding Block_hash.encoding
-         (list string) BLAKE2b.encoding
-         (list Tezos_operation.encoding))
+      (obj10 (req "key" Key.encoding)
+         (req "signature" Signature.encoding)
+         (req "hash" Block_hash.encoding)
+         (req "withdrawal_handles_hash" BLAKE2b.encoding)
+         (req "author" Key_hash.encoding)
+         (req "level" Level.encoding)
+         (req "previous" Block_hash.encoding)
+         (req "payload" (list string))
+         (req "payload_hash" BLAKE2b.encoding)
+         (req "tezos_operations" (list Tezos_operation.encoding)))
 end
