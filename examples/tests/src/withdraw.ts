@@ -24,15 +24,6 @@ const run = async ({ dekuRpc, secret, tezosRpc, ticketer, data }) => {
   const { consensus } = await deku.info();
   const contract = await tezos.contract.at(consensus);
 
-  // Withdraw 5 tickets
-  const op = await deku.withdrawTo(address, 5, ticketer, "0505050505");
-  await wait(dekuRpc, op);
-  // Get the proof of the withdraw
-  const proof = await deku.getProof(op);
-  // get the consensus contract
-  const { consensus } = await deku.info();
-  const contract = await tezos.contract.at(consensus);
-
   // Code from tzportal
   const handles = proof.proof as any as Array<[string, string]>; // TODO: fix the proof type in the toolkit
 

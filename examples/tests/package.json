@@ -1,7 +1,7 @@
 {
-  "name": "deku-tester",
+  "name": "@marigold-dev/deku-tester",
   "description": "Test several aspects of deku",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "main": "dist/index.js",
   "license": "MIT",
   "bin": {

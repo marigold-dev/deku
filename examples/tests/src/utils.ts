@@ -50,7 +50,7 @@ export const toBytes = (b58) => {
 /**
  * Initial storage of the following contract
  */
-export const initialStorage = 0;
+export const initialStorage = "0";
 
 /**
  * Counter example with 3 entrypoints:
