@@ -66,14 +66,7 @@ module Get_block_by_level_or_hash : NO_BODY_HANDLERS = struct
   type path = Level_or_hash.t
   type response = Data_encoding.Json.t
 
-  let response_encoding =
-    let open Data_encoding in
-    conv
-      (fun block -> block)
-      (fun block -> block)
-      (tup1 Data_encoding.Json.encoding)
-  (*TODO: should returns a Repr.Block.t *)
-
+  let response_encoding = Data_encoding.Json.encoding
   let meth = `GET
 
   let path =
