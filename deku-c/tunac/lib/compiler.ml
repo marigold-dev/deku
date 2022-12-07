@@ -240,6 +240,10 @@ let rec compile_instruction ~ctx instruction =
         s
   | Prim (_, I_PUSH, [ _; Bytes (_, b) ], _) ->
       compile_constant ~ctx (Values.Bytes b)
+  | Prim (_, I_PUSH, [ _; Prim (_, D_False, _, _) ], _) ->
+      "(call $push (call $false))"
+  | Prim (_, I_PUSH, [ _; Prim (_, D_True, _, _) ], _) ->
+      "(call $push (call $true))"
   | Prim (_, I_LAMBDA, [ _; _; Seq (_, body) ], _) ->
       let name = gen_symbol ~ctx "$lambda" in
       let lambda = compile_lambda ~ctx ~unit:false name body in
