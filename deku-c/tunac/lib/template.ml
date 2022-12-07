@@ -31,7 +31,8 @@ let import_list =
     func ref_ref__ref "compare";
     func ref__ref "car";
     func ref__ref "cdr";
-    func ref__ref "some" (* ; func const "now" *);
+    func ref__ref "some";
+    func const "now";
     func const "nil";
     func const "true";
     func ref_i32__unit "unpair_n";
