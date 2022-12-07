@@ -221,12 +221,10 @@ module Helpers_operation_message : HANDLERS = struct
   let response_encoding =
     let open Data_encoding in
     conv
-      (fun { hash; content } -> (Message_hash.to_blake2b hash, content))
-      (fun (hash, content) ->
-        let hash = Message_hash.of_blake2b hash in
-        { hash; content })
+      (fun { hash; content } -> (hash, content))
+      (fun (hash, content) -> { hash; content })
       (obj2
-         (req "hash" Deku_crypto.BLAKE2b.encoding)
+         (req "hash" Message_hash.encoding)
          (req "content" Message.Content.encoding))
 
   let meth = `POST
