@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { Command, Option } from 'commander';
 import { handleResult } from './utils';
 import Origination from "./origination";
