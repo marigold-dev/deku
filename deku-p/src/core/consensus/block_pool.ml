@@ -83,7 +83,6 @@ let close_level ~until pool =
   let by_level = drop ~until by_level in
   Pool by_level
 
-(* yojson *)
 (* TODO: not safe, doesn't check if signatures match validator *)
 type repr = {
   blocks : Block.t list;

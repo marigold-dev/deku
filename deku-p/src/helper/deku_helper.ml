@@ -61,9 +61,6 @@ let make_nonce () =
   Stdlib.Random.State.bits64 rng
   |> Int64.abs |> Z.of_int64 |> N.of_z |> Option.get |> Nonce.of_n
 
-(* let print_op operation =
-   operation |> Operation.yojson_of_t |> Yojson.Safe.to_string |> print_endline *)
-
 let main ~env ~sw:_ =
   let identity =
     make_identity "edsk4UWkJqpZrAm26qvJE8uY9ZFGFqQiFuBcDyEPASXeHxuD68WvvF"

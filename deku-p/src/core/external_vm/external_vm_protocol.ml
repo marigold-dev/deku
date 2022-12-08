@@ -14,8 +14,6 @@ module State = struct
   let get = String_map.find_opt
   let set = String_map.add
   let empty = String_map.empty
-  (* let equal = Storage.equal Yojson.Safe.equal *)
-
   let encoding = String_map.encoding Data_encoding.string
 end
 
