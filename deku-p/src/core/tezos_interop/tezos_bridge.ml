@@ -99,21 +99,20 @@ module Inject_transaction = struct
 
   let error_encoding =
     let open Data_encoding in
-    union
-      [
-        case ~title:"Insufficient_balance" (Tag 0) string
-          (function Insufficient_balance error -> Some error | _ -> None)
-          (fun error -> Insufficient_balance error);
-        case ~title:"Unknown" (Tag 1) string
-          (function Unknown error -> Some error | _ -> None)
-          (fun error -> Unknown error);
-        case ~title:"Consensus_contract" (Tag 2) string
-          (function Consensus_contract error -> Some error | _ -> None)
-          (fun error -> Consensus_contract error);
-        case ~title:"Several_operations" (Tag 3) string
-          (function Several_operations error -> Some error | _ -> None)
-          (fun error -> Several_operations error);
-      ]
+    conv
+      (fun error ->
+        match error with
+        | Insufficient_balance msg -> ("Insufficient_balance", msg)
+        | Unknown msg -> ("Unknown", msg)
+        | Consensus_contract msg -> ("Consensus_contract", msg)
+        | Several_operations msg -> ("Several_operations", msg))
+      (fun (kind, msg) ->
+        match kind with
+        | "Insufficient_balance" -> Insufficient_balance msg
+        | "Consensus_contract" -> Consensus_contract msg
+        | "Several_operations" -> Several_operations msg
+        | "Unknown" | _ -> Unknown msg)
+      (tup2 string string)
 
   type t =
     | Applied of { hash : string }
@@ -126,27 +125,32 @@ module Inject_transaction = struct
 
   let encoding =
     let open Data_encoding in
-    union
-      [
-        case ~title:"Applied" (Tag 0) string
-          (function Applied { hash } -> Some hash | _ -> None)
-          (fun hash -> Applied { hash });
-        case ~title:"Failed" (Tag 1) (option string)
-          (function Failed { hash } -> Some hash | _ -> None)
-          (fun hash -> Failed { hash });
-        case ~title:"Skipped" (Tag 2) (option string)
-          (function Skipped { hash } -> Some hash | _ -> None)
-          (fun hash -> Skipped { hash });
-        case ~title:"Backtracked" (Tag 3) (option string)
-          (function Backtracked { hash } -> Some hash | _ -> None)
-          (fun hash -> Backtracked { hash });
-        case ~title:"Unknown" (Tag 4) (option string)
-          (function Unknown { hash } -> Some hash | _ -> None)
-          (fun hash -> Unknown { hash });
-        case ~title:"Error" (Tag 5) error_encoding
-          (function Error { error } -> Some error | _ -> None)
-          (fun error -> Error { error });
-      ]
+    conv
+      (fun t ->
+        match t with
+        | Applied { hash } -> ("applied", Some hash, None)
+        | Failed _ -> ("failed", None, None)
+        | Skipped _ -> ("skipped", None, None)
+        | Backtracked _ -> ("backtracked", None, None)
+        | Unknown _ -> ("unknown", None, None)
+        | Error _ -> ("error", None, None))
+      (fun (status, hash, error) ->
+        match status with
+        | "applied" -> (
+            match hash with
+            | Some hash -> Applied { hash }
+            | None -> failwith "Hash is required for applied receipt")
+        | "failed" -> Failed { hash }
+        | "skipped" -> Skipped { hash }
+        | "backtracked" -> Backtracked { hash }
+        | "unknown" -> Unknown { hash }
+        | "error" -> (
+            match error with
+            | Some error -> Error { error }
+            | None -> failwith "invalid error status")
+        | _ -> failwith "invalid status")
+      (obj3 (req "status" string) (opt "hash" string)
+         (opt "error" error_encoding))
 end
 
 type bridge =
@@ -202,7 +206,6 @@ let inject_transaction ~bridge ~entrypoint ~payload process =
     Data_encoding.Json.construct Inject_transaction.request_encoding input
   in
   let response = Js_process.request process input in
-  Data_encoding.Json.pp Format.err_formatter response;
   Data_encoding.Json.destruct Inject_transaction.encoding response
 
 let spawn ~sw ~rpc_node ~secret ~destination ~on_transactions =
