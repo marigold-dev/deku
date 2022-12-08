@@ -37,13 +37,6 @@ let of_key = function
   | Key.Secp256k1 key -> Secp256k1 (Secp256k1.Key_hash.of_key key)
   | Key.P256 key -> P256 (P256.Key_hash.of_key key)
 
-include With_yojson_of_b58 (struct
-  type t = key_hash
-
-  let of_b58 = of_b58
-  let to_b58 = to_b58
-end)
-
 let encoding =
   let open Data_encoding in
   let name = "Signature.Public_key_hash" in

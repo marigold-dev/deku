@@ -41,12 +41,12 @@ struct
       Alg.verify key signature (to_raw_string hash)
   end
 
-  module With_b58_and_encoding_and_yojson (P : sig
+  module With_b58_and_encoding (P : sig
     val name : string
     val prefix : Prefix.t
   end) =
   struct
-    include With_b58_and_encoding_and_yojson (struct
+    include With_b58_and_encoding (struct
       include P
 
       type t = hash

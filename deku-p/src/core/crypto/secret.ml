@@ -45,10 +45,3 @@ let to_b58 secret =
   | Ed25519 secret -> Ed25519.Secret.to_b58 secret
   | Secp256k1 secret -> Secp256k1.Secret.to_b58 secret
   | P256 secret -> P256.Secret.to_b58 secret
-
-include With_yojson_of_b58 (struct
-  type t = secret
-
-  let of_b58 = of_b58
-  let to_b58 = to_b58
-end)

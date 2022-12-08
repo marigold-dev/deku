@@ -45,13 +45,6 @@ let to_b58 = function
   | Secp256k1 signature -> Secp256k1.Signature.to_b58 signature
   | P256 signature -> P256.Signature.to_b58 signature
 
-include With_yojson_of_b58 (struct
-  type t = signature
-
-  let of_b58 = of_b58
-  let to_b58 = to_b58
-end)
-
 let size =
   assert (
     Ed25519.Signature.size = Secp256k1.Signature.size
