@@ -39,10 +39,6 @@ end) : sig
   val to_b58 : P.t -> string
 end
 
-(* yojson exceptions *)
-exception Not_a_string
-exception Not_a_b58
-
 module With_b58_and_encoding (P : sig
   type t
 

@@ -19,10 +19,6 @@ struct
   let to_b58 t = Base58.simple_encode ~prefix ~to_raw t
 end
 
-(* TODO: exceptions???*)
-exception Not_a_string
-exception Not_a_b58
-
 (* TODO: this is dumb *)
 let rec decode_variant l string =
   match l with
