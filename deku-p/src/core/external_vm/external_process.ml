@@ -75,7 +75,7 @@ type ('a, 'b) t = {
   close : unit -> unit;
 }
 
-let open_pipes ~named_pipe_path ~of_yojson ~to_yojson ~is_chain =
+let open_pipes ~named_pipe_path ~of_json ~to_json ~is_chain =
   let () = Named_pipe.make_pipe_pair named_pipe_path in
   let vm_to_chain, chain_to_vm =
     Named_pipe.get_pipe_pair_file_descriptors ~is_chain named_pipe_path
@@ -83,17 +83,17 @@ let open_pipes ~named_pipe_path ~of_yojson ~to_yojson ~is_chain =
   let read, write =
     if is_chain then (vm_to_chain, chain_to_vm) else (chain_to_vm, vm_to_chain)
   in
-  let send x = to_yojson x |> send_to_vm ~fd:write in
+  let send x = to_json x |> send_to_vm ~fd:write in
   let receive () =
     let json = read_from_vm ~fd:read in
     (* FIXME: what to do if this fails? *)
-    of_yojson json
+    of_json json
   in
   let close () = send_to_vm ~fd:write (`String "close") in
   { send; receive; close }
 
-let open_vm_pipes ~named_pipe_path ~of_yojson ~to_yojson =
-  open_pipes ~named_pipe_path ~of_yojson ~to_yojson ~is_chain:true
+let open_vm_pipes ~named_pipe_path ~of_json ~to_json =
+  open_pipes ~named_pipe_path ~of_json ~to_json ~is_chain:true
 
-let open_chain_pipes ~named_pipe_path ~of_yojson ~to_yojson =
-  open_pipes ~named_pipe_path ~of_yojson ~to_yojson ~is_chain:false
+let open_chain_pipes ~named_pipe_path ~of_json ~to_json =
+  open_pipes ~named_pipe_path ~of_json ~to_json ~is_chain:false

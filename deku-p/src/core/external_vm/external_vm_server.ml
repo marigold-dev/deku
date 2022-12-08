@@ -10,10 +10,10 @@ let state = ref External_vm_protocol.State.empty
 let start_chain_ipc ~named_pipe_path =
   let opened_chain =
     External_process.open_chain_pipes ~named_pipe_path
-      ~to_yojson:
+      ~to_json:
         (Data_encoding.Json.construct
            External_vm_protocol.vm_server_message_encoding)
-      ~of_yojson:
+      ~of_json:
         (Data_encoding.Json.destruct
            External_vm_protocol.vm_client_message_encoding)
   in

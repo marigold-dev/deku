@@ -19,10 +19,10 @@ let start_vm_ipc ~named_pipe_path =
   vm :=
     Some
       (External_process.open_vm_pipes ~named_pipe_path
-         ~to_yojson:
+         ~to_json:
            (Data_encoding.Json.construct
               External_vm_protocol.vm_client_message_encoding)
-         ~of_yojson:
+         ~of_json:
            (Data_encoding.Json.destruct
               External_vm_protocol.vm_server_message_encoding))
 

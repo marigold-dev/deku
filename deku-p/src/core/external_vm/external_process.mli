@@ -16,19 +16,19 @@ type ('a, 'b) t = {
 
 val open_pipes :
   named_pipe_path:string ->
-  of_yojson:(Data_encoding.Json.t -> 'a) ->
-  to_yojson:('b -> Data_encoding.Json.t) ->
+  of_json:(Data_encoding.Json.t -> 'a) ->
+  to_json:('b -> Data_encoding.Json.t) ->
   is_chain:bool ->
   ('b, 'a) t
 
 val open_vm_pipes :
   named_pipe_path:string ->
-  of_yojson:(Data_encoding.Json.t -> 'a) ->
-  to_yojson:('b -> Data_encoding.Json.t) ->
+  of_json:(Data_encoding.Json.t -> 'a) ->
+  to_json:('b -> Data_encoding.Json.t) ->
   ('b, 'a) t
 
 val open_chain_pipes :
   named_pipe_path:string ->
-  of_yojson:(Data_encoding.Json.t -> 'a) ->
-  to_yojson:('b -> Data_encoding.Json.t) ->
+  of_json:(Data_encoding.Json.t -> 'a) ->
+  to_json:('b -> Data_encoding.Json.t) ->
   ('b, 'a) t
