@@ -163,7 +163,7 @@ module Net = struct
   let code_of_response (response : Piaf.Response.t) =
     response.Piaf.Response.status |> Piaf.Status.to_code
 
-  let level_body_of_yojson json =
+  let level_of_response json =
     let open Deku_concepts in
     let level_response_encoding =
       let open Data_encoding in

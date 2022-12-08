@@ -12,7 +12,7 @@ let main ticket_id tezos_owner secret verbose host =
     let response = Net.get ~sw ~env url in
     let body = Net.body_of_response response in
     if verbose then prerr_endline body;
-    let level = Net.level_body_of_yojson body in
+    let level = Net.level_of_response body in
     Level.next (Level.next level)
   in
   let identity = Identity.make secret in
