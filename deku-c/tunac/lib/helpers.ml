@@ -35,11 +35,11 @@ end
 module Map = struct
   include Map
 
-  module type S_with_yojson = sig
+  module type S = sig
     include Map.S
   end
 
-  module Make_with_yojson (K : sig
+  module Make (K : sig
     type t [@@deriving ord]
   end) =
   struct
@@ -50,11 +50,11 @@ end
 module Set = struct
   include Set
 
-  module type S_with_yojson = sig
+  module type S = sig
     include Set.S
   end
 
-  module Make_with_yojson (V : sig
+  module Make (V : sig
     type t [@@deriving ord]
   end) =
   struct

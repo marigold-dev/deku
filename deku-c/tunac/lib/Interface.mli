@@ -19,8 +19,8 @@ module rec Value : sig
   [@@deriving ord, eq, show]
 end
 
-and Map : (Helpers.Map.S_with_yojson with type key = Value.t)
-and Set : (Helpers.Set.S_with_yojson with type elt = Value.t)
+and Map : (Helpers.Map.S with type key = Value.t)
+and Set : (Helpers.Set.S with type elt = Value.t)
 
 module Ticket : sig
   type t = { ticketer : string; owner : string; data : bytes; amount : Z.t }

@@ -39,11 +39,11 @@ end
 module Map : sig
   include module type of Map
 
-  module type S_with_yojson = sig
+  module type S = sig
     include Map.S
   end
 
-  module Make_with_yojson : functor
+  module Make : functor
     (K : sig
        type t [@@deriving ord]
      end)
@@ -55,11 +55,11 @@ end
 module Set : sig
   include module type of Set
 
-  module type S_with_yojson = sig
+  module type S = sig
     include Set.S
   end
 
-  module Make_with_yojson (K : sig
+  module Make (K : sig
     type t [@@deriving ord]
   end) : sig
     include Set.S with type elt = K.t
