@@ -16,10 +16,6 @@
     "ship": "npm run build && npm run lint",
     "prettier-format": "prettier 'src/**/*.ts' --write"
   },
-  "files": [
-    "lib/",
-    "package.json"
-  ],
   "author": "contact@marigold.dev",
   "license": "ISC",
   "devDependencies": {
