@@ -2,9 +2,4 @@
  (name deku_tezos)
  (libraries deku_stdlib deku_crypto tezos-micheline deku_concepts)
  (preprocess
-  (pps
-   ppx_deriving.eq
-   ppx_deriving.ord
-   ppx_yojson_conv
-   ppx_let_binding
-   ppx_deriving.show)))
+  (pps ppx_deriving.eq ppx_deriving.ord ppx_let_binding ppx_deriving.show)))

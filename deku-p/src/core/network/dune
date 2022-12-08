@@ -2,9 +2,4 @@
  (name deku_network)
  (libraries deku_stdlib deku_crypto deku_gossip)
  (preprocess
-  (pps
-   ppx_let_binding
-   ppx_deriving.show
-   ppx_deriving.eq
-   ppx_deriving.ord
-   ppx_yojson_conv)))
+  (pps ppx_let_binding ppx_deriving.show ppx_deriving.eq ppx_deriving.ord)))

@@ -12,4 +12,4 @@
   secp256k1-internal)
  (modules_without_implementation alg_intf hash_intf)
  (preprocess
-  (pps ppx_deriving.show ppx_deriving.eq ppx_deriving.ord ppx_yojson_conv)))
+  (pps ppx_deriving.show ppx_deriving.eq ppx_deriving.ord)))
