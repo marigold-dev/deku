@@ -113,7 +113,8 @@ let vm_server_message_encoding =
         (function Take_tickets address -> Some address | _ -> None)
         (fun address -> Take_tickets address);
       case ~title:"Deposit_tickets" (Tag 4)
-        (tup2 Deku_ledger.Address.encoding
+        (tup2
+           (dynamic_size Deku_ledger.Address.encoding)
            (list (tup2 Deku_ledger.Ticket_id.encoding N.encoding)))
         (function
           | Deposit_tickets { address; tickets } -> Some (address, tickets)
