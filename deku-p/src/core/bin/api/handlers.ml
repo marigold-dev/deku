@@ -449,6 +449,7 @@ module Get_hexa_to_signed : HANDLERS = struct
     let binary =
       Data_encoding.Binary.to_string_exn hash_encoding (nonce, level, operation)
     in
+    let binary = "\x80" ^ binary in
     let bytes = binary |> Hex.of_string |> Hex.show in
     Ok { bytes }
 end
