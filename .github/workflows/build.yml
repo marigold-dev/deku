@@ -58,6 +58,7 @@ jobs:
           nix copy --to "file://$(pwd)/cache" .#devShells.x86_64-linux.default
           nix copy --to "file://$(pwd)/cache" .#deku
           nix copy --to "file://$(pwd)/cache" .#deku-static
+          nix copy --to "file://$(pwd)/cache" .#formatter.x86_64-linux
       - name: "Build docker image"
         run: nix build .#docker
       - name: "Load docker image"
