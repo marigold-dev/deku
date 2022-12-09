@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import CSS from "csstype";
 import logo from "./logo.png";
-import { DekuToolkit, fromMemorySigner } from "@marigold-dev/deku";
+import { DekuPClient, fromMemorySigner } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
 
 const containerStyle: CSS.Properties = {
@@ -16,7 +16,7 @@ const dekuSigner = fromMemorySigner(
   new InMemorySigner("edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq")
 );
 
-const deku = new DekuToolkit({
+const deku = new DekuPClient({
   dekuRpc: "http://0.0.0.0:8080",
   dekuSigner,
 }).setTezosRpc("http://localhost:20000");

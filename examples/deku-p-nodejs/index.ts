@@ -1,4 +1,4 @@
-import { DekuToolkit, fromMemorySigner } from "@marigold-dev/deku";
+import { DekuPClient, fromMemorySigner } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
 
 const dekuSigner = fromMemorySigner(
@@ -6,7 +6,7 @@ const dekuSigner = fromMemorySigner(
 );
 
 (async () => {
-  const deku = new DekuToolkit({
+  const deku = new DekuPClient({
     dekuRpc: "https://deku-canonical-vm0.deku-v1.marigold.dev/",
     dekuSigner,
   }).setTezosRpc("https://ghostnet.tezos.marigold.dev/");
