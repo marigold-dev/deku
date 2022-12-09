@@ -109,7 +109,7 @@ let host =
   value & opt uri default & info [ "api-node" ] ~doc ~docv ~env
 
 (* Helpers to post/get json on the network*)
-
+(* TODO: copy pasted from repr.ml of the API*)
 module Operation_dto = struct
   open Deku_crypto
   open Deku_protocol
@@ -119,7 +119,15 @@ module Operation_dto = struct
     signature : Signature.t;
     initial : Operation.Initial.t;
   }
-  [@@deriving yojson]
+
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun { key; signature; initial } -> (key, signature, initial))
+      (fun (key, signature, initial) -> { key; signature; initial })
+      (obj3 (req "key" Key.encoding)
+         (req "signature" Signature.encoding)
+         (req "initial" Operation.Initial.encoding))
 
   let of_signed signed =
     let (Operation.Signed.Signed_operation { key; signature; initial }) =
@@ -134,8 +142,9 @@ end
 
 module Net = struct
   let post_operation ~sw ~env operation uri =
-    let json = Operation_dto.of_signed operation |> Operation_dto.yojson_of_t in
-    let body = Yojson.Safe.to_string json in
+    let ope_dto = Operation_dto.of_signed operation in
+    let json = Data_encoding.Json.construct Operation_dto.encoding ope_dto in
+    let body = Data_encoding.Json.to_string json in
     let body = Piaf.Body.of_string body in
     match Piaf.Client.Oneshot.post ~body env uri ~sw with
     | Ok response -> response
@@ -154,10 +163,16 @@ module Net = struct
   let code_of_response (response : Piaf.Response.t) =
     response.Piaf.Response.status |> Piaf.Status.to_code
 
-  let level_body_of_yojson json =
+  let level_of_response json =
     let open Deku_concepts in
-    match Yojson.Safe.from_string json with
-    | `Assoc [ ("level", level) ] -> Level.t_of_yojson level
+    let level_response_encoding =
+      let open Data_encoding in
+      obj1 (req "level" Level.encoding)
+    in
+    match Data_encoding.Json.from_string json with
+    | Ok json -> (
+        try Data_encoding.Json.destruct level_response_encoding json
+        with _ -> failwith "Cannot parse the body from level endpoint")
     | _ -> failwith "Wrong body received from level endpoint"
 end
 

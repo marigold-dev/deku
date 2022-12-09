@@ -25,7 +25,7 @@ type operation =
     }
   | Operation_noop of { sender : Address.t }
 
-and t = operation [@@deriving show, yojson]
+and t = operation [@@deriving show]
 
 let encoding =
   (* TODO: bench Data_encoding.union vs Data_encoding.matching*)
@@ -34,10 +34,11 @@ let encoding =
     [
       case ~title:"ticket_transfer" (Tag 0)
         (Data_encoding.dynamic_size
-           (tup4
-              (Data_encoding.dynamic_size Address.encoding)
-              (Data_encoding.dynamic_size Address.encoding)
-              Ticket_id.encoding Amount.encoding))
+           (obj4
+              (req "sender" (Data_encoding.dynamic_size Address.encoding))
+              (req "receiver" (Data_encoding.dynamic_size Address.encoding))
+              (req "ticket_id" Ticket_id.encoding)
+              (req "amount" Amount.encoding)))
         (fun operation ->
           match operation with
           | Operation_ticket_transfer { sender; receiver; ticket_id; amount } ->
@@ -46,9 +47,9 @@ let encoding =
         (fun (sender, receiver, ticket_id, amount) ->
           Operation_ticket_transfer { sender; receiver; ticket_id; amount });
       case ~title:"vm_transaction" (Tag 1)
-        (tup2
-           (Data_encoding.dynamic_size Address.encoding)
-           Ocaml_wasm_vm.Operation_payload.encoding)
+        (obj2
+           (req "sender" (Data_encoding.dynamic_size Address.encoding))
+           (req "operation" Ocaml_wasm_vm.Operation_payload.encoding))
         (fun operation ->
           match operation with
           | Operation_vm_transaction { sender; operation } ->
@@ -57,9 +58,11 @@ let encoding =
         (fun (sender, operation) ->
           Operation_vm_transaction { sender; operation });
       case ~title:"withdraw" (Tag 2)
-        (tup4
-           (Data_encoding.dynamic_size Address.encoding)
-           Ticket_id.encoding Amount.encoding Deku_tezos.Address.encoding)
+        (obj4
+           (req "sender" (Data_encoding.dynamic_size Address.encoding))
+           (req "ticket_id" Ticket_id.encoding)
+           (req "amount" Amount.encoding)
+           (req "sender" Deku_tezos.Address.encoding))
         (fun operation ->
           match operation with
           | Operation_withdraw { sender; owner; ticket_id; amount } ->
@@ -67,7 +70,8 @@ let encoding =
           | _ -> None)
         (fun (sender, ticket_id, amount, owner) ->
           Operation_withdraw { sender; owner; ticket_id; amount });
-      case ~title:"noop" (Tag 3) Address.encoding
+      case ~title:"noop" (Tag 3)
+        (obj1 (req "sender" Address.encoding))
         (fun operation ->
           match operation with
           | Operation_noop { sender } -> Some sender
@@ -84,9 +88,14 @@ module Initial = struct
         operation : operation;
       }
 
-  and t = initial_operation [@@deriving show, yojson]
+  and t = initial_operation [@@deriving show]
 
-  let hash_encoding = Data_encoding.tup3 Nonce.encoding Level.encoding encoding
+  let hash_encoding =
+    let open Data_encoding in
+    obj3
+      (req "nonce" Nonce.encoding)
+      (req "level" Level.encoding)
+      (req "operation" encoding)
 
   let hash ~nonce ~level ~operation =
     let binary =
@@ -170,16 +179,6 @@ module Signed = struct
         | true -> Ok (Signed_operation { key; signature; initial })
         | false -> Error "Invalid operation signature")
       (tup2 Signature.key_encoding Initial.encoding)
-
-  let t_of_yojson json =
-    let json = Yojson.Safe.to_string json in
-    let json = Result.get_ok (Data_encoding.Json.from_string json) in
-    Data_encoding.Json.destruct encoding json
-
-  let yojson_of_t signed =
-    let json = Data_encoding.Json.construct encoding signed in
-    let json = Data_encoding.Json.to_string json in
-    Yojson.Safe.from_string json
 
   let make_with_signature ~key ~signature ~initial =
     let (Initial.Initial_operation { hash; _ }) = initial in

@@ -6,7 +6,7 @@ type key_hash =
   | Secp256k1 of Secp256k1.Key_hash.t
   | P256 of P256.Key_hash.t
 
-and t = key_hash [@@deriving eq, ord, yojson]
+and t = key_hash [@@deriving eq, ord]
 
 let of_b58 =
   let ed25519 string =
@@ -37,13 +37,6 @@ let of_key = function
   | Key.Secp256k1 key -> Secp256k1 (Secp256k1.Key_hash.of_key key)
   | Key.P256 key -> P256 (P256.Key_hash.of_key key)
 
-include With_yojson_of_b58 (struct
-  type t = key_hash
-
-  let of_b58 = of_b58
-  let to_b58 = to_b58
-end)
-
 let encoding =
   let open Data_encoding in
   let name = "Signature.Public_key_hash" in
@@ -64,13 +57,13 @@ let encoding =
   make_encoding ~name ~to_string:to_b58 ~of_string:of_b58 ~raw_encoding
 
 module Map = Map.Make (struct
-  type t = key_hash [@@deriving ord, yojson]
+  type t = key_hash [@@deriving ord]
 
   let encoding = encoding
 end)
 
 module Set = Set.Make (struct
-  type t = key_hash [@@deriving ord, yojson]
+  type t = key_hash [@@deriving ord]
 
   let encoding = encoding
 end)

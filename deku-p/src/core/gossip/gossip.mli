@@ -1,7 +1,7 @@
 open Deku_concepts
 
 type gossip
-type t = gossip [@@deriving yojson]
+type t = gossip
 type fragment
 type outcome
 

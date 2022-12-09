@@ -9,7 +9,7 @@ let empty =
   { get = empty; post = empty }
 
 let json_to_response ~status body =
-  let body = body |> Yojson.Safe.to_string |> Piaf.Body.of_string in
+  let body = body |> Data_encoding.Json.to_string |> Piaf.Body.of_string in
   let headers =
     Piaf.Headers.of_list
       [ (Piaf.Headers.Well_known.content_type, "application/json") ]
@@ -18,7 +18,7 @@ let json_to_response ~status body =
 
 let error_to_response error =
   let status = Api_error.to_http_code error |> Piaf.Status.of_code in
-  let body = Api_error.yojson_of_t error in
+  let body = Api_error.encoding error in
   json_to_response ~status body
 
 let handle_error error route =
@@ -38,30 +38,53 @@ let with_body (module Handler : HANDLERS) server =
   let route =
     Routes.map
       (fun path ~state ~body ->
-        let body =
-          try
-            Yojson.Safe.from_string body |> Handler.body_of_yojson |> Result.ok
-          with exn ->
-            let err_message =
-              match exn with
-              | Data_encoding.Json.Cannot_destruct (_, exn) ->
-                  (Format.asprintf "%a" (fun fmt ->
-                       Data_encoding.Json.print_error fmt))
-                    exn
-              | Ppx_yojson_conv_lib.Yojson_conv.Of_yojson_error (exn, _) | exn
-                ->
-                  Printexc.to_string exn
-            in
-            Error (Api_error.invalid_body err_message)
+        let result =
+          body |> Data_encoding.Json.from_string
+          |> Result.map_error (fun err ->
+                 error_to_response (Api_error.invalid_body err))
+          |> fun res ->
+          Result.bind res (fun body ->
+              try Ok (Data_encoding.Json.destruct Handler.body_encoding body)
+              with exn ->
+                let msg =
+                  match exn with
+                  | Data_encoding.Json.Bad_array_size _ -> "Wrong array size"
+                  | Data_encoding.Json.Cannot_destruct (paths, _) ->
+                      List.fold_left
+                        (fun acc path ->
+                          let err =
+                            match path with
+                            | `Field path ->
+                                Format.sprintf "cannot parse field: [%s]" path
+                            | `Index index ->
+                                Format.sprintf "wrong index of array: [%i]"
+                                  index
+                            | `Star -> "every fields"
+                            | `Next -> "next"
+                          in
+                          err ^ "," ^ acc)
+                        "" paths
+                  | Data_encoding.Json.No_case_matched _ -> "no case matched"
+                  | Data_encoding.Json.Unexpected (field, _) ->
+                      Format.sprintf "unexpected: [%s]" field
+                  | Data_encoding.Json.Unexpected_field field ->
+                      Format.sprintf "unexpected field: [%s]" field
+                  | exn -> Printexc.to_string exn
+                in
+                msg |> Api_error.invalid_body |> error_to_response
+                |> Result.error)
         in
-        match body with
-        | Error err -> handle_error err Handler.route
+        match result with
+        | Error err -> err
         | Ok body -> (
             let response = Handler.handler ~path ~body ~state in
             match response with
             | Error error -> handle_error error Handler.route
             | Ok response ->
-                let body = Handler.yojson_of_response response in
+                let body =
+                  Data_encoding.Json.construct Handler.response_encoding
+                    response
+                in
                 json_to_response ~status:`OK body))
       Handler.route
   in
@@ -75,7 +98,9 @@ let without_body (module Handler : NO_BODY_HANDLERS) server =
         match response with
         | Error error -> handle_error error Handler.route
         | Ok response ->
-            let body = Handler.yojson_of_response response in
+            let body =
+              Data_encoding.Json.construct Handler.response_encoding response
+            in
             json_to_response ~status:`OK body)
       Handler.route
   in

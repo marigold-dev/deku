@@ -7,6 +7,21 @@ type signature =
 
 and t = signature [@@deriving eq, ord]
 
+let encoding =
+  let open Data_encoding in
+  union
+    [
+      case ~title:"Ed25519" (Tag 0) Ed25519.Signature.encoding
+        (function Ed25519 signature -> Some signature | _ -> None)
+        (fun signature -> Ed25519 signature);
+      case ~title:"Secp256k1" (Tag 1) Secp256k1.Signature.encoding
+        (function Secp256k1 signature -> Some signature | _ -> None)
+        (fun signature -> Secp256k1 signature);
+      case ~title:"P256" (Tag 2) P256.Signature.encoding
+        (function P256 signature -> Some signature | _ -> None)
+        (fun signature -> P256 signature);
+    ]
+
 let of_b58 =
   let ed25519 string =
     match Ed25519.Signature.of_b58 string with
@@ -29,13 +44,6 @@ let to_b58 = function
   | Ed25519 signature -> Ed25519.Signature.to_b58 signature
   | Secp256k1 signature -> Secp256k1.Signature.to_b58 signature
   | P256 signature -> P256.Signature.to_b58 signature
-
-include With_yojson_of_b58 (struct
-  type t = signature
-
-  let of_b58 = of_b58
-  let to_b58 = to_b58
-end)
 
 let size =
   assert (

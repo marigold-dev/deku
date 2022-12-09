@@ -2,7 +2,7 @@ open Deku_crypto
 
 (* TODO: should we care about the adding validator order *)
 type validators
-type t = validators [@@deriving yojson]
+type t = validators
 
 (* repr *)
 val encodings : validators Data_encoding.t

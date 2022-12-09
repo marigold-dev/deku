@@ -8,15 +8,13 @@ type internal_operation =
       amount : Amount.t;
       ticket : Ticket_id.t;
     }
-[@@deriving yojson]
 
 type tezos_operation = {
   hash : Tezos_operation_hash.t;
   operations : internal_operation list;
 }
-[@@deriving yojson]
 
-type t = tezos_operation [@@deriving yojson]
+type t = tezos_operation
 
 let make hash operations =
   (*TODO: do we need to verify the hash ? here ? or somewhere else ? *)

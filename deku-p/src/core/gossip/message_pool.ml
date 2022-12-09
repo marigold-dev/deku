@@ -5,7 +5,6 @@ type message_state =
   | Pending of { queue : string list }
   | Unknown
   | Late
-[@@deriving yojson]
 
 type message_pool =
   | Message_pool of {
@@ -13,7 +12,7 @@ type message_pool =
       by_level : message_state Message_hash.Map.t Level.Map.t;
     }
 
-and t = message_pool [@@deriving yojson]
+and t = message_pool
 
 let message_state_encoding =
   let open Data_encoding in

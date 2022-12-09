@@ -36,7 +36,7 @@ let test_serde_transaction () =
     |> Data_encoding.Binary.of_string_exn Operation.Signed.encoding
     |> fun _ -> ()
   in
-  Alcotest.(check unit) "to and from yojson" () (transaction_str ())
+  Alcotest.(check unit) "to and from encoding" () (transaction_str ())
 
 let run () =
   let open Alcotest in

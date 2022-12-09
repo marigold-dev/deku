@@ -4,7 +4,7 @@ open Deku_stdlib
 module Tickets = struct
   module Ticket_map = Map.Make (Ticket_id)
 
-  type t = Amount.t Ticket_map.t [@@deriving yojson]
+  type t = Amount.t Ticket_map.t
 
   let encodings = Ticket_map.encoding Amount.encoding
   let get_balance ~ticket_id t = Ticket_map.find_opt ticket_id t
@@ -59,7 +59,7 @@ end
 module Ticket_map = Tickets.Ticket_map
 module Address_map = Map.Make (Address)
 
-type t = Tickets.t Address_map.t [@@deriving yojson]
+type t = Tickets.t Address_map.t
 
 let encoding = Address_map.encoding Tickets.encodings
 let empty = Address_map.empty

@@ -6,7 +6,7 @@ let rec take n l =
   | _, [] -> []
   | n, hd :: tl -> hd :: take (n - 1) tl
 
-type stats = { latency : float; tps : float } [@@deriving yojson]
+type stats = { latency : float; tps : float }
 
 let latest_tx_count = ref []
 

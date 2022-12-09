@@ -1,20 +1,19 @@
 module Make (V : sig
-  type t [@@deriving yojson]
+  type t
 
   val encoding : t Data_encoding.t
   val hash : t -> BLAKE2b.t
 end) =
 struct
-  type value = V.t [@@deriving yojson]
-  type key = int [@@deriving yojson]
+  type value = V.t
+  type key = int
 
   type tree =
     | Empty
     | Leaf of { value : value; hash : BLAKE2b.t }
     | Node of { left : tree; hash : BLAKE2b.t; right : tree }
-  [@@deriving yojson]
 
-  type t = { tree : tree; top_bit : key; last_key : key } [@@deriving yojson]
+  type t = { tree : tree; top_bit : key; last_key : key }
 
   let is_set bit number = (1 lsl bit) land number <> 0
   let empty_hash = BLAKE2b.hash ""

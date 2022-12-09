@@ -2,7 +2,7 @@ open Deku_crypto
 open Deku_stdlib
 
 module State : sig
-  type t [@@deriving yojson]
+  type t
 
   val encoding : t Data_encoding.t
   val get : string -> t -> string option
@@ -10,7 +10,7 @@ module State : sig
   val empty : t
 end
 
-type set = { key : string; value : string } [@@deriving yojson]
+type set = { key : string; value : string }
 
 type transaction = {
   operation_raw_hash : string;
@@ -19,7 +19,6 @@ type transaction = {
   tickets : (Deku_ledger.Ticket_id.t * N.t) list;
   level : Deku_concepts.Level.t;
 }
-[@@deriving yojson]
 
 type vm_client_message =
   | Transaction of transaction
@@ -29,7 +28,8 @@ type vm_client_message =
   | Give_Tickets of (Deku_ledger.Ticket_id.t * N.t) list
   | Set_Initial_State of State.t
   | Get of string
-[@@deriving yojson]
+
+val vm_client_message_encoding : vm_client_message Data_encoding.t
 
 type vm_server_message =
   | Init of set list
@@ -41,4 +41,5 @@ type vm_server_message =
       tickets : (Deku_ledger.Ticket_id.t * N.t) list;
     }
   | Error of string
-[@@deriving yojson]
+
+val vm_server_message_encoding : vm_server_message Data_encoding.t

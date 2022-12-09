@@ -120,7 +120,10 @@ const read = (callback) => {
       buf = buf + chunk;
 
       const parts = buf.split("\n");
-      const messages = parts.slice(0, -1); // everything except last
+      const messages0 = parts.slice(0, -1); // everything except last
+
+      const messages1 = messages0.join("");
+      const messages = [messages1];
 
       buf = parts.slice(-1)[0]; // last
 

@@ -11,7 +11,7 @@ type protocol =
       vm_state : Ocaml_wasm_vm.State.t;
     }
 
-and t = protocol [@@deriving yojson]
+and t = protocol
 
 let encoding =
   let open Data_encoding in

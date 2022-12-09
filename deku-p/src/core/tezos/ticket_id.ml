@@ -1,7 +1,7 @@
 open Tezos_micheline
 open Deku_stdlib
 
-type t = { ticketer : Address.t; data : bytes } [@@deriving eq, ord, yojson]
+type t = { ticketer : Address.t; data : bytes } [@@deriving eq, ord]
 
 let parse_micheline string =
   let tokens, errors = Micheline_parser.tokenize string in

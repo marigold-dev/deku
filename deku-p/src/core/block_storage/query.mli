@@ -26,10 +26,11 @@ val insert_message :
   pool ->
   unit result_promise
 
-val find_block_by_level : level:Level.t -> pool -> string option result_promise
+val find_block_by_level :
+  level:Level.t -> pool -> Data_encoding.Json.t option result_promise
 
 val find_block_by_hash :
-  hash:Block_hash.t -> pool -> string option result_promise
+  hash:Block_hash.t -> pool -> Data_encoding.Json.t option result_promise
 
 val find_block_and_votes_by_level :
   level:Level.t -> pool -> Message.Network.t option result_promise

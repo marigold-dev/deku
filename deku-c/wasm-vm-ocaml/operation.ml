@@ -78,17 +78,3 @@ let encoding =
         (fun (initial_storage, module_, constants, entrypoints) ->
           Originate { initial_storage; module_; constants; entrypoints });
     ]
-
-let yojson_of_t t =
-  `String
-    (Data_encoding.Json.construct encoding t |> Data_encoding.Json.to_string)
-
-let t_of_yojson t =
-  match t with
-  | `String string -> (
-      try
-        Data_encoding.Json.from_string string
-        |> Result.map (fun x -> Data_encoding.Json.destruct encoding x)
-        |> Result.get_ok
-      with Invalid_argument _ -> raise Not_an_operation)
-  | _ -> raise Not_an_operation

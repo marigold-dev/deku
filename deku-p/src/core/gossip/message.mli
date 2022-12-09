@@ -22,7 +22,7 @@ module Content : sig
     | Content_operation of Operation.Signed.t
     | Content_accepted of { block : Block.t; votes : Verified_signature.t list }
 
-  type t = content [@@deriving show, yojson]
+  type t = content [@@deriving show]
 
   val encoding : content Data_encoding.t
   val block : Block.t -> content
@@ -35,7 +35,7 @@ module Network : sig
   type network_message = private
     | Network_message of { raw_header : string; raw_content : string }
 
-  type t = network_message [@@deriving yojson]
+  type t = network_message
 
   val encoding : network_message Data_encoding.t
 end

@@ -3,7 +3,7 @@
 (* TODO: some code is duplicated from tezos_interop/long_lived_js_process.ml *)
 
 exception Process_closed of Unix.process_status
-exception Failed_to_parse_json of string * Yojson.Safe.t
+exception Failed_to_parse_json of string * Data_encoding.Json.t
 
 (* enhance error messages *)
 let () =
@@ -21,8 +21,7 @@ let () =
     | Failed_to_parse_json (message, json) ->
         Some
           (asprintf "Failed_to_parse_json (%s, %a)" message
-             (Yojson.Safe.pretty_print ~std:false)
-             json)
+             Data_encoding.Json.pp json)
     | _ -> None
   in
   Printexc.register_printer printer
@@ -53,8 +52,8 @@ let write_all fd bytes_ =
     remaining := !remaining - wrote
   done
 
-let send_to_vm ~fd (message : Yojson.Safe.t) =
-  let message = Bytes.of_string (Yojson.Safe.to_string message) in
+let send_to_vm ~fd (message : Data_encoding.Json.t) =
+  let message = Bytes.of_string (Data_encoding.Json.to_string message) in
   let message_length = Bytes.create 8 in
   Bytes.set_int64_ne message_length 0 (Int64.of_int (Bytes.length message));
   let _ = Unix.write fd message_length 0 8 in
@@ -66,7 +65,9 @@ let read_from_vm ~fd =
   let _ = Unix.read fd message_length 0 8 in
   let message_length = Bytes.get_int64_ne message_length 0 |> Int64.to_int in
   let message = read_all fd message_length |> Bytes.to_string in
-  Yojson.Safe.from_string message
+  match Data_encoding.Json.from_string message with
+  | Ok message -> message
+  | _ -> failwith "impossible to parse mesage from VM"
 
 type ('a, 'b) t = {
   send : 'a -> unit;
@@ -74,7 +75,7 @@ type ('a, 'b) t = {
   close : unit -> unit;
 }
 
-let open_pipes ~named_pipe_path ~of_yojson ~to_yojson ~is_chain =
+let open_pipes ~named_pipe_path ~of_json ~to_json ~is_chain =
   let () = Named_pipe.make_pipe_pair named_pipe_path in
   let vm_to_chain, chain_to_vm =
     Named_pipe.get_pipe_pair_file_descriptors ~is_chain named_pipe_path
@@ -82,17 +83,17 @@ let open_pipes ~named_pipe_path ~of_yojson ~to_yojson ~is_chain =
   let read, write =
     if is_chain then (vm_to_chain, chain_to_vm) else (chain_to_vm, vm_to_chain)
   in
-  let send x = to_yojson x |> send_to_vm ~fd:write in
+  let send x = to_json x |> send_to_vm ~fd:write in
   let receive () =
     let json = read_from_vm ~fd:read in
     (* FIXME: what to do if this fails? *)
-    of_yojson json
+    of_json json
   in
   let close () = send_to_vm ~fd:write (`String "close") in
   { send; receive; close }
 
-let open_vm_pipes ~named_pipe_path ~of_yojson ~to_yojson =
-  open_pipes ~named_pipe_path ~of_yojson ~to_yojson ~is_chain:true
+let open_vm_pipes ~named_pipe_path ~of_json ~to_json =
+  open_pipes ~named_pipe_path ~of_json ~to_json ~is_chain:true
 
-let open_chain_pipes ~named_pipe_path ~of_yojson ~to_yojson =
-  open_pipes ~named_pipe_path ~of_yojson ~to_yojson ~is_chain:false
+let open_chain_pipes ~named_pipe_path ~of_json ~to_json =
+  open_pipes ~named_pipe_path ~of_json ~to_json ~is_chain:false

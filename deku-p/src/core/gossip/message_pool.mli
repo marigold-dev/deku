@@ -1,7 +1,7 @@
 open Deku_concepts
 
 type message_pool
-type t = message_pool [@@deriving yojson]
+type t = message_pool
 
 val encoding : message_pool Data_encoding.t
 

@@ -11,9 +11,4 @@
   deku_metrics
   ocaml_wasm_vm)
  (preprocess
-  (pps
-   ppx_let_binding
-   ppx_deriving.eq
-   ppx_deriving.show
-   ppx_deriving.ord
-   ppx_yojson_conv)))
+  (pps ppx_let_binding ppx_deriving.eq ppx_deriving.show ppx_deriving.ord)))

@@ -31,29 +31,19 @@ let encoding =
           (dynamic_size Contract_address.encoding)
           (dynamic_size State_entry.encoding)))
 
-let to_json_api (t : t) =
-  match t with
-  | State state ->
-      let acc =
-        Table.fold
-          (fun contract_address state_entry acc ->
-            let string = Contract_address.to_b58 contract_address in
-            let json = State_entry.yojson_of_t state_entry in
-            (string, json) :: acc)
-          state []
-      in
-      `Assoc acc
-
-let yojson_of_t t =
-  `String
-    (Data_encoding.Json.construct encoding t |> Data_encoding.Json.to_string)
-
-let t_of_yojson t =
-  match t with
-  | `String string -> (
-      try
-        Data_encoding.Json.from_string string
-        |> Result.map (fun x -> Data_encoding.Json.destruct encoding x)
-        |> Result.get_ok
-      with Invalid_argument _ -> raise Not_a_state)
-  | _ -> raise Not_a_state
+let api_encoding =
+  Data_encoding.conv
+    (fun state ->
+      let (State state) = state in
+      Table.fold
+        (fun key value acc ->
+          let key = Contract_address.to_b58 key in
+          (key, value) :: acc)
+        state [])
+    (fun list ->
+      List.fold_left
+        (fun acc (key, value) ->
+          let address = Contract_address.of_b58 key |> Option.get in
+          add_contract acc address value)
+        empty list)
+    (Data_encoding.assoc State_entry.encoding)

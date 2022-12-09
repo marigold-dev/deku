@@ -11,7 +11,7 @@ type producer =
       tezos_operations : Tezos_operation.t Tezos_operation_hash.Map.t;
     }
 
-and t = producer [@@deriving yojson]
+and t = producer
 
 let encoding =
   let open Data_encoding in

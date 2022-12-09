@@ -20,7 +20,7 @@
   piaf
   routes)
  (preprocess
-  (pps ppx_let_binding ppx_deriving_cmdliner ppx_yojson_conv)))
+  (pps ppx_let_binding ppx_deriving_cmdliner)))
 
 (executable
  (name deku_node)
@@ -28,7 +28,7 @@
  (modules deku_node)
  (libraries node)
  (preprocess
-  (pps ppx_let_binding ppx_deriving_cmdliner ppx_yojson_conv)))
+  (pps ppx_let_binding ppx_deriving_cmdliner)))
 
 (executable
  (name test_node)
@@ -36,4 +36,4 @@
  (modules test_node)
  (libraries node)
  (preprocess
-  (pps ppx_let_binding ppx_deriving_cmdliner ppx_yojson_conv)))
+  (pps ppx_let_binding ppx_deriving_cmdliner)))

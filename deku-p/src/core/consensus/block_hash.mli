@@ -3,7 +3,7 @@ open Deku_crypto
 open Deku_concepts
 
 type block_hash
-type t = block_hash [@@deriving eq, ord, yojson, show]
+type t = block_hash [@@deriving eq, ord, show]
 
 (* repr *)
 (* TODO: this API is not ideal *)

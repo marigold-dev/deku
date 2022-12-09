@@ -17,8 +17,8 @@ type t = request
 
 let hash ~above =
   (* guarantees canonical representation *)
-  let json = Level.yojson_of_t above in
-  let raw_content = Yojson.Safe.to_string json in
+  let json = Data_encoding.Json.construct Level.encoding above in
+  let raw_content = Data_encoding.Json.to_string json in
   let hash = Request_hash.hash raw_content in
   let raw_header = Request_hash.to_b58 hash in
   (hash, raw_header, raw_content)
@@ -32,8 +32,12 @@ let encode ~above =
   Request { hash; above; network }
 
 let decode ~expected ~raw_content =
-  let json = Yojson.Safe.from_string raw_content in
-  let above = Level.t_of_yojson json in
+  let json =
+    match Data_encoding.Json.from_string raw_content with
+    | Ok json -> json
+    | Error _ -> failwith "cannot decode level"
+  in
+  let above = Data_encoding.Json.destruct Level.encoding json in
   let hash, raw_header, raw_content = hash ~above in
   let network = Network.make ~raw_header ~raw_content in
   (match Request_hash.equal expected hash with

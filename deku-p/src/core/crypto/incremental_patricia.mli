@@ -1,6 +1,6 @@
 module Make : functor
   (V : sig
-     type t [@@deriving yojson]
+     type t
 
      val encoding : t Data_encoding.t
      val hash : t -> BLAKE2b.t
@@ -8,7 +8,7 @@ module Make : functor
   -> sig
   type value = V.t
   type key = int
-  type t [@@deriving yojson]
+  type t
 
   val encoding : t Data_encoding.t
   val empty : t

@@ -42,16 +42,6 @@ let to_b58 = function
   | Originated { address; entrypoint = Some entrypoint } ->
       Contract_address.to_b58 address ^ "%" ^ entrypoint
 
-let t_of_yojson x =
-  match x with
-  | `String x -> (
-      match of_b58 x with
-      | Some x -> x
-      | None -> Yojson.json_error "wrong format")
-  | _ -> Yojson.json_error "wrong format"
-
-let yojson_of_t x = `String (to_b58 x)
-
 let contract_encoding =
   let open Data_encoding in
   def "address" ~title:"A deku_address"
@@ -92,8 +82,6 @@ let encoding =
 module Map = Deku_stdlib.Map.Make (struct
   type t = address [@@deriving ord]
 
-  let t_of_yojson = t_of_yojson
-  let yojson_of_t = yojson_of_t
   let encoding = encoding
 end)
 

@@ -51,9 +51,11 @@ let main { named_pipe_path; content = _ } =
       ~tickets:[]
       (Some (operation_raw_hash, content))
   in
-  let json = External_vm_protocol.State.yojson_of_t state in
+  let json =
+    Data_encoding.Json.construct External_vm_protocol.State.encoding state
+  in
   Format.printf "Transaction submitted successfully. New state:\n%s\n%!"
-    (Yojson.Safe.to_string json);
+    (Data_encoding.Json.to_string json);
   print_endline "Opening IPC with VM";
   let content =
     {|{
@@ -84,9 +86,11 @@ let main { named_pipe_path; content = _ } =
       ~tickets:[]
       (Some (operation_raw_hash, content))
   in
-  let json = External_vm_protocol.State.yojson_of_t state in
+  let json =
+    Data_encoding.Json.construct External_vm_protocol.State.encoding state
+  in
   Format.printf "Transaction submitted successfully. New state:\n%s\n%!"
-    (Yojson.Safe.to_string json);
+    (Data_encoding.Json.to_string json);
   print_endline "Test successful"
 
 let () =

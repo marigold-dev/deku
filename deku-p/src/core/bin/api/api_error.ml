@@ -86,7 +86,7 @@ let receipt_not_found operation_hash =
   }
 
 module Repr = struct
-  type t = { code : string; msg : string } [@@deriving yojson_of]
+  type t = { code : string; msg : string }
 
   let t_of_error { kind; msg } =
     let code =
@@ -105,9 +105,17 @@ module Repr = struct
       | Receipt_not_found -> "RECEIPT_NOT_FOUND"
     in
     { code; msg }
+
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun { code; msg } -> (code, msg))
+      (fun (code, msg) -> { code; msg })
+      (obj2 (req "code" string) (req "msg" string))
 end
 
-let yojson_of_t error = Repr.t_of_error error |> Repr.yojson_of_t
+let encoding error =
+  Repr.t_of_error error |> Data_encoding.Json.construct Repr.encoding
 
 let string_of_error error =
   let Repr.{ code; _ } = Repr.t_of_error error in
