@@ -90,7 +90,21 @@ let main ~env ~sw:_ =
   (* Change this string with your appropriate needs*)
   let _content =
     {| 
-    {"operation":"{ \"address\": \"DK1AYirVcQa1sVtXFGhz9TddMbWw71WbBxx7\",\n  \"argument\":\n    [ \"Pair\",\n      [ [ \"Pair\",\n          [ [ \"Int\", \"1\" ],\n            [ \"Option\",\n              [ \"Some\",\n                [ \"Union\",\n                  [ \"Left\",\n                    [ \"Union\",\n                      [ \"Left\", [ \"Union\", [ \"Right\", [ \"Unit\" ] ] ] ] ] ] ] ] ] ] ],\n        [ \"Pair\",\n          [ [ \"Union\", [ \"Left\", [ \"Union\", [ \"Right\", [ \"Unit\" ] ] ] ] ],\n            [ \"Option\", [ \"None\", {} ] ] ] ] ] ] }","tickets":[]}
+    { "operation":
+    { "address": "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD",
+      "argument":
+        [ "Pair",
+          [ [ "Pair",
+              [ [ "Int", "1" ],
+                [ "Option",
+                  [ "Some",
+                    [ "Union",
+                      [ "Left",
+                        [ "Union",
+                          [ "Left", [ "Union", [ "Right", [ "Unit" ] ] ] ] ] ] ] ] ] ] ],
+            [ "Pair",
+              [ [ "Union", [ "Left", [ "Union", [ "Right", [ "Unit" ] ] ] ] ],
+                [ "Option", [ "None", {} ] ] ] ] ] ] }, "tickets": [] }
     |}
   in
   let operation = Data_encoding.Json.from_string _content2 in
