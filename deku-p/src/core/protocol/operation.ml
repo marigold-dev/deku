@@ -34,7 +34,8 @@ let encoding =
     [
       case ~title:"ticket_transfer" (Tag 0)
         (Data_encoding.dynamic_size
-           (obj4
+           (obj5
+              (req "type" (constant "ticket_transfer"))
               (req "sender" (Data_encoding.dynamic_size Address.encoding))
               (req "receiver" (Data_encoding.dynamic_size Address.encoding))
               (req "ticket_id" Ticket_id.encoding)
@@ -42,42 +43,107 @@ let encoding =
         (fun operation ->
           match operation with
           | Operation_ticket_transfer { sender; receiver; ticket_id; amount } ->
-              Some (sender, receiver, ticket_id, amount)
+              Some ((), sender, receiver, ticket_id, amount)
           | _ -> None)
-        (fun (sender, receiver, ticket_id, amount) ->
+        (fun ((), sender, receiver, ticket_id, amount) ->
           Operation_ticket_transfer { sender; receiver; ticket_id; amount });
       case ~title:"vm_transaction" (Tag 1)
-        (obj2
+        (obj3
+           (req "type" (constant "vm_transaction"))
            (req "sender" (Data_encoding.dynamic_size Address.encoding))
            (req "operation" Ocaml_wasm_vm.Operation_payload.encoding))
         (fun operation ->
           match operation with
           | Operation_vm_transaction { sender; operation } ->
-              Some (sender, operation)
+              Some ((), sender, operation)
           | _ -> None)
-        (fun (sender, operation) ->
+        (fun ((), sender, operation) ->
           Operation_vm_transaction { sender; operation });
       case ~title:"withdraw" (Tag 2)
-        (obj4
+        (obj5
+           (req "type" (constant "withdraw"))
            (req "sender" (Data_encoding.dynamic_size Address.encoding))
            (req "ticket_id" Ticket_id.encoding)
            (req "amount" Amount.encoding)
-           (req "sender" Deku_tezos.Address.encoding))
+           (req "owner" Deku_tezos.Address.encoding))
         (fun operation ->
           match operation with
           | Operation_withdraw { sender; owner; ticket_id; amount } ->
-              Some (sender, ticket_id, amount, owner)
+              Some ((), sender, ticket_id, amount, owner)
           | _ -> None)
-        (fun (sender, ticket_id, amount, owner) ->
+        (fun ((), sender, ticket_id, amount, owner) ->
           Operation_withdraw { sender; owner; ticket_id; amount });
       case ~title:"noop" (Tag 3)
-        (obj1 (req "sender" Address.encoding))
+        (obj2 (req "type" (constant "noop")) (req "sender" Address.encoding))
         (fun operation ->
           match operation with
-          | Operation_noop { sender } -> Some sender
+          | Operation_noop { sender } -> Some ((), sender)
           | _ -> None)
-        (fun sender -> Operation_noop { sender });
+        (fun ((), sender) -> Operation_noop { sender });
     ]
+
+let%expect_test "Operation encoding" =
+  let address =
+    Address.of_b58 "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE" |> Option.get
+  in
+  let tezos_address =
+    Deku_tezos.Address.of_string "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE"
+    |> Option.get
+  in
+  let contract_address =
+    Deku_tezos.Contract_hash.of_b58 "KT1LiabSxPyVUmVZCqHneCFLJrqQcLHkmX9d"
+    |> Option.get
+  in
+  let ticketer = Ticket_id.Tezos contract_address in
+  let ticket_id = Ticket_id.make ticketer (Bytes.of_string "hello") in
+  let show_op op =
+    let json = Data_encoding.Json.construct encoding op in
+    Format.printf "%a\n---------\n%!" Data_encoding.Json.pp json
+  in
+  show_op
+  @@ Operation_ticket_transfer
+       { sender = address; receiver = address; ticket_id; amount = Amount.zero };
+
+  let operation =
+    let open Ocaml_wasm_vm in
+    let argument = Value.(Union (Left (Union (Right (Int (Z.of_int 5)))))) in
+    let operation = Operation.Call { address; argument } in
+    Operation_payload.{ operation; tickets = [ (ticket_id, Amount.zero) ] }
+  in
+  (* TODO: this one is a big ugly with nested "operation" keys. We should fix it. *)
+  show_op @@ Operation_vm_transaction { sender = address; operation };
+  show_op
+  @@ Operation_withdraw
+       {
+         sender = address;
+         owner = tezos_address;
+         ticket_id;
+         amount = Amount.zero;
+       };
+  show_op @@ Operation_noop { sender = address };
+  [%expect
+    {|
+      { "type": "ticket_transfer",
+        "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
+        "receiver": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
+        "ticket_id": [ "KT1LiabSxPyVUmVZCqHneCFLJrqQcLHkmX9d", "68656c6c6f" ],
+        "amount": "0" }
+      ---------
+      { "type": "vm_transaction", "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
+        "operation":
+          { "operation":
+              { "address": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
+                "argument":
+                  [ "Union", [ "Left", [ "Union", [ "Right", [ "Int", "5" ] ] ] ] ] },
+            "tickets":
+              [ [ [ "KT1LiabSxPyVUmVZCqHneCFLJrqQcLHkmX9d", "68656c6c6f" ], "0" ] ] } }
+      ---------
+      { "type": "withdraw", "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
+        "ticket_id": [ "KT1LiabSxPyVUmVZCqHneCFLJrqQcLHkmX9d", "68656c6c6f" ],
+        "amount": "0", "owner": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE" }
+      ---------
+      { "type": "noop", "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE" }
+      --------- |}]
 
 module Initial = struct
   type initial_operation =
@@ -117,6 +183,35 @@ module Initial = struct
         let hash = hash ~nonce ~level ~operation in
         Initial_operation { hash; nonce; level; operation })
       hash_encoding
+
+  let%expect_test "Initial encoding" =
+    let nonce = Nonce.of_n N.zero in
+    let sender =
+      Address.of_b58 "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE" |> Option.get
+    in
+    let operation = Operation_noop { sender } in
+    let initial = make ~nonce ~level:Level.zero ~operation in
+    Format.printf "Pretty: %a\n%!" pp initial;
+    let hex =
+      Data_encoding.make_lazy encoding initial
+      |> Data_encoding.force_bytes |> Hex.of_bytes |> Hex.show
+    in
+    Format.printf "Hex: %s\n%!" hex;
+    let json = Data_encoding.Json.construct encoding initial in
+    Format.printf "Json: %a\n%!" Data_encoding.Json.pp json;
+    [%expect
+      {|
+      Pretty: Operation.Initial.Initial_operation {
+                hash = Do2XVsHk8txd6V4YTt6io1nyJMHujD6APbhWWW64DwM3y8D5XxhF;
+                nonce = 0; level = 0;
+                operation =
+                Operation.Operation_noop {
+                  sender = (Address.Implicit tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE)}}
+      Hex: 000000010000000001000300005d9ac49706a3566b65f1ad56dd1433e4569a0367
+      Json: { "nonce": "0", "level": 0,
+              "operation":
+                { "type": "noop",
+                  "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE" } } |}]
 
   let includable_operation_window = Deku_constants.includable_operation_window
 

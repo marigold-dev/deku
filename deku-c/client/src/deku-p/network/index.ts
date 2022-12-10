@@ -1,9 +1,8 @@
 import JSONValue, { JSONType } from "../utils/json";
-import Level, { Level as LevelType } from "../core/level";
 import Block, { Block as BlockType } from "../core/block";
 import Proof, { Proof as ProofType } from "../core/proof";
-import { TicketID } from "../core/ticket-id";
 import urlJoin from "../utils/urlJoin";
+import { Level, TicketId } from "../core/operation-encoding";
 
 const VERSION = "/api/v1";
 
@@ -19,12 +18,12 @@ export type endpoints = {
     consensus: string;
     inSync: boolean;
   }>;
-  GET_CURRENT_LEVEL: endpoint<LevelType>;
-  GET_BLOCK_BY_LEVEL: (level: LevelType) => endpoint<BlockType>;
+  GET_CURRENT_LEVEL: endpoint<Level>;
+  GET_BLOCK_BY_LEVEL: (level: Level) => endpoint<BlockType>;
   GET_BLOCK_BY_HASH: (hash: string) => endpoint<BlockType>;
   GET_GENESIS: endpoint<BlockType>;
   GET_CURRENT_BLOCK: endpoint<BlockType>;
-  GET_BALANCE: (address: string, ticket_id: TicketID) => endpoint<number>;
+  GET_BALANCE: (address: string, ticket_id: TicketId) => endpoint<number>;
   GET_PROOF: (operation_hash: string) => endpoint<ProofType>;
   OPERATIONS: endpoint<string>;
   GET_VM_STATE: endpoint<JSONType>;
@@ -50,12 +49,13 @@ export const makeEndpoints = (root: string): endpoints => ({
     uri: urlJoin(root, `${VERSION}/chain/level`),
     expectedStatus: 200,
     parse: (json: JSONValue) => {
-      const level_json = json.at("level");
-      return Level.ofDTO(level_json);
+      const level_json = json.at("level").as_int();
+      const level = Level(level_json!);
+      return level;
     },
   },
-  GET_BLOCK_BY_LEVEL: (level: LevelType) => ({
-    uri: urlJoin(root, `${VERSION}/chain/blocks/${Level.toDTO(level)}`),
+  GET_BLOCK_BY_LEVEL: (level: number) => ({
+    uri: urlJoin(root, `${VERSION}/chain/blocks/${level}`),
     expectedStatus: 200,
     parse: Block.ofDTO,
   }),
@@ -74,10 +74,10 @@ export const makeEndpoints = (root: string): endpoints => ({
     expectedStatus: 200,
     parse: Block.ofDTO,
   },
-  GET_BALANCE: (address: string, ticket_id: TicketID) => ({
+  GET_BALANCE: (address: string, ticket_id: TicketId) => ({
     uri: urlJoin(
       root,
-      `${VERSION}/balance/${address}/${ticket_id.ticketer}/${ticket_id.data}`
+      `${VERSION}/balance/${address}/${ticket_id[0]}/${ticket_id[1]}`
     ),
     expectedStatus: 200,
     parse: (json: JSONValue) => {
