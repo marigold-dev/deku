@@ -1,7 +1,6 @@
 import { fromMemorySigner } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
 import {
-  Contract,
   DekuCClient,
   DEKU_API_URL,
   LIGO_DEKU_RPC_URL,

@@ -110,7 +110,7 @@ export class Contract {
       },
       tickets: [],
     };
-    const hash = await this.deku.submitVmOperation(invoke);
+    const hash = await this.deku.submitVmOperation(invoke, []);
     return hash;
   }
 

@@ -1,17 +1,19 @@
 import { Key } from "../core/key";
-import { KeyHash } from "../core/key-hash";
-import Operation, { Operation as OperationType } from "../core/operation";
-import { JSONType } from "./json";
+import {
+  Initial_operation,
+  Initial_operation_hash_encoding,
+  toRepr,
+} from "../core/operation-encoding";
 
 interface MemorySigner {
   sign: (payload: string) => Promise<{ prefixSig: string }>;
   publicKey: () => Promise<Key>;
-  publicKeyHash: () => Promise<KeyHash>;
+  publicKeyHash: () => Promise<string>;
 }
 
 interface BeaconSigner {
   getActiveAccount: () => Promise<
-    { address: KeyHash; publicKey: Key } | undefined
+    { address: string; publicKey: Key } | undefined
   >;
   requestSignPayload: ({
     payload,
@@ -23,24 +25,28 @@ interface BeaconSigner {
 interface CustomSigner {
   sign: (payload: string) => Promise<string>;
   publicKey: () => Promise<Key>;
-  publicKeyHash: () => Promise<KeyHash>;
+  publicKeyHash: () => Promise<string>;
 }
 
 export abstract class DekuSigner {
   abstract sign(payload: string): Promise<string>;
   abstract publicKey: () => Promise<Key>;
-  abstract publicKeyHash: () => Promise<KeyHash>;
+  abstract publicKeyHash: () => Promise<string>;
 
-  async signOperation(operation: OperationType): Promise<JSONType> {
+  async signOperation(operation: Initial_operation): Promise<{
+    key: string;
+    signature: string;
+    initial: Initial_operation_hash_encoding;
+  }> {
     const bytes = operation.bytes;
     const signature = await this.sign(bytes.toString("hex"));
 
     const key = await this.publicKey();
-    const dto = Operation.toDTO(operation);
+    const repr = toRepr(operation);
     return {
       key,
       signature,
-      initial: dto,
+      initial: repr,
     };
   }
 }
