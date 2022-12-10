@@ -22,6 +22,7 @@ with ocamlPackages;
       ligo
 
       # OCaml developer tooling
+      merlin
       ocaml
       dune_3
       ocaml-lsp

@@ -8,3 +8,5 @@ chain*.json
 *-node-*-deku_state_*.tar.gz
 tezos_js_bridge.bundle.js
 flextesa_chain/data
+*.js
+*.sw?

@@ -14,7 +14,8 @@
     "dev": "tsc --project . -w --module commonjs",
     "lint": "eslint .",
     "ship": "npm run build && npm run lint",
-    "prettier-format": "prettier 'src/**/*.ts' --write"
+    "prettier-format": "prettier 'src/**/*.ts' --write",
+    "test": "jest"
   },
   "files": [
     "lib/",

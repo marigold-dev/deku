@@ -35,7 +35,7 @@ services:
       - POSTGRES_DB=bcd
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
-      - db:/var/lib/postgresql/data 
+      - db:/var/lib/postgresql/data
   api:
     container_name: deku_api
     restart: always
@@ -74,7 +74,7 @@ services:
   flextesa:
     container_name: deku_flextesa
     restart: always
-    image: ghcr.io/marigold-dev/deku-flextesa:latest
+    image: oxheadalpha/flextesa:latest
     command: kathmandubox start
     environment:
       - block_time=4
