@@ -17,7 +17,7 @@ type endpoint<T> = {
 export type endpoints = {
   GET_CHAIN_INFO: endpoint<{
     consensus: string;
-    isSync: boolean;
+    inSync: boolean;
   }>;
   GET_CURRENT_LEVEL: endpoint<LevelType>;
   GET_BLOCK_BY_LEVEL: (level: LevelType) => endpoint<BlockType>;
@@ -40,10 +40,10 @@ export const makeEndpoints = (root: string): endpoints => ({
       if (consensus === null) return null;
       // const discovery = json.at("discovery").as_string();
       // if (discovery === null) return null;
-      const isSync = json.at("is_sync").as_bool();
-      if (isSync === null) return null;
+      const inSync = json.at("in_sync").as_bool();
+      if (inSync === null) return null;
 
-      return { consensus, isSync };
+      return { consensus, inSync };
     },
   },
   GET_CURRENT_LEVEL: {
