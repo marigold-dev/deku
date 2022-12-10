@@ -26,7 +26,7 @@ const App: () => JSX.Element = () => {
   const [balance, setBalance] = useState(0);
   const [info, setInfo] = useState<{
     consensus: string;
-    isSync: boolean;
+    inSync: boolean;
   } | null>(null);
 
   const [vmState, setVmState] = useState<unknown>(null);
@@ -170,7 +170,7 @@ const App: () => JSX.Element = () => {
       <img src={logo} alt="deku logo" />
       {info && <div>Consensus : {info.consensus} </div>}
       {/* {info && <div>Discovery : {info.discovery} </div>} */}
-      {info && <div>Is sync : {info.isSync.toString()} </div>}
+      {info && <div>In sync : {info.inSync.toString()} </div>}
       <div>Level : {level} </div>
       <div>Balance : {balance}</div>
       <div>State : {JSON.stringify(vmState)}</div>

@@ -108,7 +108,7 @@ export class DekuPClient {
    * Returns the address of the consensus and discovery used by the deku chain
    * @returns the consensus and discovery addresses
    */
-  async info(): Promise<{ consensus: string }> {
+  async info(): Promise<{ consensus: string; inSync: boolean }> {
     const info = await get(this.endpoints["GET_CHAIN_INFO"]);
     return info;
   }
