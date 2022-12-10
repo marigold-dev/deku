@@ -190,22 +190,22 @@ end
 
 module Get_chain_info : NO_BODY_HANDLERS = struct
   type path = unit
-  type response = { consensus : string; is_sync : bool }
+  type response = { consensus : string; in_sync : bool }
 
   let response_encoding =
     let open Data_encoding in
     conv
-      (fun { consensus; is_sync } -> (consensus, is_sync))
-      (fun (consensus, is_sync) -> { consensus; is_sync })
-      (obj2 (req "consensus" string) (req "is_sync" bool))
+      (fun { consensus; in_sync } -> (consensus, in_sync))
+      (fun (consensus, in_sync) -> { consensus; in_sync })
+      (obj2 (req "consensus" string) (req "in_sync" bool))
 
   let meth = `GET
   let path = Routes.(version / s "chain" / s "info" /? nil)
   let route = Routes.(path @--> ())
 
   let handler ~path:_ ~state =
-    let Api_state.{ consensus_address; is_sync; _ } = state in
-    Ok { consensus = Deku_tezos.Address.to_string consensus_address; is_sync }
+    let Api_state.{ consensus_address; in_sync; _ } = state in
+    Ok { consensus = Deku_tezos.Address.to_string consensus_address; in_sync }
 end
 
 module Helpers_operation_message : HANDLERS = struct

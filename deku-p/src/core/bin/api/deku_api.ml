@@ -82,7 +82,7 @@ let apply_block ~sw ~state ~block =
   state.receipts <- receipts;
   (* TODO: how do we clear the list of receipts ?*)
   state.protocol <- protocol;
-  state.is_sync <- true;
+  state.in_sync <- true;
   Logs.info (fun m -> m "Writing state for level %a" Level.pp level);
   state.dump ~current_block:block ~protocol ~receipts
 
@@ -95,7 +95,7 @@ let on_accepted_block ~sw ~state ~block =
       Logs.warn (fun m ->
           m "API desynchronized: state at level %a, block at level %a" Level.pp
             api_level Level.pp level);
-      state.is_sync <- false
+      state.in_sync <- false
   | _ -> ()
 
 let on_connection ~connection state =

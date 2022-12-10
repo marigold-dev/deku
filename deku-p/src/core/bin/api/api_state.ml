@@ -12,7 +12,7 @@ type api_state = {
   network : Network_manager.t;
   identity : Identity.t;
   mutable protocol : Protocol.t;
-  mutable is_sync : bool;
+  mutable in_sync : bool;
   mutable receipts : Receipt.t Operation_hash.Map.t;
       (** Receipts of the included operations; also contains withdrawal receipts, which are used to
   generate withdrawal proofs. *)
@@ -34,7 +34,7 @@ let make ~consensus_address ~indexer ~network ~identity ~protocol ~current_block
     network;
     identity;
     protocol;
-    is_sync = false;
+    in_sync = false;
     receipts;
     dump;
   }
