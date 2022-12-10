@@ -22,6 +22,7 @@
     "@types/react": "^18.0.17",
     "@types/react-dom": "^18.0.6",
     "prettier": "^2.7.1",
+    "react-app-rewired": "^2.2.1",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.0.0",
     "tsconfig-paths-jest": "^0.0.1",
