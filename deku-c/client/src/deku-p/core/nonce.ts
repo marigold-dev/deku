@@ -1,33 +1,14 @@
-import JSONValue from "../utils/json";
+import { Nominal } from "../utils/nominal";
 
-export type Nonce = number;
+export type Nonce = Nominal<string, "Nonce">;
+export const Nonce = (nonce: number) => nonce.toString() as Nonce;
 
 /**
  * Creates a new once
  * @returns random number between 0 and 2**32
  */
-const rand = (): Nonce => {
+export const rand = (): Nonce => {
   const maxInt32 = 2147483647;
   const nonce = Math.floor(Math.random() * maxInt32);
-  return nonce;
-};
-
-const toDTO = (nonce: Nonce): string => {
-  return nonce.toString();
-};
-
-const ofDTO = (json: JSONValue): Nonce | null => {
-  const string = json.as_string();
-  if (string === null) return null;
-  try {
-    return Number.parseInt(string);
-  } catch {
-    return null;
-  }
-};
-
-export default {
-  rand,
-  toDTO,
-  ofDTO,
+  return nonce.toString() as Nonce;
 };

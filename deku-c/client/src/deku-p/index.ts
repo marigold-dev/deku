@@ -1,19 +1,25 @@
 import { TezosToolkit } from "@taquito/taquito";
 import Consensus from "./tezos-contracts/consensus";
 import Discovery from "./tezos-contracts/discovery";
-import { Address as AddressType } from "./core/address";
-import { Amount as AmountType } from "./core/amount";
 import { Block as BlockType } from "./core/block";
-import { KeyHash as KeyHashType } from "./core/key-hash";
-import Level, { Level as LevelType } from "./core/level";
-import Nonce, { Nonce as NonceType } from "./core/nonce";
-import { Operation as OperationType } from "./core/operation";
-import Operation from "./core/operation";
+import {
+  Initial_operation,
+  Amount,
+  KeyHash,
+  TicketId,
+  Level,
+  Operation_json,
+  Initial_operation_hash_encoding,
+  createTicketTransfer,
+  createVmOperation,
+  createWithdraw,
+  createNoop,
+} from "./core/operation-encoding";
 import { OperationHash as OperationHashType } from "./core/operation-hash";
-import TicketID from "./core/ticket-id";
 import { endpoints, get, makeEndpoints, post } from "./network";
 import { JSONType } from "./utils/json";
 import { DekuSigner } from "./utils/signers";
+import * as Nonce from "./core/nonce";
 export type Proof = import("./core/proof").Proof;
 
 /* FIXME: reintroduce discovery when the API supports it */
@@ -24,14 +30,14 @@ export type Setting = {
 };
 
 export type OptOptions = {
-  nonce?: NonceType;
-  level?: LevelType;
+  nonce?: number;
+  level?: number;
 };
 
 type OperationInfo = {
-  source: KeyHashType;
-  nonce: NonceType;
-  level: LevelType;
+  source: KeyHash;
+  nonce: Nonce.Nonce;
+  level: Level;
 };
 
 export class DekuPClient {
@@ -117,7 +123,7 @@ export class DekuPClient {
    * Returns the current level of the chain
    * @returns the level of the chain as a promise
    */
-  async level(): Promise<LevelType> {
+  async level(): Promise<Level> {
     const level = await get(this.endpoints["GET_CURRENT_LEVEL"]);
     return level;
   }
@@ -127,8 +133,8 @@ export class DekuPClient {
    * @param level the level of the block to return
    * @returns the block at the given level
    */
-  async getBlockByLevel(level: LevelType): Promise<BlockType> {
-    const block = await get(this.endpoints["GET_BLOCK_BY_LEVEL"](level));
+  async getBlockByLevel(level: number): Promise<BlockType> {
+    const block = await get(this.endpoints["GET_BLOCK_BY_LEVEL"](Level(level)));
     return block;
   }
 
@@ -164,7 +170,7 @@ export class DekuPClient {
     address: string,
     { ticketer, data }: { ticketer: string; data: string }
   ): Promise<number> {
-    const ticket_id = TicketID.createTicketID(
+    const ticket_id = TicketId(
       ticketer,
       data.startsWith("0x") ? data : "0x" + data
     );
@@ -188,7 +194,7 @@ export class DekuPClient {
    * @returns the source, a level and a nonce
    */
   private async submitOperation(
-    operation: OperationType
+    operation: Initial_operation
   ): Promise<OperationHashType> {
     // Retrieve the deku signer
     const dekuSigner = this.assertTzWallet();
@@ -218,7 +224,7 @@ export class DekuPClient {
     options?: OptOptions
   ): Promise<OperationInfo> {
     const dekuSigner = this.assertTzWallet();
-    const source = await dekuSigner.publicKeyHash();
+    const source = KeyHash(await dekuSigner.publicKeyHash());
     const level =
       options === undefined || options.level === undefined
         ? await this.level()
@@ -226,10 +232,10 @@ export class DekuPClient {
     const nonce =
       options === undefined || options.nonce === undefined
         ? Nonce.rand()
-        : options.nonce;
+        : Nonce.Nonce(options.nonce);
     return {
       source,
-      level,
+      level: Level(level),
       nonce,
     };
   }
@@ -237,18 +243,18 @@ export class DekuPClient {
   /** Helper to encode operation to binary, so that core/operations stay pure
    * TODO: find a way to not use the API
    */
-  private async encodeOperation(
-    nonce: NonceType,
-    level: NonceType,
-    operation: unknown
-  ): Promise<Buffer> {
-    const body = {
-      nonce: Nonce.toDTO(nonce),
-      level: Level.toDTO(level),
+  private encodeOperation = async (
+    nonce: Nonce.Nonce,
+    level: Level,
+    operation: Operation_json
+  ): Promise<Buffer> => {
+    const body: Initial_operation_hash_encoding = {
+      nonce,
+      level,
       operation,
     };
     return post(this.endpoints["ENCODE_OPERATION"], body);
-  }
+  };
 
   /**
    * Transfer some ticket to someone
@@ -260,25 +266,49 @@ export class DekuPClient {
    * @returns an operation hash of the transfer
    */
   async transferTo(
-    receiver: AddressType,
-    amount: AmountType,
+    receiver: string,
+    amount: number,
     ticketer: string,
     data: string,
     options?: OptOptions
   ): Promise<OperationHashType> {
     const { source, level, nonce } = await this.parseOperationOptions(options);
     // Create the transaction
-    const transaction = await Operation.createTransaction(
-      this.encodeOperation.bind(this),
+    const transaction = await createTicketTransfer(
+      this.encodeOperation,
       level,
       nonce,
       source,
-      receiver,
+      KeyHash(receiver),
       amount,
-      ticketer,
+      KeyHash(ticketer),
       data
     );
     return this.submitOperation(transaction);
+  }
+
+  /**
+   * Submits an operation to the vm
+   * @param payload the string (TODO: is it better to have a json instead of a string ?)
+   * @param options {level, nonce} optional options
+   * @returns the hash the submitted operation
+   */
+  async submitVmOperation(
+    payload: JSONType,
+    tickets: { ticket_id: TicketId; amount: number }[],
+    options?: OptOptions
+  ): Promise<OperationHashType> {
+    const { source, level, nonce } = await this.parseOperationOptions(options);
+    // Create the vm transaction
+    const vmOperation = await createVmOperation(
+      this.encodeOperation,
+      level,
+      nonce,
+      source,
+      payload,
+      tickets
+    );
+    return this.submitOperation(vmOperation);
   }
 
   /**
@@ -291,47 +321,24 @@ export class DekuPClient {
    * @returns an operation hash of the withdraw
    */
   async withdrawTo(
-    owner: AddressType,
-    amount: AmountType,
+    owner: string,
+    amount: number,
     ticketer: string,
     data: string,
     options?: OptOptions
   ): Promise<OperationHashType> {
     const { source, level, nonce } = await this.parseOperationOptions(options);
     // Create the withdraw
-    const withdraw = await Operation.createWithdraw(
-      this.encodeOperation.bind(this),
+    const withdraw = await createWithdraw(
+      this.encodeOperation,
       level,
       nonce,
       source,
-      owner,
+      TicketId(ticketer, data),
       amount,
-      ticketer,
-      data
+      KeyHash(owner)
     );
     return this.submitOperation(withdraw);
-  }
-
-  /**
-   * Submits an operation to the vm
-   * @param payload the string (TODO: is it better to have a json instead of a string ?)
-   * @param options {level, nonce} optional options
-   * @returns the hash the submitted operation
-   */
-  async submitVmOperation(
-    payload: unknown,
-    options?: OptOptions
-  ): Promise<OperationHashType> {
-    const { source, level, nonce } = await this.parseOperationOptions(options);
-    // Create the vm transaction
-    const vmOperation = await Operation.createVmOperation(
-      this.encodeOperation.bind(this),
-      level,
-      nonce,
-      source,
-      payload
-    );
-    return this.submitOperation(vmOperation);
   }
 
   /**
@@ -342,8 +349,8 @@ export class DekuPClient {
   async submitNoopOperation(options?: OptOptions): Promise<OperationHashType> {
     const { source, level, nonce } = await this.parseOperationOptions(options);
     // Create the noop operation
-    const noopOperation = await Operation.createNoop(
-      this.encodeOperation.bind(this),
+    const noopOperation = await createNoop(
+      this.encodeOperation,
       level,
       nonce,
       source
@@ -351,7 +358,7 @@ export class DekuPClient {
     return this.submitOperation(noopOperation);
   }
 
-  async wait(operationHash: OperationHashType): Promise<LevelType> {
+  async wait(operationHash: OperationHashType): Promise<Level> {
     console.log(operationHash);
     throw "Feature not yet implemented"; // TODO: implement this feature
   }

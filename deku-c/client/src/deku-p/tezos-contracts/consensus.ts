@@ -1,5 +1,4 @@
 import { ContractAbstraction, ContractProvider } from "@taquito/taquito";
-import { Level as LevelType } from "../core/level";
 
 type consensus_storage = {
   root_hash: {
@@ -28,7 +27,7 @@ export default class Consensus {
    * Retrieve the level of the chain from the consensus contract
    * @returns the level of the chain
    */
-  async level(): Promise<LevelType> {
+  async level(): Promise<number> {
     const contract = await this._contract();
     const storage = await contract.storage<consensus_storage>();
     return storage.root_hash.current_block_level.c[0];

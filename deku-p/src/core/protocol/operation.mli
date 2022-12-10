@@ -39,6 +39,7 @@ module Initial : sig
 
   type t = initial_operation [@@deriving show]
 
+  val hash_encoding : (Nonce.t * Level.t * operation) Data_encoding.t
   val encoding : t Data_encoding.t
 
   (* helpers *)

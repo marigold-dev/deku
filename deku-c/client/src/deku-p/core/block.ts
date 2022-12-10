@@ -1,14 +1,14 @@
-import Level, { Level as LevelType } from "./level";
 import { Address } from "./address";
 import { Key } from "./key";
 import JSONValue from "../utils/json";
+import { Level } from "./operation-encoding";
 
 export type Block = {
   key: Key;
   signature: string;
   block: {
     author: Address;
-    level: LevelType;
+    level: Level;
     previous: string;
     payload: Array<string>; // TODO: should we parse the operation of a block ??
     tezos_operations: Array<string>;
@@ -21,7 +21,7 @@ const ofDTO = (dto: JSONValue): Block | null => {
   const block = dto.at("block");
 
   const author_str = block.at("author").as_string();
-  const level = Level.ofDTO(block.at("level"));
+  const level = Level(Number(block.at("level")));
   const previous_str = block.at("previous").as_string();
   const payload_json = block.at("payload").as_string_array();
   const tezos_operations = block.at("tezos_operations").as_string_array();
