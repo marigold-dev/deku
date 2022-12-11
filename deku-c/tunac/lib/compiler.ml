@@ -1,5 +1,3 @@
-[@@@warning "-40-4"]
-
 open Tezos_micheline.Micheline
 open Michelson_primitives
 
