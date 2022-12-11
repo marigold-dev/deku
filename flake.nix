@@ -84,6 +84,7 @@
             tuna = self'.packages.tuna;
             deploy-rs = deploy-rs.packages.${system}.default;
           };
+          checks = self.outputs.packages.${system};
           formatter = treefmt.legacyPackages.${system}.withConfig {
             settings = with pkgs; {
               excludes = [
