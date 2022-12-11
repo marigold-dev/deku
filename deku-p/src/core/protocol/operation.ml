@@ -185,22 +185,48 @@ module Initial = struct
       hash_encoding
 
   let%expect_test "Initial encoding" =
+    let show_initial initial =
+      print_endline "-------";
+      Format.printf "Pretty: %a\n%!" pp initial;
+      let hex =
+        Data_encoding.make_lazy encoding initial
+        |> Data_encoding.force_bytes |> Hex.of_bytes |> Hex.show
+      in
+      Format.printf "Hex: %s\n%!" hex;
+      let json = Data_encoding.Json.construct encoding initial in
+      Format.printf "Json: %a\n%!" Data_encoding.Json.pp json
+    in
     let nonce = Nonce.of_n N.zero in
     let sender =
       Address.of_b58 "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE" |> Option.get
     in
     let operation = Operation_noop { sender } in
-    let initial = make ~nonce ~level:Level.zero ~operation in
-    Format.printf "Pretty: %a\n%!" pp initial;
-    let hex =
-      Data_encoding.make_lazy encoding initial
-      |> Data_encoding.force_bytes |> Hex.of_bytes |> Hex.show
+    let noop = make ~nonce ~level:Level.zero ~operation in
+    show_initial noop;
+    let operation =
+      let address =
+        Address.of_b58 "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE" |> Option.get
+      in
+      let contract_address =
+        Deku_tezos.Contract_hash.of_b58 "KT1LiabSxPyVUmVZCqHneCFLJrqQcLHkmX9d"
+        |> Option.get
+      in
+      let ticketer = Ticket_id.Tezos contract_address in
+      let ticket_id = Ticket_id.make ticketer (Bytes.of_string "hello") in
+      let open Ocaml_wasm_vm in
+      let argument = Value.(Union (Left (Union (Right (Int (Z.of_int 5)))))) in
+      let operation = Operation.Call { address; argument } in
+      let payload =
+        Operation_payload.{ operation; tickets = [ (ticket_id, Amount.zero) ] }
+      in
+      Operation_vm_transaction { sender = address; operation = payload }
     in
-    Format.printf "Hex: %s\n%!" hex;
-    let json = Data_encoding.Json.construct encoding initial in
-    Format.printf "Json: %a\n%!" Data_encoding.Json.pp json;
+    (* TODO: triple-nested `operation` tags is pretty ugly. We should make it prettier. *)
+    let vm_operation = make ~nonce ~level:Level.zero ~operation in
+    show_initial vm_operation;
     [%expect
       {|
+      -------
       Pretty: Operation.Initial.Initial_operation {
                 hash = Do2XVsHk8txd6V4YTt6io1nyJMHujD6APbhWWW64DwM3y8D5XxhF;
                 nonce = 0; level = 0;
@@ -211,7 +237,37 @@ module Initial = struct
       Json: { "nonce": "0", "level": 0,
               "operation":
                 { "type": "noop",
-                  "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE" } } |}]
+                  "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE" } }
+      -------
+      Pretty: Operation.Initial.Initial_operation {
+                hash = Do2PvNgvfLPoj7WJoAMECmtPB5chhKuSbj2cmo9XF31bXRxoxheu;
+                nonce = 0; level = 0;
+                operation =
+                Operation.Operation_vm_transaction {
+                  sender = (Address.Implicit tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE);
+                  operation =
+                  { Operation_payload.operation =
+                    Operation.Call {
+                      address =
+                      (Address.Implicit tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE);
+                      argument =
+                      (Value.V.Union
+                         (Value.V.Left (Value.V.Union (Value.V.Right 5))))};
+                    tickets = <opaque> }}}
+      Hex: 00000001000000000100010000001600005d9ac49706a3566b65f1ad56dd1433e4569a036700000029010000001600005d9ac49706a3566b65f1ad56dd1433e4569a036709000000090f09000000031000050000002300851badd1d782c28269474322b2662d7774545bf50000000568656c6c6f0000000100
+      Json: { "nonce": "0", "level": 0,
+              "operation":
+                { "type": "vm_transaction",
+                  "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
+                  "operation":
+                    { "operation":
+                        { "address": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
+                          "argument":
+                            [ "Union",
+                              [ "Left", [ "Union", [ "Right", [ "Int", "5" ] ] ] ] ] },
+                      "tickets":
+                        [ [ [ "KT1LiabSxPyVUmVZCqHneCFLJrqQcLHkmX9d",
+                              "68656c6c6f" ], "0" ] ] } } } |}]
 
   let includable_operation_window = Deku_constants.includable_operation_window
 
