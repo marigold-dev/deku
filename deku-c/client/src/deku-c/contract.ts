@@ -103,14 +103,11 @@ export class Contract {
    * @returns the hash of the operation
    */
   async invokeRaw(parameter: any): Promise<string> {
-    const invoke = {
-      operation: {
-        address: this.address,
-        argument: parameter,
-      },
-      tickets: [],
+    const operation = {
+      address: this.address,
+      argument: parameter,
     };
-    const hash = await this.deku.submitVmOperation(invoke, []);
+    const hash = await this.deku.submitVmOperation(operation, []);
     return hash;
   }
 
