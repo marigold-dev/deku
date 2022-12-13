@@ -99,17 +99,20 @@ let apply_operation ~current_level protocol operation :
                            (Address.to_b58 address)))
             in
             let result () =
-              let%some ledger =
-                if operation.tickets = [] then Some ledger
+              let%ok ledger =
+                if operation.tickets = [] then Ok ledger
                 else
                   Ledger.with_ticket_table ledger (fun ~get_table ~set_table ->
                       let tickets = operation.tickets in
-                      let%some _, table =
+                      let result =
                         Ticket_table.take_tickets ~sender ~ticket_ids:tickets
                           (get_table ())
-                        |> Result.to_option
                       in
-                      Some (set_table table))
+                      match result with
+                      | Ok (_, table) -> Ok (set_table table)
+                      | Error err -> (
+                          match err with
+                          | `Insufficient_funds -> Error "Insufficient_funds"))
               in
               let source = sender in
               match
@@ -125,17 +128,20 @@ let apply_operation ~current_level protocol operation :
                   |> Env.finalize)
               with
               | Ok (vm_state, ledger) ->
-                  Some (ledger, Some receipt, vm_state, None)
-              | Error _ -> None
+                  Ok (ledger, Some receipt, vm_state, None)
+              | Error err -> Error err
             in
             match result () with
-            | Some result -> result
-            | None ->
+            | Ok result -> result
+            | Error err ->
                 ( ledger,
                   Some receipt,
                   vm_state,
-                  Some (Failure "Error while executing external vm transaction")
-                ))
+                  Some
+                    (Failure
+                       (Format.sprintf
+                          "Error while executing external vm transaction : %s"
+                          err)) ))
         | Operation_noop { sender = _ } -> (ledger, None, vm_state, None)
         | Operation_withdraw { sender; owner; amount; ticket_id } -> (
             match
