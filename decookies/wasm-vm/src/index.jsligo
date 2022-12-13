@@ -6,12 +6,10 @@ const main =
      storage]): return_ => {const player = 
      Tezos.get_source();
    return [list([]),
-    match(ope.operationType, {Mint: () => {let operation = 
-        Option.unopt_with_error(ope.operation, "Operation is mandatory for minting");
-      match(operation, {Cookie: () => {let cookieBaker: cookieBaker = 
+    match(ope, {Mint: (m: mint) => {match(m.operation, {Cookie: () => {let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         let cookies = 
-          cookieBaker.cookies + (ope.amount as nat);
+          cookieBaker.cookies + (m.amount as nat);
         let cookieBakers = 
           Map.update(player as address, Some
             ({...cookieBaker, cookies: cookies, layerOneAddress: Some(ope.layerOneAddress)}), cookieBakers);
@@ -27,7 +25,7 @@ const main =
             cookies: cookies,
             cursors: cursors};
          let cursorCost = 
-           calculateCost(operation, updatedCookieBaker);
+           calculateCost(m.operation, updatedCookieBaker);
          let passiveCPS = calculateCPS(updatedCookieBaker);
          let updatedCookieBaker = 
            {...updatedCookieBaker,
@@ -48,7 +46,7 @@ const main =
             cookies: cookies,
             grandmas: grandmas};
          let grandmaCost = 
-           calculateCost(operation, updatedCookieBaker);
+           calculateCost(m.operation, updatedCookieBaker);
          let passiveCPS = calculateCPS(updatedCookieBaker);
          let updatedCookieBaker = 
            {...updatedCookieBaker,
@@ -67,7 +65,7 @@ const main =
          let updatedCookieBaker = 
            {...cookieBaker, cookies: cookies, farms: farms};
          let farmCost = 
-           calculateCost(operation, updatedCookieBaker);
+           calculateCost(m.operation, updatedCookieBaker);
          let passiveCPS = calculateCPS(updatedCookieBaker);
          let updatedCookieBaker = 
            {...updatedCookieBaker,
@@ -86,7 +84,7 @@ const main =
          let updatedCookieBaker = 
            {...cookieBaker, cookies: cookies, mines: mines};
          let mineCost = 
-           calculateCost(operation, updatedCookieBaker);
+           calculateCost(m.operation, updatedCookieBaker);
          let passiveCPS = calculateCPS(updatedCookieBaker);
          let updatedCookieBaker = 
            {...updatedCookieBaker,
@@ -107,7 +105,7 @@ const main =
             cookies: cookies,
             factories: factories};
          let factoryCost = 
-           calculateCost(operation, updatedCookieBaker);
+           calculateCost(m.operation, updatedCookieBaker);
          let passiveCPS = calculateCPS(updatedCookieBaker);
          let updatedCookieBaker = 
            {...updatedCookieBaker,
@@ -126,7 +124,7 @@ const main =
          let updatedCookieBaker = 
            {...cookieBaker, cookies: cookies, banks: banks};
          let bankCost = 
-           calculateCost(operation, updatedCookieBaker);
+           calculateCost(m.operation, updatedCookieBaker);
          let passiveCPS = calculateCPS(updatedCookieBaker);
          let updatedCookieBaker = 
            {...updatedCookieBaker,
@@ -147,7 +145,7 @@ const main =
             cookies: cookies,
             temples: temples};
          let templeCost = 
-           calculateCost(operation, updatedCookieBaker);
+           calculateCost(m.operation, updatedCookieBaker);
          let passiveCPS = calculateCPS(updatedCookieBaker);
          let updatedCookieBaker = 
            {...updatedCookieBaker,
@@ -157,27 +155,24 @@ const main =
            Map.update(player as address, Some
              (updatedCookieBaker), cookieBakers);
          return cookieBakers} else {return cookieBakers}}})},
-     Eat: () => {let cookieBaker: cookieBaker = 
+     Eat: eat => {let cookieBaker: cookieBaker = 
         force_access(player as address, cookieBakers);
-      if(cookieBaker.cookies >= ope.amount && (ope.amount
-            as nat) > (0 as nat)) {let eatenCookies = 
-         cookieBaker.eatenCookies + (ope.amount as nat);
+      if(cookieBaker.cookies >= eat.amount) {let eatenCookies = 
+         cookieBaker.eatenCookies + (eat.amount as nat);
        let cookies = 
-         abs(cookieBaker.cookies - (ope.amount as nat));
+         abs(cookieBaker.cookies - (eat.amount as nat));
        let cookieBakers = 
          Map.update(player as address, Some
            ({...cookieBaker,
             cookies: cookies,
             eatenCookies: eatenCookies}), cookieBakers);
        return cookieBakers} else {return cookieBakers}},
-     Transfer: () => {let sender: cookieBaker = 
+     Transfer: transfer => {let sender: cookieBaker = 
         force_access(player as address, cookieBakers);
-      if(sender.cookies >= ope.amount && (ope.amount as nat) > (0
-              as nat)) {let rawRecipient = 
-         Option.unopt_with_error(ope.recipient, "There is not recipient");
+      if(sender.cookies >= transfer.amount) {let rawRecipient = transfer.recipient;
        let recipient = 
          force_access(rawRecipient as address, cookieBakers);
-       let cookiesToTransfer = ope.amount as nat;
+       let cookiesToTransfer = transfer.amount as nat;
        let senderCookies = 
          sender.cookies - cookiesToTransfer;
        let recipientCookies = 
@@ -188,4 +183,13 @@ const main =
        let cookieBakers = 
          Map.update(rawRecipient as address, Some
            ({...recipient, cookies: recipientCookies}), cookieBakers);
-       return cookieBakers} else {return cookieBakers}}})]};
+       return cookieBakers} else {return cookieBakers}},
+     Delegate: delegation => {let cookieBaker: cookieBaker = 
+        force_access(player as address, cookieBakers);
+      let authorizedKeys = 
+         Set.add(delegation.address ,cookieBaker.authorizedKeys);
+       let cookieBakers = 
+         Map.update(player as address, Some
+           ({...cookieBaker,
+            authorizedKeys: authorizedKeys}), cookieBakers);
+       return cookieBakers}})]};

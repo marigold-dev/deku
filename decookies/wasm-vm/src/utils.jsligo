@@ -18,7 +18,7 @@ const newCookieBaker: cookieBaker =
    bankCost: initialBankCost,
    templeCost: initialTempleCost,
    eatenCookies: 0 as nat,
-   layerOneAddress: None() as option<address>};
+   authorizedKeys: Set.empty};
 
 const calculateCost = 
   (ope: actions, cookieBaker: cookieBaker): nat => {match(ope, {Cookie: () => {return (0

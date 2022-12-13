@@ -18,7 +18,7 @@ type cookieBaker =
     bankCost: nat,
     templeCost: nat,
     eatenCookies: nat,
-    layerOneAddress: option<address>
+    authorizedKeys: set<address>
   };
 
 type storage = map<address, cookieBaker>;
@@ -33,16 +33,29 @@ type actions =
   | ["Bank"]
   | ["Temple"];
 
-type operationType = | ["Mint"] | ["Transfer"] | ["Eat"];
+type operationType = | ["Mint"] | ["Transfer"] | ["Eat"] | ["Delegate"];
 
-type parameter =
+type mint =
   {
-    operationType,
-    operation: option<actions>,
+    operation: actions,
     amount: nat,
-    recipient: option<address>,
     layerOneAddress: address
   };
+type transfer =
+  {
+    amount: nat,
+    recipient: address,
+    layerOneAddress: address
+  };
+type eat =
+  {
+    amount: nat,
+    layerOneAddress: address
+  };
+
+type delegate = {layerOneAddress: address, address: address};
+
+type parameter = | ["Mint", mint] | ["Transfer", transfer] | ["Eat", eat] | ["Delegate", delegate]
 
 type return_ =
 
