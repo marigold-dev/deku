@@ -122,6 +122,10 @@
                   # dune build @fmt --auto-promote does not comply with treefmt spec
                   includes = ["*.ml" ".mli"];
                 };
+                rust = {
+                  command = "${rustfmt}/bin/rustfmt";
+                  includes = ["*.rs"];
+                };
               };
             };
             projectRootFile = "flake.nix";

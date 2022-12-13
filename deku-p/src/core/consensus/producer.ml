@@ -63,9 +63,10 @@ let clean ~receipts ~tezos_operations producer =
       (fun operations receipt ->
         match receipt with
         | Receipt.Ticket_transfer_receipt { operation = hash }
-        | Receipt.Vm_origination_receipt { operation = hash; _ }
-        | Receipt.Vm_transaction_receipt { operation = hash; _ }
-        | Receipt.Vm_transaction_error { operation = hash; _ }
+        | Receipt.Attest_twitch_handle { operation = hash; _ }
+        | Receipt.Attest_deku_address { operation = hash; _ }
+        | Receipt.Game_vote { operation = hash; _ }
+        | Receipt.Delegated_game_vote { operation = hash; _ }
         | Receipt.Withdraw_receipt { operation = hash; _ } ->
             Operation_hash.Map.remove hash operations)
       operations receipts
@@ -94,8 +95,10 @@ let fill_with_noop ~identity ~level ~default_block_size operations =
   fill dummy_op_size operations
 
 let produce ~identity ~default_block_size ~above ~withdrawal_handles_hash
-    producer =
+    ~game_decision producer =
   let open Block in
+  Unix.sleep 1;
+  let _cycles_advanced = Deku_gameboy.send_input (Input game_decision) in
   let (Producer { operations; tezos_operations }) = producer in
   let (Block { hash = current_block; level = current_level; _ }) = above in
 

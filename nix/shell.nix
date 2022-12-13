@@ -6,14 +6,27 @@
   deploy-rs,
 }:
 with pkgs;
-with ocamlPackages;
+with ocamlPackages; let
+  rust-src = stdenv.mkDerivation {
+    inherit (rustc) src;
+    inherit (rustc.src) name;
+    phases = ["unpackPhase" "installPhase"];
+    installPhase = ''cp -r library $out'';
+  };
+in
   mkShell {
     inputsFrom = [deku tuna];
+    shellHook = ''
+      export RUST_SRC_PATH="${rust-src}"
+    '';
     packages = [
       # Formatters
       alejandra
       ocamlformat
       nodePackages.prettier
+      rustfmt
+
+      rust-analyzer
 
       # Typescript for decookie
       nodePackages.typescript

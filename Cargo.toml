@@ -1,0 +1,17 @@
+[package]
+name = "gameboy"
+version = "0.1.0"
+authors = ["mohanson <mohanson@outlook.com>"]
+edition = "2018"
+
+[features]
+default = ["gui", "audio"]
+gui = ["minifb", "cpal"]
+audio = ["cpal"]
+
+[dependencies]
+argparse = "0.2"
+blip_buf = "0.1"
+cpal = { version = "0.8", optional = true }
+minifb = { version = "0.11", optional = true }
+rog = "=0.1.8"

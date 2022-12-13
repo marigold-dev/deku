@@ -1,0 +1,25 @@
+(library
+ (name deku_gameboy)
+ (modules deku_gameboy)
+ (libraries
+  deku_stdlib
+  deku_external_vm
+  unix
+  data-encoding
+  piaf
+  logs
+  logs.fmt)
+ (inline_tests)
+ (preprocess
+  (pps
+   ppx_let_binding
+   ppx_deriving.eq
+   ppx_deriving.show
+   ppx_deriving.ord
+   ppx_expect)))
+
+(executable
+ (name gameboy_test)
+ (modules gameboy_test)
+ (public_name gameboy-test)
+ (libraries deku_gameboy))

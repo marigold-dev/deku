@@ -8,6 +8,8 @@
     "examples/deku-c-nodejs",
     "examples/deku-p-nodejs",
     "examples/deku-p-react",
+    "examples/deku-plays-pokemon-bot",
+    "examples/deku-plays-pokemon-dapp",
     "examples/number-go-up",
     "website"
   ],

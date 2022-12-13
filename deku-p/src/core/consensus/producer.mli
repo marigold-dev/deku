@@ -23,5 +23,6 @@ val produce :
   default_block_size:int ->
   above:Block.block ->
   withdrawal_handles_hash:Deku_crypto.BLAKE2b.BLAKE2b_256.hash ->
+  game_decision:Deku_gameboy.Joypad.t option ->
   t ->
   Block.block

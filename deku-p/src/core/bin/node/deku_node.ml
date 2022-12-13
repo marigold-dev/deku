@@ -117,10 +117,9 @@ let main params style_renderer log_level =
   let validator_uris =
     if port = 4440 then api_uri :: validator_uris else validator_uris
   in
-
-  (* The VM must be started before the node because this call is blocking
-     Logs.info (fun m ->
-         m "Starting IPC with external vm at path %s" named_pipe_path); *)
+  let net = Eio.Stdenv.net env in
+  (* Initialize network connection with emulator *)
+  Deku_gameboy.init net;
   let identity = Identity.make (Secret.Ed25519 secret) in
   Logs.info (fun m ->
       m "Running as validator %s" (Identity.key_hash identity |> Key_hash.to_b58));
@@ -129,11 +128,7 @@ let main params style_renderer log_level =
   let chain = Storage.Chain.read ~env ~folder:data_folder in
   Logs.info (fun m -> m "Loaded chain from disk");
   let chain =
-    match chain with
-    | Some chain -> chain
-    | None ->
-        let vm_state = Ocaml_wasm_vm.State.empty in
-        Chain.make ~validators ~vm_state
+    match chain with Some chain -> chain | None -> Chain.make ~validators
   in
   let dump = make_dump_loop ~sw ~env ~folder:data_folder in
   let node =
@@ -143,10 +138,8 @@ let main params style_renderer log_level =
   let (Chain { consensus; _ }) = chain in
   let (Block { level; _ }) = Deku_consensus.Consensus.trusted_block consensus in
   Logs.info (fun m -> m "Chain started at level: %a" Level.pp level);
-  let tezos =
-    (tezos_rpc_node, Secret.Ed25519 tezos_secret, tezos_consensus_address)
-  in
-  Node.start ~sw ~env ~port ~nodes:validator_uris ~tezos:(Some tezos) node
+  ignore (tezos_consensus_address, tezos_rpc_node, tezos_secret);
+  Node.start ~sw ~env ~port ~nodes:validator_uris ~tezos:None node
 
 let main () =
   let open Cmdliner in

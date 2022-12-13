@@ -13,9 +13,20 @@ type operation =
       ticket_id : Ticket_id.t;
       amount : Amount.t;
     }
-  | Operation_vm_transaction of {
+  | Operation_attest_twitch_handle of {
       sender : Address.t;
-      operation : Ocaml_wasm_vm.Operation_payload.t;
+      twitch_handle : string;
+    }
+  | Operation_attest_deku_address of {
+      sender : Address.t;
+      deku_address : Address.t;
+      twitch_handle : Game.Twitch_handle.t;
+    }
+  | Operation_vote of { sender : Address.t; vote : Game.Vote.t }
+  | Operation_delegated_vote of {
+      sender : Address.t;
+      twitch_handle : Game.Twitch_handle.t;
+      vote : Game.Vote.t;
     }
   | Operation_withdraw of {
       sender : Address.t;
@@ -47,19 +58,56 @@ let encoding =
           | _ -> None)
         (fun ((), sender, receiver, ticket_id, amount) ->
           Operation_ticket_transfer { sender; receiver; ticket_id; amount });
-      case ~title:"vm_transaction" (Tag 1)
+      case ~title:"attest_twitch_handle" (Tag 1)
         (obj3
-           (req "type" (constant "vm_transaction"))
+           (req "type" (constant "attest_twitch_handle"))
            (req "sender" (Data_encoding.dynamic_size Address.encoding))
-           (req "operation" Ocaml_wasm_vm.Operation_payload.encoding))
+           (req "twitch_handle" string))
         (fun operation ->
           match operation with
-          | Operation_vm_transaction { sender; operation } ->
-              Some ((), sender, operation)
+          | Operation_attest_twitch_handle { sender; twitch_handle } ->
+              Some ((), sender, twitch_handle)
           | _ -> None)
-        (fun ((), sender, operation) ->
-          Operation_vm_transaction { sender; operation });
-      case ~title:"withdraw" (Tag 2)
+        (fun ((), sender, twitch_handle) ->
+          Operation_attest_twitch_handle { sender; twitch_handle });
+      case ~title:"attest_deku_address" (Tag 2)
+        (obj4
+           (req "type" (constant "attest_twitch_handle"))
+           (req "sender" (Data_encoding.dynamic_size Address.encoding))
+           (req "deku_address" (Data_encoding.dynamic_size Address.encoding))
+           (req "twitch_handle" string))
+        (fun operation ->
+          match operation with
+          | Operation_attest_deku_address
+              { sender; deku_address; twitch_handle } ->
+              Some ((), sender, deku_address, twitch_handle)
+          | _ -> None)
+        (fun ((), sender, deku_address, twitch_handle) ->
+          Operation_attest_deku_address { sender; deku_address; twitch_handle });
+      case ~title:"vote" (Tag 3)
+        (obj3
+           (req "type" (constant "vote"))
+           (req "sender" (Data_encoding.dynamic_size Address.encoding))
+           (req "vote" Game.Vote.encoding))
+        (fun operation ->
+          match operation with
+          | Operation_vote { sender; vote } -> Some ((), sender, vote)
+          | _ -> None)
+        (fun ((), sender, vote) -> Operation_vote { sender; vote });
+      case ~title:"delegated_vote" (Tag 4)
+        (obj4
+           (req "type" (constant "vote"))
+           (req "sender" (Data_encoding.dynamic_size Address.encoding))
+           (req "twitch_handle" string)
+           (req "vote" Game.Vote.encoding))
+        (fun operation ->
+          match operation with
+          | Operation_delegated_vote { sender; twitch_handle; vote } ->
+              Some ((), sender, twitch_handle, vote)
+          | _ -> None)
+        (fun ((), sender, twitch_handle, vote) ->
+          Operation_delegated_vote { sender; twitch_handle; vote });
+      case ~title:"withdraw" (Tag 5)
         (obj5
            (req "type" (constant "withdraw"))
            (req "sender" (Data_encoding.dynamic_size Address.encoding))
@@ -73,7 +121,7 @@ let encoding =
           | _ -> None)
         (fun ((), sender, ticket_id, amount, owner) ->
           Operation_withdraw { sender; owner; ticket_id; amount });
-      case ~title:"noop" (Tag 3)
+      case ~title:"noop" (Tag 6)
         (obj2 (req "type" (constant "noop")) (req "sender" Address.encoding))
         (fun operation ->
           match operation with
@@ -101,17 +149,27 @@ let%expect_test "Operation encoding" =
     Format.printf "%a\n---------\n%!" Data_encoding.Json.pp json
   in
   show_op
+    (Operation_attest_twitch_handle
+       { sender = address; twitch_handle = "d4hines" });
+  show_op
+    (Operation_attest_deku_address
+       { sender = address; deku_address = address; twitch_handle = "d4hines" });
+  show_op
+    (Operation_vote
+       { sender = address; vote = Game.Vote.Input Deku_gameboy.Joypad.A });
+  show_op
+    (Operation_vote
+       { sender = address; vote = Game.Vote.Governance Game.Anarchy });
+  show_op
+    (Operation_delegated_vote
+       {
+         sender = address;
+         vote = Game.Vote.Input Deku_gameboy.Joypad.A;
+         twitch_handle = "d4hines";
+       });
+  show_op
   @@ Operation_ticket_transfer
        { sender = address; receiver = address; ticket_id; amount = Amount.zero };
-
-  let operation =
-    let open Ocaml_wasm_vm in
-    let argument = Value.(Union (Left (Union (Right (Int (Z.of_int 5)))))) in
-    let operation = Operation.Call { address; argument } in
-    Operation_payload.{ operation; tickets = [ (ticket_id, Amount.zero) ] }
-  in
-  (* TODO: this one is a big ugly with nested "operation" keys. We should fix it. *)
-  show_op @@ Operation_vm_transaction { sender = address; operation };
   show_op
   @@ Operation_withdraw
        {
@@ -123,20 +181,29 @@ let%expect_test "Operation encoding" =
   show_op @@ Operation_noop { sender = address };
   [%expect
     {|
+      { "type": "attest_twitch_handle",
+        "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
+        "twitch_handle": "d4hines" }
+      ---------
+      { "type": "attest_twitch_handle",
+        "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
+        "deku_address": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
+        "twitch_handle": "d4hines" }
+      ---------
+      { "type": "vote", "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
+        "vote": "A" }
+      ---------
+      { "type": "vote", "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
+        "vote": "Anarchy" }
+      ---------
+      { "type": "vote", "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
+        "twitch_handle": "d4hines", "vote": "A" }
+      ---------
       { "type": "ticket_transfer",
         "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
         "receiver": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
         "ticket_id": [ "KT1LiabSxPyVUmVZCqHneCFLJrqQcLHkmX9d", "68656c6c6f" ],
         "amount": "0" }
-      ---------
-      { "type": "vm_transaction", "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
-        "operation":
-          { "operation":
-              { "address": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
-                "argument":
-                  [ "Union", [ "Left", [ "Union", [ "Right", [ "Int", "5" ] ] ] ] ] },
-            "tickets":
-              [ [ [ "KT1LiabSxPyVUmVZCqHneCFLJrqQcLHkmX9d", "68656c6c6f" ], "0" ] ] } }
       ---------
       { "type": "withdraw", "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
         "ticket_id": [ "KT1LiabSxPyVUmVZCqHneCFLJrqQcLHkmX9d", "68656c6c6f" ],
@@ -172,6 +239,50 @@ module Initial = struct
     let binary = "\x80" ^ binary in
     Operation_hash.hash binary
 
+  let%expect_test "Hashing a Input Vote" =
+    let sender =
+      let secret =
+        Secret.Ed25519
+          (Ed25519.Secret.of_b58
+             "edsk3MVrH9TbnFw7VsbBZX2yMNv4ApszZecLpPqrigx3HNnsDwQGio"
+          |> Option.get)
+      in
+      Identity.make secret |> Identity.key_hash |> Address.of_key_hash
+    in
+    let open Deku_gameboy in
+    let nonce = Nonce.of_n N.one in
+    let level = Level.zero in
+    let operation =
+      Operation_attest_twitch_handle { sender; twitch_handle = "1337gmr" }
+    in
+    let operation_hash = hash ~nonce ~level ~operation in
+    Format.printf "Operation_attest_twitch_handle: %a\n" Operation_hash.pp
+      operation_hash;
+    let operation =
+      Operation_attest_deku_address
+        { sender; deku_address = sender; twitch_handle = "1337gmr" }
+    in
+    let operation_hash = hash ~nonce ~level ~operation in
+    Format.printf "Operation_attest_deku_address: %a\n" Operation_hash.pp
+      operation_hash;
+    let operation = Operation_vote { sender; vote = Input Joypad.A } in
+    let operation_hash = hash ~nonce ~level ~operation in
+    Format.printf "Operation_vote: %a\n" Operation_hash.pp operation_hash;
+    let operation =
+      Operation_delegated_vote
+        { sender; vote = Input Joypad.A; twitch_handle = "1337gmr" }
+    in
+    let operation_hash = hash ~nonce ~level ~operation in
+    Format.printf "Operation_delegated_vote: %a\n" Operation_hash.pp
+      operation_hash;
+
+    [%expect
+      {|
+      Operation_attest_twitch_handle: Do3nPqZQPXSVq7JmtWmus5WTBYf8PcLzZqgcr9wrL34Z1absaW2r
+      Operation_attest_deku_address: Do41eSeJG6d5bAST6TWeESGuivoz8Qm3A6eRaTM5qMUvtHxAiKMN
+      Operation_vote: Do3bzgbxFUWpkKp65otHmNqGRDXEjUHHQVc9y3CPHkeNgHHcpDWb
+      Operation_delegated_vote: Do2w6q7qGjP4RjSYhcggYh6CRJwcLCFWJthvQcBWi5jwZNhvHSou |}]
+
   let make ~nonce ~level ~operation =
     let hash = hash ~nonce ~level ~operation in
     Initial_operation { hash; nonce; level; operation }
@@ -206,70 +317,43 @@ module Initial = struct
     let noop = make ~nonce ~level:Level.zero ~operation in
     show_initial noop;
     let operation =
-      let address =
-        Address.of_b58 "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE" |> Option.get
-      in
-      let contract_address =
-        Deku_tezos.Contract_hash.of_b58 "KT1LiabSxPyVUmVZCqHneCFLJrqQcLHkmX9d"
-        |> Option.get
-      in
-      let ticketer = Ticket_id.Tezos contract_address in
-      let ticket_id = Ticket_id.make ticketer (Bytes.of_string "hello") in
-      let open Ocaml_wasm_vm in
-      let argument = Value.(Union (Left (Union (Right (Int (Z.of_int 5)))))) in
-      let operation = Operation.Call { address; argument } in
-      let payload =
-        Operation_payload.{ operation; tickets = [ (ticket_id, Amount.zero) ] }
-      in
-      Operation_vm_transaction { sender = address; operation = payload }
+      Operation_delegated_vote
+        {
+          sender;
+          twitch_handle = "d4hines";
+          vote = Game.Vote.Governance Game.Anarchy;
+        }
     in
-    (* TODO: triple-nested `operation` tags is pretty ugly. We should make it prettier. *)
-    let vm_operation = make ~nonce ~level:Level.zero ~operation in
-    show_initial vm_operation;
+    let vote_operation = make ~nonce ~level:Level.zero ~operation in
+    show_initial vote_operation;
     [%expect
       {|
       -------
       Pretty: Operation.Initial.Initial_operation {
-                hash = Do2XVsHk8txd6V4YTt6io1nyJMHujD6APbhWWW64DwM3y8D5XxhF;
+                hash = Do3StPYpof6NyxvDj4GJhv6FXL84qHx9KWn6DJpJSQVC4M13QX5o;
                 nonce = 0; level = 0;
                 operation =
                 Operation.Operation_noop {
                   sender = (Address.Implicit tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE)}}
-      Hex: 000000010000000001000300005d9ac49706a3566b65f1ad56dd1433e4569a0367
+      Hex: 000000010000000001000600005d9ac49706a3566b65f1ad56dd1433e4569a0367
       Json: { "nonce": "0", "level": 0,
               "operation":
                 { "type": "noop",
                   "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE" } }
       -------
       Pretty: Operation.Initial.Initial_operation {
-                hash = Do2PvNgvfLPoj7WJoAMECmtPB5chhKuSbj2cmo9XF31bXRxoxheu;
+                hash = Do2nsjgRhfUYDJqNELzQSXyhqY11i78j1SSZwQn4CFY4Zw6hoyUQ;
                 nonce = 0; level = 0;
                 operation =
-                Operation.Operation_vm_transaction {
+                Operation.Operation_delegated_vote {
                   sender = (Address.Implicit tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE);
-                  operation =
-                  { Operation_payload.operation =
-                    Operation.Call {
-                      address =
-                      (Address.Implicit tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE);
-                      argument =
-                      (Value.V.Union
-                         (Value.V.Left (Value.V.Union (Value.V.Right 5))))};
-                    tickets = <opaque> }}}
-      Hex: 00000001000000000100010000001600005d9ac49706a3566b65f1ad56dd1433e4569a036700000029010000001600005d9ac49706a3566b65f1ad56dd1433e4569a036709000000090f09000000031000050000002300851badd1d782c28269474322b2662d7774545bf50000000568656c6c6f0000000100
+                  twitch_handle = "d4hines";
+                  vote = (Game.Vote.Governance Game.Anarchy)}}
+      Hex: 00000001000000000100040000001600005d9ac49706a3566b65f1ad56dd1433e4569a036700000007643468696e6573000000000100
       Json: { "nonce": "0", "level": 0,
               "operation":
-                { "type": "vm_transaction",
-                  "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
-                  "operation":
-                    { "operation":
-                        { "address": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
-                          "argument":
-                            [ "Union",
-                              [ "Left", [ "Union", [ "Right", [ "Int", "5" ] ] ] ] ] },
-                      "tickets":
-                        [ [ [ "KT1LiabSxPyVUmVZCqHneCFLJrqQcLHkmX9d",
-                              "68656c6c6f" ], "0" ] ] } } } |}]
+                { "type": "vote", "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
+                  "twitch_handle": "d4hines", "vote": "Anarchy" } } |}]
 
   let includable_operation_window = Deku_constants.includable_operation_window
 
@@ -320,7 +404,10 @@ module Signed = struct
         let sender =
           match operation with
           | Operation_ticket_transfer { sender; _ } -> sender
-          | Operation_vm_transaction { sender; _ } -> sender
+          | Operation_attest_twitch_handle { sender; _ } -> sender
+          | Operation_attest_deku_address { sender; _ } -> sender
+          | Operation_vote { sender; _ } -> sender
+          | Operation_delegated_vote { sender; _ } -> sender
           | Operation_withdraw { sender; _ } -> sender
           | Operation_noop { sender } -> sender
         in
@@ -362,9 +449,29 @@ module Signed = struct
     let initial = Initial.make ~nonce ~level ~operation in
     make ~identity ~initial
 
-  let vm_transaction ~nonce ~level ~content ~identity =
+  let vote ~nonce ~level ~vote ~identity =
     let sender = Address.of_key_hash (Identity.key_hash identity) in
-    let operation = Operation_vm_transaction { sender; operation = content } in
+    let operation = Operation_vote { sender; vote } in
+    let initial = Initial.make ~nonce ~level ~operation in
+    make ~identity ~initial
+
+  let delegated_vote ~nonce ~level ~vote ~twitch_handle ~identity =
+    let sender = Address.of_key_hash (Identity.key_hash identity) in
+    let operation = Operation_delegated_vote { sender; twitch_handle; vote } in
+    let initial = Initial.make ~nonce ~level ~operation in
+    make ~identity ~initial
+
+  let attest_twitch_handle ~nonce ~level ~twitch_handle ~identity =
+    let sender = Address.of_key_hash (Identity.key_hash identity) in
+    let operation = Operation_attest_twitch_handle { sender; twitch_handle } in
+    let initial = Initial.make ~nonce ~level ~operation in
+    make ~identity ~initial
+
+  let attest_deku_address ~nonce ~level ~deku_address ~twitch_handle ~identity =
+    let sender = Address.of_key_hash (Identity.key_hash identity) in
+    let operation =
+      Operation_attest_deku_address { sender; deku_address; twitch_handle }
+    in
     let initial = Initial.make ~nonce ~level ~operation in
     make ~identity ~initial
 end

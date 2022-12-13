@@ -71,10 +71,11 @@ let apply_block ~sw ~state ~block =
           match receipt with
           | Ticket_transfer_receipt { operation; _ }
           | Withdraw_receipt { operation; _ }
-          | Vm_origination_receipt { operation; _ }
-          | Vm_transaction_receipt { operation; _ } ->
+          | Attest_twitch_handle { operation; _ }
+          | Attest_deku_address { operation; _ }
+          | Game_vote { operation; _ }
+          | Delegated_game_vote { operation; _ } ->
               operation
-          | Vm_transaction_error { operation; _ } -> operation
         in
         Operation_hash.Map.add hash receipt receipts)
       state.receipts receipts
@@ -140,8 +141,8 @@ let start_api ~env ~sw ~port ~state =
        |> Server.with_body (module Helpers_operation_message)
        |> Server.with_body (module Helpers_hash_operation)
        |> Server.with_body (module Post_operation)
-       |> Server.without_body (module Get_vm_state)
-       |> Server.without_body (module Get_vm_state_key)
+       (* |> Server.without_body (module Get_vm_state)
+          |> Server.without_body (module Get_vm_state_key) *)
        |> Server.without_body (module Get_stats)
        |> Server.with_body (module Encode_operation)
        |> Server.with_body (module Decode_operation)
@@ -229,8 +230,9 @@ let main params style_renderer log_level =
   let state =
     match state with
     | None ->
-        let vm_state = Ocaml_wasm_vm.State.empty in
-        let protocol = Protocol.initial_with_vm_state ~vm_state in
+        (* FIXME: *)
+        let twitch_oracle_address = assert false in
+        let protocol = Protocol.initial ~twitch_oracle_address () in
         let current_block = Genesis.block in
         let receipts = Operation_hash.Map.empty in
         let (Block { level; _ }) = current_block in

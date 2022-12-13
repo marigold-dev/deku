@@ -24,8 +24,8 @@ export DEKU_TEZOS_CONSENSUS_ADDRESS="KT1LHcxdRTgyFp1TdrgodVekLFkQwzFnTJcY"
 export DEKU_DUMMYT_TICKET="KT1Us9LZaG8F6cskmMg1hB2FPRwakWkegkPi"
 export DEKU_API_PORT=8080
 export DEKU_DEFAULT_BLOCK_SIZE=${DEKU_DEFAULT_BLOCK_SIZE:-10000}
-export DEKU_LOG_VERBOSITY=${DEKU_LOG_VERBOSITY:-info}
-export DEKU_API_LOG_VERBOSITY=${DEKU_API_LOG_VERBOSITY:-info}
+# export DEKU_LOG_VERBOSITY=${DEKU_LOG_VERBOSITY:-info}
+# export DEKU_API_LOG_VERBOSITY=${DEKU_API_LOG_VERBOSITY:-info}
 
 # Starting only one API node
 export DEKU_API_NODE_URI="127.0.0.1:4440"
@@ -53,7 +53,7 @@ start_node() {
 
   # Starts the Node
   _build/install/default/bin/deku-node \
-    --default-block-size=10000 \
+    --default-block-size=10 \
     --port "444$N" \
     --database-uri "sqlite3:./flextesa_chain/data/$N/database.db" \
     --data-folder "./flextesa_chain/data/$N" \

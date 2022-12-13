@@ -34,13 +34,12 @@ let send_blocks ~sw ~connection ~above node =
   | Some indexer ->
       Eio.Fiber.fork ~sw @@ fun () ->
       let rec send_while level =
-        let level = Level.next level in
         match Block_storage.find_block_and_votes_by_level ~level indexer with
         | Some network ->
             let (Network_message { raw_header; raw_content }) = network in
             Network_manager.send ~connection ~raw_header ~raw_content
               node.network;
-            send_while level
+            send_while (Level.next level)
         | None -> ()
       in
       send_while above

@@ -4,18 +4,29 @@ type receipt =
   | Ticket_transfer_receipt of { operation : Operation_hash.t }
   | Withdraw_receipt of {
       operation : Operation_hash.t;
-      handle : Ledger.Withdrawal_handle.t;
+      handle : Ledger.Withdrawal_handle.t; [@opaque]
     }
-  | Vm_origination_receipt of {
+  | Attest_twitch_handle of {
       operation : Operation_hash.t;
-      contract_address : Deku_ledger.Contract_address.t;
+      deku_address : Address.t;
+      twitch_handle : Game.Twitch_handle.t;
     }
-  | Vm_transaction_receipt of {
+  | Attest_deku_address of {
       operation : Operation_hash.t;
-      contract_address : Deku_ledger.Contract_address.t;
+      deku_address : Address.t;
+      twitch_handle : Game.Twitch_handle.t;
     }
-  | Vm_transaction_error of { operation : Operation_hash.t; message : string }
+  | Game_vote of {
+      operation : Operation_hash.t;
+      sender : Address.t;
+      vote : Game.Vote.t;
+    }
+  | Delegated_game_vote of {
+      operation : Operation_hash.t;
+      delegator : Game.Twitch_handle.t;
+      vote : Game.Vote.t;
+    }
 
-type t = receipt [@@deriving eq]
+type t = receipt [@@deriving eq, show]
 
 val encoding : receipt Data_encoding.t

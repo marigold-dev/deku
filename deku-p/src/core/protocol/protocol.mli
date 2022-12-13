@@ -1,20 +1,19 @@
 open Deku_concepts
-open Deku_tezos
 open Deku_ledger
 
 type protocol = private
   | Protocol of {
       included_operations : Included_operation_set.t;
-      included_tezos_operations : Tezos_operation_hash.Set.t;
+      included_tezos_operations : Deku_tezos.Tezos_operation_hash.Set.t;
       ledger : Ledger.t;
-      vm_state : Ocaml_wasm_vm.State.t;
+      vm_state : Deku_gameboy.state;
+      game : Game.t;
     }
 
 type t = protocol
 
 val encoding : protocol Data_encoding.t
-val initial : protocol
-val initial_with_vm_state : vm_state:Ocaml_wasm_vm.State.t -> protocol
+val initial : ?twitch_oracle_address:Address.t -> unit -> protocol
 
 val prepare :
   parallel:

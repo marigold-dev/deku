@@ -17,7 +17,7 @@ export DEKU_API_DATA_FOLDER="./flextesa_chain/data/0/"
 export DEKU_API_LOG_VERBOSITY=${DEKU_API_LOG_VERBOSITY:-info}
 
 ## The api needs its own vm
-nix run ".#$vm" -- "$DEKU_API_VM" &
+# nix run ".#$vm" -- "$DEKU_API_VM" &
 sleep 1
 echo Start the API
 

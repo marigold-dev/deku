@@ -6,7 +6,7 @@
   deku_concepts
   deku_constants
   tezos-micheline
-  deku_external_vm
+  deku_gameboy
   deku_tezos
   deku_ledger
   deku_metrics
