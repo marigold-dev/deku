@@ -3,18 +3,21 @@
 const main = 
   ([ope, cookieBakers]: 
     [parameter,
-     storage]): return_ => {const player = 
-     Tezos.get_source();
+     storage]): return_ => {
    return [list([]),
-    match(ope, {Mint: (m: mint) => {match(m.operation, {Cookie: () => {let cookieBaker: cookieBaker = 
+    match(ope, {Mint: (m: mint) => {match(m.operation, {Cookie: () => {
+      let player = m.layerOneAddress;
+      let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         let cookies = 
           cookieBaker.cookies + (m.amount as nat);
         let cookieBakers = 
           Map.update(player as address, Some
-            ({...cookieBaker, cookies: cookies, layerOneAddress: Some(ope.layerOneAddress)}), cookieBakers);
+            ({...cookieBaker, cookies: cookies}), cookieBakers);
         return cookieBakers},
-       Cursor: () => {let cookieBaker: cookieBaker = 
+       Cursor: () => {
+        let player = m.layerOneAddress;
+        let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         if(cookieBaker.cookies >= cookieBaker.cursorCost) {let cursors = 
            cookieBaker.cursors + (1 as nat);
@@ -35,7 +38,9 @@ const main =
            Map.update(player as address, Some
              (updatedCookieBaker), cookieBakers);
          return cookieBakers} else {return cookieBakers}},
-       Grandma: () => {let cookieBaker: cookieBaker = 
+       Grandma: () => {
+        let player = m.layerOneAddress;
+        let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         if(cookieBaker.cookies >= cookieBaker.grandmaCost) {let grandmas = 
            cookieBaker.grandmas + (1 as nat);
@@ -56,7 +61,9 @@ const main =
            Map.update(player as address, Some
              (updatedCookieBaker), cookieBakers);
          return cookieBakers} else {return cookieBakers}},
-       Farm: () => {let cookieBaker: cookieBaker = 
+       Farm: () => {
+        let player = m.layerOneAddress;
+        let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         if(cookieBaker.cookies >= cookieBaker.farmCost) {let farms = 
            cookieBaker.farms + (1 as nat);
@@ -75,7 +82,9 @@ const main =
            Map.update(player as address, Some
              (updatedCookieBaker), cookieBakers);
          return cookieBakers} else {return cookieBakers}},
-       Mine: () => {let cookieBaker: cookieBaker = 
+       Mine: () => {
+        let player = m.layerOneAddress;
+        let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         if(cookieBaker.cookies >= cookieBaker.mineCost) {let mines = 
            cookieBaker.mines + (1 as nat);
@@ -94,7 +103,9 @@ const main =
            Map.update(player as address, Some
              (updatedCookieBaker), cookieBakers);
          return cookieBakers} else {return cookieBakers}},
-       Factory: () => {let cookieBaker: cookieBaker = 
+       Factory: () => {
+        let player = m.layerOneAddress;
+        let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         if(cookieBaker.cookies >= cookieBaker.factoryCost) {let factories = 
            cookieBaker.factories + (1 as nat);
@@ -115,7 +126,9 @@ const main =
            Map.update(player as address, Some
              (updatedCookieBaker), cookieBakers);
          return cookieBakers} else {return cookieBakers}},
-       Bank: () => {let cookieBaker: cookieBaker = 
+       Bank: () => {
+        let player = m.layerOneAddress;
+        let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         if(cookieBaker.cookies >= cookieBaker.bankCost) {let banks = 
            cookieBaker.banks + (1 as nat);
@@ -134,7 +147,9 @@ const main =
            Map.update(player as address, Some
              (updatedCookieBaker), cookieBakers);
          return cookieBakers} else {return cookieBakers}},
-       Temple: () => {let cookieBaker: cookieBaker = 
+       Temple: () => {
+        let player = m.layerOneAddress;
+        let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         if(cookieBaker.cookies >= cookieBaker.templeCost) {let temples = 
            cookieBaker.temples + (1 as nat);
@@ -155,7 +170,9 @@ const main =
            Map.update(player as address, Some
              (updatedCookieBaker), cookieBakers);
          return cookieBakers} else {return cookieBakers}}})},
-     Eat: eat => {let cookieBaker: cookieBaker = 
+     Eat: eat => {
+      let player = eat.layerOneAddress;
+      let cookieBaker: cookieBaker = 
         force_access(player as address, cookieBakers);
       if(cookieBaker.cookies >= eat.amount) {let eatenCookies = 
          cookieBaker.eatenCookies + (eat.amount as nat);
@@ -167,7 +184,9 @@ const main =
             cookies: cookies,
             eatenCookies: eatenCookies}), cookieBakers);
        return cookieBakers} else {return cookieBakers}},
-     Transfer: transfer => {let sender: cookieBaker = 
+     Transfer: transfer => {
+      let player = transfer.layerOneAddress;
+      let sender: cookieBaker = 
         force_access(player as address, cookieBakers);
       if(sender.cookies >= transfer.amount) {let rawRecipient = transfer.recipient;
        let recipient = 
@@ -184,7 +203,9 @@ const main =
          Map.update(rawRecipient as address, Some
            ({...recipient, cookies: recipientCookies}), cookieBakers);
        return cookieBakers} else {return cookieBakers}},
-     Delegate: delegation => {let cookieBaker: cookieBaker = 
+     Delegate: delegation => {
+      let player = delegation.layerOneAddress;
+      let cookieBaker: cookieBaker = 
         force_access(player as address, cookieBakers);
       let authorizedKeys = 
          Set.add(delegation.address ,cookieBaker.authorizedKeys);

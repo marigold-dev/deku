@@ -7,17 +7,12 @@ const _test_mint_grandma =
      Test.originate(main, initial_storage, 0 as tez);
    let contr = Test.to_contract(taddr);
    let _ = 
-     Test.transfer_to_contract_exn(contr, ({operationType: Mint(),
-       operation: Some (Cookie()) as option<actions>,
-       amount: 100 as nat,
-       recipient: None() as option<address>}), 1 as mutez);
+     Test.transfer_to_contract_exn(contr, (Mint({operation: Cookie(), amount: 100 as nat, layerOneAddress: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
    let _ = 
-     Test.transfer_to_contract_exn(contr, ({operationType: Mint(),
-       operation: Some (Grandma()) as option<actions>,
-       amount: 1 as nat,
-       recipient: None() as option<address>}), 1 as mutez);
+     Test.transfer_to_contract_exn(contr, (Mint({operation: Grandma(), amount: 1 as nat, layerOneAddress: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
+   let authorizedKeys: set<address> = Set.empty;
    let expectedStorage: storage = 
-     Map.update("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
+     Map.update("tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
       as address, Some
        ({bankCost: initialBankCost,
         banks: 0 as nat,
@@ -35,7 +30,7 @@ const _test_mint_grandma =
         mines: 0 as nat,
         passiveCPS: 3 as nat,
         templeCost: initialTempleCost,
-        temples: 0 as nat}), initial_storage);
+        temples: 0 as nat, authorizedKeys:authorizedKeys}), initial_storage);
    let actualStorage = Test.get_storage(taddr);
    let _ = Test.log(["actual   storage: ", actualStorage]);
    let _ = Test.log(["expected storage: ", expectedStorage]);
@@ -49,18 +44,13 @@ const _test_cannot_mint_grandma =
    let [taddr, _, _] = 
      Test.originate(main, initial_storage, 0 as tez);
    let contr = Test.to_contract(taddr);
+      let _ = 
+     Test.transfer_to_contract_exn(contr, (Mint({operation: Cookie(), amount: 1 as nat, layerOneAddress: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
    let _ = 
-     Test.transfer_to_contract_exn(contr, ({operationType: Mint(),
-       operation: Some (Cookie()) as option<actions>,
-       amount: 1 as nat,
-       recipient: None() as option<address>}), 1 as mutez);
-   let _ = 
-     Test.transfer_to_contract_exn(contr, ({operationType: Mint(),
-       operation: Some (Grandma()) as option<actions>,
-       amount: 1 as nat,
-       recipient: None() as option<address>}), 1 as mutez);
+     Test.transfer_to_contract_exn(contr, (Mint({operation: Grandma(), amount: 1 as nat, layerOneAddress: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
+   let authorizedKeys: set<address> = Set.empty;
    let expectedStorage: storage = 
-     Map.update("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
+     Map.update("tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
       as address, Some
        ({bankCost: initialBankCost,
         banks: 0 as nat,
@@ -78,7 +68,7 @@ const _test_cannot_mint_grandma =
         mines: 0 as nat,
         passiveCPS: 0 as nat,
         templeCost: initialTempleCost,
-        temples: 0 as nat}), initial_storage);
+        temples: 0 as nat, authorizedKeys:authorizedKeys}), initial_storage);
    let actualStorage = Test.get_storage(taddr);
    let _ = Test.log(["actual   storage: ", actualStorage]);
    let _ = Test.log(["expected storage: ", expectedStorage]);
