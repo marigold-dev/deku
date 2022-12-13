@@ -39,21 +39,21 @@ type mint =
   {
     operation: actions,
     amount: nat,
-    layerOneAddress: address
+    onBehalfOf: address
   };
 type transfer =
   {
     amount: nat,
     recipient: address,
-    layerOneAddress: address
+    onBehalfOf: address
   };
 type eat =
   {
     amount: nat,
-    layerOneAddress: address
+    onBehalfOf: address
   };
 
-type delegate = {layerOneAddress: address, address: address};
+type delegate = {onBehalfOf: address};
 
 type parameter = | ["Mint", mint] | ["Transfer", transfer] | ["Eat", eat] | ["Delegate", delegate]
 

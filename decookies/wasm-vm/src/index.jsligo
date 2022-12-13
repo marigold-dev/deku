@@ -6,7 +6,7 @@ const main =
      storage]): return_ => {
    return [list([]),
     match(ope, {Mint: (m: mint) => {match(m.operation, {Cookie: () => {
-      let player = m.layerOneAddress;
+      let player = m.onBehalfOf;
       let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         let cookies = 
@@ -16,7 +16,7 @@ const main =
             ({...cookieBaker, cookies: cookies}), cookieBakers);
         return cookieBakers},
        Cursor: () => {
-        let player = m.layerOneAddress;
+        let player = m.onBehalfOf;
         let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         if(cookieBaker.cookies >= cookieBaker.cursorCost) {let cursors = 
@@ -39,7 +39,7 @@ const main =
              (updatedCookieBaker), cookieBakers);
          return cookieBakers} else {return cookieBakers}},
        Grandma: () => {
-        let player = m.layerOneAddress;
+        let player = m.onBehalfOf;
         let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         if(cookieBaker.cookies >= cookieBaker.grandmaCost) {let grandmas = 
@@ -62,7 +62,7 @@ const main =
              (updatedCookieBaker), cookieBakers);
          return cookieBakers} else {return cookieBakers}},
        Farm: () => {
-        let player = m.layerOneAddress;
+        let player = m.onBehalfOf;
         let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         if(cookieBaker.cookies >= cookieBaker.farmCost) {let farms = 
@@ -83,7 +83,7 @@ const main =
              (updatedCookieBaker), cookieBakers);
          return cookieBakers} else {return cookieBakers}},
        Mine: () => {
-        let player = m.layerOneAddress;
+        let player = m.onBehalfOf;
         let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         if(cookieBaker.cookies >= cookieBaker.mineCost) {let mines = 
@@ -104,7 +104,7 @@ const main =
              (updatedCookieBaker), cookieBakers);
          return cookieBakers} else {return cookieBakers}},
        Factory: () => {
-        let player = m.layerOneAddress;
+        let player = m.onBehalfOf;
         let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         if(cookieBaker.cookies >= cookieBaker.factoryCost) {let factories = 
@@ -127,7 +127,7 @@ const main =
              (updatedCookieBaker), cookieBakers);
          return cookieBakers} else {return cookieBakers}},
        Bank: () => {
-        let player = m.layerOneAddress;
+        let player = m.onBehalfOf;
         let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         if(cookieBaker.cookies >= cookieBaker.bankCost) {let banks = 
@@ -148,7 +148,7 @@ const main =
              (updatedCookieBaker), cookieBakers);
          return cookieBakers} else {return cookieBakers}},
        Temple: () => {
-        let player = m.layerOneAddress;
+        let player = m.onBehalfOf;
         let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
         if(cookieBaker.cookies >= cookieBaker.templeCost) {let temples = 
@@ -171,7 +171,7 @@ const main =
              (updatedCookieBaker), cookieBakers);
          return cookieBakers} else {return cookieBakers}}})},
      Eat: eat => {
-      let player = eat.layerOneAddress;
+      let player = eat.onBehalfOf;
       let cookieBaker: cookieBaker = 
         force_access(player as address, cookieBakers);
       if(cookieBaker.cookies >= eat.amount) {let eatenCookies = 
@@ -185,7 +185,7 @@ const main =
             eatenCookies: eatenCookies}), cookieBakers);
        return cookieBakers} else {return cookieBakers}},
      Transfer: transfer => {
-      let player = transfer.layerOneAddress;
+      let player = transfer.onBehalfOf;
       let sender: cookieBaker = 
         force_access(player as address, cookieBakers);
       if(sender.cookies >= transfer.amount) {let rawRecipient = transfer.recipient;
@@ -204,11 +204,11 @@ const main =
            ({...recipient, cookies: recipientCookies}), cookieBakers);
        return cookieBakers} else {return cookieBakers}},
      Delegate: delegation => {
-      let player = delegation.layerOneAddress;
+      let player = delegation.onBehalfOf;
       let cookieBaker: cookieBaker = 
         force_access(player as address, cookieBakers);
       let authorizedKeys = 
-         Set.add(delegation.address ,cookieBaker.authorizedKeys);
+         Set.add(Tezos.get_sender(), cookieBaker.authorizedKeys);
        let cookieBakers = 
          Map.update(player as address, Some
            ({...cookieBaker,
