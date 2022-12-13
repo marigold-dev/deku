@@ -7,9 +7,9 @@ const _test_mint_grandma =
      Test.originate(main, initial_storage, 0 as tez);
    let contr = Test.to_contract(taddr);
    let _ = 
-     Test.transfer_to_contract_exn(contr, (Mint({operation: Cookie(), amount: 100 as nat, layerOneAddress: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
+     Test.transfer_to_contract_exn(contr, (Mint({operation: Cookie(), amount: 100 as nat, onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
    let _ = 
-     Test.transfer_to_contract_exn(contr, (Mint({operation: Grandma(), amount: 1 as nat, layerOneAddress: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
+     Test.transfer_to_contract_exn(contr, (Mint({operation: Grandma(), amount: 1 as nat, onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
    let authorizedKeys: set<address> = Set.empty;
    let expectedStorage: storage = 
      Map.update("tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
@@ -45,9 +45,9 @@ const _test_cannot_mint_grandma =
      Test.originate(main, initial_storage, 0 as tez);
    let contr = Test.to_contract(taddr);
       let _ = 
-     Test.transfer_to_contract_exn(contr, (Mint({operation: Cookie(), amount: 1 as nat, layerOneAddress: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
+     Test.transfer_to_contract_exn(contr, (Mint({operation: Cookie(), amount: 1 as nat, onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
    let _ = 
-     Test.transfer_to_contract_exn(contr, (Mint({operation: Grandma(), amount: 1 as nat, layerOneAddress: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
+     Test.transfer_to_contract_exn(contr, (Mint({operation: Grandma(), amount: 1 as nat, onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
    let authorizedKeys: set<address> = Set.empty;
    let expectedStorage: storage = 
      Map.update("tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
