@@ -58,7 +58,7 @@ export default function make(command: Commander.Command) {
     )
     .action((walletPath, contractPath, initialStorage, options) => {
       const apiUri = options.endpoint ?? DEKU_API_URL;
-      const ligoUri = options.ligo_uri ?? LIGO_DEKU_RPC_URL;
+      const ligoUri = options.ligoEndpoint ?? LIGO_DEKU_RPC_URL;
       main(apiUri, ligoUri, walletPath, contractPath, initialStorage);
     });
   return command;

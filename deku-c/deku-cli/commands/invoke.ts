@@ -95,12 +95,12 @@ export default function make(command: Commander.Command) {
       `URI of the deku API to use (default ${DEKU_API_URL})`
     )
     .option(
-      "--ligoRpc <endpoint>",
+      "--ligo-endpoint <endpoint>",
       `URI of the ligo RPC API to use (default ${LIGO_DEKU_RPC_URL})`
     )
     .action((walletPath, contractAddress, parameter, options) => {
       const apiUri = options.endpoint ?? DEKU_API_URL;
-      const ligoApiUri = options.ligoRpc ?? LIGO_DEKU_RPC_URL;
+      const ligoApiUri = options.ligoEndpoint ?? LIGO_DEKU_RPC_URL;
       invokeMain(
         apiUri,
         ligoApiUri,
@@ -126,7 +126,7 @@ export default function make(command: Commander.Command) {
     )
     .action((walletPath, contractAddress, contractPath, ligo, options) => {
       const apiUri = options.endpoint ?? DEKU_API_URL;
-      const ligoUri = options.ligo_uri ?? LIGO_DEKU_RPC_URL;
+      const ligoUri = options.ligoEndpoint ?? LIGO_DEKU_RPC_URL;
       invokeLigoMain(
         apiUri,
         ligoUri,
