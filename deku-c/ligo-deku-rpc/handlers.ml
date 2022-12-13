@@ -42,12 +42,25 @@ end
 
 let version p = Routes.(s "api" / s "v1") p
 
-type lang =
-  | Jsligo [@name "jsligo"]
-  | Cameligo [@name "mligo"]
-  | PascalLigo [@name "ligo"]
-  | Michelson [@name "michelson"]
-[@@deriving encoding]
+type lang = Jsligo | Cameligo | PascalLigo | Michelson
+
+let lang_enc =
+  let open Json_encoding in
+  conv
+    (fun lang ->
+      match lang with
+      | Jsligo -> "jsligo"
+      | Cameligo -> "mligo"
+      | PascalLigo -> "ligo"
+      | Michelson -> "michelson")
+    (fun str ->
+      match str with
+      | "jsligo" -> Jsligo
+      | "mligo" -> Cameligo
+      | "ligo" -> PascalLigo
+      | "michelson" -> Michelson
+      | _ -> failwith "unknown lang string")
+    string
 
 let lang_to_string = function
   | Jsligo -> "jsligo"
