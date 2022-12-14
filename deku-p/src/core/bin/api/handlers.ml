@@ -414,7 +414,7 @@ module Get_stats : NO_BODY_HANDLERS = struct
     Ok { latency; tps }
 end
 
-module Get_hexa_to_signed : HANDLERS = struct
+module Encode_operation : HANDLERS = struct
   type path = unit
   type body = { nonce : Nonce.t; level : Level.t; operation : Operation.t }
 
