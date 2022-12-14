@@ -445,6 +445,33 @@ module Encode_operation : HANDLERS = struct
     Ok { bytes }
 end
 
+module Decode_operation : HANDLERS = struct
+  type path = unit
+  type body = { data : string }
+
+  let body_encoding =
+    let open Data_encoding in
+    conv
+      (fun { data } -> data)
+      (fun data -> { data })
+      (obj1 (req "data" string))
+
+  type response = Operation.Initial.hash_repr
+
+  let response_encoding = Operation.Initial.hash_encoding
+  let meth = `POST
+  let path = Routes.(version / s "helpers" / s "decode-operation" /? nil)
+  let route = Routes.(path @--> ())
+
+  let handler ~path:_ ~body ~state:_ =
+    let { data } = body in
+    let data = Hex.to_string (`Hex data) in
+    let nonce, level, operation =
+      Data_encoding.Binary.of_string_exn Operation.Initial.hash_encoding data
+    in
+    Ok (nonce, level, operation)
+end
+
 module Get_receipt : NO_BODY_HANDLERS = struct
   type path = Operation_hash.t
   type response = Receipt.t
