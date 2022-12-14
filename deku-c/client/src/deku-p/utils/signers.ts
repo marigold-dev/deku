@@ -1,3 +1,4 @@
+import { SigningType } from "@airgap/beacon-types";
 import { Key } from "../core/key";
 import {
   Initial_operation,
@@ -16,8 +17,10 @@ interface BeaconSigner {
     { address: string; publicKey: Key } | undefined
   >;
   requestSignPayload: ({
+    signingType,
     payload,
   }: {
+    signingType?: SigningType;
     payload: string;
   }) => Promise<{ signature: string } | undefined | null>;
 }
@@ -76,7 +79,10 @@ export const fromMemorySigner = (signer: MemorySigner): DekuSigner => {
 export const fromBeaconSigner = (signer: BeaconSigner): DekuSigner => {
   class BeaconSigner extends DekuSigner {
     sign = async (payload: string) => {
-      const sig = await signer.requestSignPayload({ payload });
+      const sig = await signer.requestSignPayload({
+        payload,
+        signingType: SigningType.DEKU,
+      });
       if (!sig) {
         return Promise.reject({
           type: "SIGNER_ERROR",
