@@ -144,6 +144,7 @@ let start_api ~env ~sw ~port ~state =
        |> Server.without_body (module Get_vm_state_key)
        |> Server.without_body (module Get_stats)
        |> Server.with_body (module Encode_operation)
+       |> Server.with_body (module Decode_operation)
        |> Server.without_body (module Get_receipt)
        |> Server.with_body (module Compute_contract_hash)
        |> Server.with_body (module Helper_compile_origination)
