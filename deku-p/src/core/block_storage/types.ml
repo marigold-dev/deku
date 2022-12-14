@@ -41,25 +41,28 @@ module Timestamp : Rapper.CUSTOM with type t = Timestamp.t = struct
     Caqti_type.(custom ~encode ~decode float)
 end
 
-module Block : Rapper.CUSTOM with type t = Data_encoding.Json.t = struct
-  type t = Data_encoding.Json.t
+module Block : Rapper.CUSTOM with type t = Block.t = struct
+  type t = Block.t
 
   let t =
     let encode block =
-      block |> Data_encoding.Json.to_string |> Ezgzip.compress |> Result.ok
+      match Data_encoding.Binary.to_string Block.encoding block with
+      | Ok binary -> Ok (Ezgzip.compress binary)
+      | Error error ->
+          Error
+            (Format.asprintf "write error: %a"
+               Data_encoding.Binary.pp_write_error error)
     in
-    let decode json =
-      try
-        let maybe_string =
-          json |> Ezgzip.decompress |> Result.map Data_encoding.Json.from_string
-        in
-        match maybe_string with
-        | Ok value -> value
-        | _ -> failwith "cannot decompress block"
-      with exn ->
-        Error
-          (Format.sprintf "cannot decode block from the database: %s"
-             (Printexc.to_string exn))
+    let decode compressed =
+      match Ezgzip.decompress compressed with
+      | Ok binary -> (
+          match Data_encoding.Binary.of_string Block.encoding binary with
+          | Ok network -> Ok network
+          | Error error ->
+              Error
+                (Format.asprintf "%a" Data_encoding.Binary.pp_read_error error))
+      | Error (`Gzip error) ->
+          Error (Format.asprintf "%a" Ezgzip.pp_error error)
     in
     Caqti_type.(custom ~encode ~decode string)
 end
