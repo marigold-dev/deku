@@ -69,8 +69,7 @@ and handle_chain_action ~sw ~env ~action node =
       | Some indexer ->
           Eio.Fiber.fork_sub ~sw ~on_error @@ fun _sw ->
           let (Block { level; _ }) = block in
-          Block_storage.save_block_and_votes ~level ~network indexer;
-          Block_storage.save_block ~block indexer
+          Block_storage.save_block_and_votes ~level ~network indexer
       | None -> ())
   | Chain_send_blocks { connection; above } ->
       send_blocks ~sw ~connection ~above node
