@@ -6,6 +6,10 @@
   alcotest,
   binaryen,
   proto-alpha-utils,
+  emscripten,
+  ppx_blob,
+  llvm,
+  pkgs
 }:
 buildDunePackage rec {
   pname = "deku";
@@ -25,6 +29,9 @@ buildDunePackage rec {
     tezos-micheline
     binaryen
     proto-alpha-utils
+    llvm
+    pkgs.gdb
+    # llvmPackages_14.lldb
   ];
 
   buildInputs = [

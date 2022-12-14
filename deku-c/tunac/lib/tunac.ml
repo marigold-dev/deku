@@ -53,11 +53,31 @@ let compile_contract ~config contract =
       ~code:code
   in
   let contract = report_error @@ IR_of_michelson.compile_contract typed_contract in
+
+  let () =
+    Llvm_all_backends.initialize ();
+    let llvm_mod = Llvm_of_ir.compile_ir contract in
+    ignore llvm_mod
+    (* let target = Llvm_target.Target.by_triple "wasm32-unknown-unknown" in
+    let target_machine =
+      Llvm_target.TargetMachine.create
+        ~triple:"wasm32-unknown-unknown"
+        target
+    in
+    Llvm_target.TargetMachine.emit_to_file
+      llvm_mod
+      Llvm_target.CodeGenFileType.ObjectFile
+      "michelson_contract_from_llvm.wasm"
+      target_machine *)
+  in
+
+  let wasm_mod = Binaryen.Module.create () in
   Wasm_of_ir.compile_ir
     ~memory:config.memory
     ~optimize:config.optimize
     ~debug:config.debug
     ~shared_memory:config.shared_memory
+    wasm_mod
     contract
 
 let compile_contract ~config contract =

@@ -52,15 +52,15 @@ module Env = struct
 end
 let compile_pop var =
   Cblock
-    [ Cassign (var, Data.car (Cglobal "stack"))
-    ; Cglobal_assign ("stack", Data.cdr (Cglobal "stack")) ]
+    [ Cassign (var, Data.car (Cglobal "__michelson_stack"))
+    ; Cglobal_assign ("__michelson_stack", Data.cdr (Cglobal "__michelson_stack")) ]
 
 let compile_push ~env expr =
   let cell = Env.alloc_local env in
   let block =
     Cblock
-      [ Data.cons cell expr (Cglobal "stack")
-      ; Cglobal_assign ("stack", Cvar cell) ]
+      [ Data.cons cell expr (Cglobal "__michelson_stack")
+      ; Cglobal_assign ("__michelson_stack", Cvar cell) ]
   in
   Env.free_local env cell;
   block
@@ -81,32 +81,8 @@ let compile_pair ~env =
   Env.free_local env item;
   block
 
-let compile_dig ~env n =
-  let n = Int32.sub n 1l in
-  let counter =  Env.alloc_local env in
-  let node = Env.alloc_local env in
-  let loop =
-    Cblock
-      [ Cassign (counter, Cconst_i32 n)
-      ; Cassign (node, Cglobal "stack")
-      ; Cwhile (Cvar counter,
-          Cblock
-            [ Cassign (counter, Data.dec (Cvar counter))
-            ; Cassign (node, Data.cdr (Cvar node)) ]) ]
-  in
-  Env.free_local env counter;
-  let a = Env.alloc_local env in
-  let block =
-    Cblock
-      [ loop
-      ; Cassign (a, Data.cdr (Cvar node))
-      ; Cstore (1, Cvar node, Data.cdr (Cvar a))
-      ; Cstore (1, Cvar a, Cglobal "stack")
-      ; Cglobal_assign ("stack", Cvar a) ]
-  in
-  Env.free_local env a;
-  Env.free_local env node;
-  block
+let compile_dig ~env:_ n =
+  Cassign (0, Cop (Capply "michelson_dig", [ Cconst_i32 n ]))
 
 let compile_dug ~env n =
   let n = Int32.sub n 1l in
@@ -115,7 +91,7 @@ let compile_dug ~env n =
   let inner_loop =
     Cblock
       [ Cassign (counter, Cconst_i32 n)
-      ; Cassign (node, Data.cdr (Cglobal "stack"))
+      ; Cassign (node, Data.cdr (Cglobal "__michelson_stack"))
       ; Cwhile (Cvar counter,
           Cblock
             [ Cassign (counter, Data.dec (Cvar counter))
@@ -126,8 +102,8 @@ let compile_dug ~env n =
   let block =
     Cblock
       [ inner_loop
-      ; Cassign (head, Cglobal "stack")
-      ; Cglobal_assign ("stack", Data.cdr (Cvar head))
+      ; Cassign (head, Cglobal "__michelson_stack")
+      ; Cglobal_assign ("__michelson_stack", Data.cdr (Cvar head))
       ; Cstore (1, Cvar head, Data.cdr (Cvar node))
       ; Cstore (1, Cvar node, Cvar head) ]
   in
@@ -141,7 +117,7 @@ let compile_drop ~env n =
   let inner_loop =
     Cblock
       [ Cassign (counter, Cconst_i32 n)
-      ; Cassign (node, Cglobal "stack")
+      ; Cassign (node, Cglobal "__michelson_stack")
       ; Cwhile (Cvar counter,
          Cblock
           [ Cassign (counter, Data.dec (Cvar counter))
@@ -151,7 +127,7 @@ let compile_drop ~env n =
   let block =
     Cblock
       [ inner_loop
-      ; Cglobal_assign ("stack", Cvar node) ]
+      ; Cglobal_assign ("__michelson_stack", Cvar node) ]
   in
   Env.free_local env node;
   block
@@ -163,7 +139,7 @@ let compile_dup ~env n =
   let inner_loop =
     Cblock
       [ Cassign (counter, Cconst_i32 n)
-      ; Cassign (node, Cglobal "stack")
+      ; Cassign (node, Cglobal "__michelson_stack")
       ; Cwhile (Cvar counter
           , Cblock
              [ Cassign (counter, Data.dec (Cvar counter))
@@ -185,7 +161,7 @@ let compile_dip ~env n block =
   let inner_loop =
     Cblock
       [ Cassign (counter, Cconst_i32 n)
-      ; Cassign (node, Cglobal "stack")
+      ; Cassign (node, Cglobal "__michelson_stack")
       ; Cwhile (Cvar counter
           , Cblock
               [ Cassign (counter, Data.dec (Cvar counter))
@@ -197,11 +173,11 @@ let compile_dip ~env n block =
   let save_stack_block =
     Cblock
       [ Cassign (pair, Cop (Calloc 2, []))
-      ; Cstore (0, Cvar pair, Cglobal "stack")
+      ; Cstore (0, Cvar pair, Cglobal "__michelson_stack")
       ; Cstore (1, Cvar pair, Cvar node)
-      ; Cglobal_assign ("dip_stack", Cop (Cwasm (Wasm_add, I32), [ Cglobal "dip_stack"; Cconst_i32 4l ]))
-      ; Cstore (0, Cglobal "dip_stack", Cvar pair)
-      ; Cglobal_assign ("stack", Data.cdr (Cvar node)) ]
+      ; Cglobal_assign ("__michelson_dip_stack", Cop (Cwasm (Wasm_add, I32), [ Cglobal "__michelson_dip_stack"; Cconst_i32 4l ]))
+      ; Cstore (0, Cglobal "__michelson_dip_stack", Cvar pair)
+      ; Cglobal_assign ("__michelson_stack", Data.cdr (Cvar node)) ]
   in
   Env.free_local env pair;
   Env.free_local env node;
@@ -210,10 +186,10 @@ let compile_dip ~env n block =
   let pair = Env.alloc_local env in
   let restore_stack =
     Cblock
-      [ Cassign (pair, Cop (Cload (0, I32), [ Cglobal "dip_stack" ]))
-      ; Cstore (1, Data.cdr (Cvar pair), Cglobal "stack")
-      ; Cglobal_assign ("stack", Data.car (Cvar pair)) 
-      ; Cglobal_assign ("dip_stack", Cop (Cwasm (Wasm_sub, I32), [ Cglobal "dip_stack"; Cconst_i32 4l ] )) ]
+      [ Cassign (pair, Cop (Cload (0, I32), [ Cglobal "__michelson_dip_stack" ]))
+      ; Cstore (1, Data.cdr (Cvar pair), Cglobal "__michelson_stack")
+      ; Cglobal_assign ("__michelson_stack", Data.car (Cvar pair)) 
+      ; Cglobal_assign ("__michelson_dip_stack", Cop (Cwasm (Wasm_sub, I32), [ Cglobal "__michelson_dip_stack"; Cconst_i32 4l ] )) ]
   in
 
   Cblock [ inner_loop; save_stack_block; block; restore_stack ]
@@ -1406,7 +1382,7 @@ let compile_contract contract =
     let size = Env.alloc_local env in
     let value = Env.alloc_local env in
     let block =
-      [ Cassign (value, Data.cdr (Data.car (Cglobal "stack")))
+      [ Cassign (value, Data.cdr (Data.car (Cglobal "__michelson_stack")))
       ; compile_value_encoder true env storage_type ptr size value
       ; Cassign (value, Cop (Capply "save_storage", [ Cvar ptr; Cvar size ])) ]
     in
@@ -1418,6 +1394,7 @@ let compile_contract contract =
 
   let main =
     let body = Cblock (param_block :: compile_instruction env code :: store_block) in
+    (* let body = compile_instruction env code in *)
     { body ; locals = env.max + 1 }
   in
   let lambdas =

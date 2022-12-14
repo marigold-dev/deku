@@ -3,6 +3,7 @@
   doCheck ? true,
   nodejs,
   npmPackages,
+  llvmPackages_14,
   static ? false,
   removeReferencesTo,
   nix-filter,
@@ -95,6 +96,9 @@ in
           ezgzip
           ppx_jane # TODO: do we need this?
           core
+          llvmPackages_14.clang-unwrapped
+          llvmPackages_14.llvm
+          llvmPackages_14.lld
         ]
         # checkInputs are here because when cross compiling dune needs test dependencies
         # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.

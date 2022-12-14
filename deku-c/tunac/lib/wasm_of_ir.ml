@@ -16,11 +16,12 @@ let rec compile_expression wasm_mod expr =
 and compile_operation wasm_mod op params =
   let compile_load cell typ ptr =
     (* TODO: How know if its signed or not? *)
-    match typ with
-    | I8 -> Expression.Load.make wasm_mod 1 (cell * 4) 0 Type.int32 ptr
-    | U8 -> Expression.Load.make wasm_mod 1 (cell * 4) 0 Type.int32 ptr
-    | I32 -> Expression.Load.make wasm_mod 4 (cell * 4) 0 Type.int32 ptr
-    | U32 -> Expression.Load.make wasm_mod 4 (cell * 4) 0 Type.int32 ptr
+    let bytes = 
+      match typ with
+      | I8  | U8  -> 1
+      | I32 | U32 -> 4
+    in
+    Expression.Load.make wasm_mod bytes (cell * 4) 0 Type.int32 ptr
   in
 
   match op, params with
@@ -174,7 +175,7 @@ let compile_exec_function wasm_mod lambdas =
 let compile_malloc wasm_mod =
   let body =
     Expression.Block.make wasm_mod "malloc_func_body"
-      [ Expression.Global_set.make wasm_mod "stack"
+      [ Expression.Global_set.make wasm_mod "heap_top"
           (Expression.Binary.make wasm_mod Op.add_int32
             (Expression.Local_tee.make wasm_mod 1 (Expression.Global_get.make wasm_mod "heap_top" Type.int32) Type.int32)
             (Expression.Local_get.make wasm_mod 0 Type.int32))
@@ -183,9 +184,7 @@ let compile_malloc wasm_mod =
   ignore @@
     Function.add_function wasm_mod "malloc" Type.int32 Type.int32 [| Type.int32 |] body
 
-let compile_ir ~memory ~optimize ~debug ~shared_memory contract =
-  let wasm_mod = Module.create () in
-  
+let compile_ir ~memory ~optimize ~debug ~shared_memory wasm_mod contract =
   let IR_of_michelson.{ main; lambdas; static_data } = contract in
   add_function wasm_mod "main" main;
 
@@ -202,18 +201,18 @@ let compile_ir ~memory ~optimize ~debug ~shared_memory contract =
   ignore @@ Export.add_function_export wasm_mod "malloc" "malloc";
 
   ignore @@
-    Global.add_global wasm_mod "stack" Type.int32 true
+    Global.add_global wasm_mod "__michelson_stack" Type.int32 true
       (Expression.Const.make wasm_mod (Literal.int32 0l));  
   ignore @@
     Global.add_global wasm_mod "heap_top" Type.int32 true
       (Expression.Const.make wasm_mod (Literal.int32 512l));
 
   ignore @@
-    Global.add_global wasm_mod "dip_stack" Type.int32 true
+    Global.add_global wasm_mod "__michelson_dip_stack" Type.int32 true
       (Expression.Const.make wasm_mod (Literal.int32 256l));
 
   if debug then begin
-    ignore @@ Export.add_global_export wasm_mod "stack" "stack";
+    ignore @@ Export.add_global_export wasm_mod "__michelson_stack" "__michelson_stack";
     ignore @@ Export.add_global_export wasm_mod "heap_top" "heap_top";
   end;
 
@@ -229,6 +228,8 @@ let compile_ir ~memory ~optimize ~debug ~shared_memory contract =
   Import.add_function_import wasm_mod "lookup_address" "env" "lookup_address" Type.int32 Type.int32;
   Import.add_function_import wasm_mod "reverse_lookup_address" "env" "reverse_lookup_address" Type.int32 Type.int32;
 
+  Import.add_function_import wasm_mod "michelson_dig" "env" "michelson_dig" Type.int32 Type.int32;
+
   let (initial, max) = memory in
   let segments =
     [ Memory.{ data = static_data
@@ -241,5 +242,18 @@ let compile_ir ~memory ~optimize ~debug ~shared_memory contract =
 
   if optimize then
     Module.optimize wasm_mod;
+
+  let linking =
+    let open Linking in
+    [ Symbol_table [ { kind  = Symtab_function
+                     ; flags = [ Sym_exported ]
+                     ; index = 10l
+                     ; name  = Some "main" }
+                   ; { kind  = Symtab_function
+                     ; flags = [ Sym_undefined ]
+                     ; index = 9l
+                     ; name  = None } ] ]
+  in
+  Linking.add_linking_metadata wasm_mod linking;
 
   wasm_mod

@@ -221,6 +221,35 @@ with super; {
               ligo-tezos-utils
             ];
           };
+
+          llvm = (super.llvm.override {
+            libllvm = llvmPackages_14.libllvm;
+          }).overrideAttrs (self: {
+              cmakeFlags = self.cmakeFlags ++ [ "-S ../llvm" ];
+              postPatch = ''
+                substituteInPlace "llvm/bindings/ocaml/llvm/llvm_ocaml.c" --replace \
+                  " alloc_custom(" \
+                  " caml_alloc_custom("
+                substituteInPlace "llvm/bindings/ocaml/llvm/llvm_ocaml.c" --replace \
+                  " string_length(" \
+                  " caml_string_length("
+                substituteInPlace "llvm/bindings/ocaml/llvm/llvm_ocaml.c" --replace \
+                  " callback(" \
+                  " caml_callback("
+                substituteInPlace "llvm/bindings/ocaml/llvm/llvm_ocaml.c" --replace \
+                  " failwith(" \
+                  " caml_failwith("
+                substituteInPlace "llvm/bindings/ocaml/llvm/llvm_ocaml.c" --replace \
+                  " remove_global_root(" \
+                  " caml_remove_global_root("
+                substituteInPlace "llvm/bindings/ocaml/target/target_ocaml.c" --replace \
+                  " alloc_custom(" \
+                  " caml_alloc_custom("
+                substituteInPlace "llvm/bindings/ocaml/target/target_ocaml.c" --replace \
+                  " copy_string(" \
+                  " caml_copy_string("
+              '';
+          });
         });
     });
 }
