@@ -1,3 +1,4 @@
+open Deku_stdlib
 open Deku_crypto
 
 let () = assert (Sys.word_size = 64)
@@ -53,12 +54,15 @@ end
 module Connection = struct
   type connection =
     | Connection of {
+        sw : Eio.Switch.t;
         owner : Key.t;
-        read_buf : Eio.Buf_read.t;
-        write_buf : Eio.Buf_write.t;
+        read_stream : Network_message.t Eio.Stream.t;
+        write_stream : Network_message.t Eio.Stream.t;
       }
 
   type t = connection
+
+  let x = Yojson.equal
 
   module Handshake = struct
     module Challenge = Make_read_and_write (Network_handshake.Challenge)
@@ -67,7 +71,27 @@ module Connection = struct
 
   module Message = Make_read_and_write (Network_message)
 
-  let of_stream ~identity stream k =
+  let owner connection =
+    let (Connection { sw = _; owner; read_stream = _; write_stream = _ }) =
+      connection
+    in
+    owner
+
+  let read connection =
+    let (Connection { sw; owner = _; read_stream; write_stream = _ }) =
+      connection
+    in
+    Eio.Switch.check sw;
+    Eio.Stream.take read_stream
+
+  let write connection message =
+    let (Connection { sw; owner = _; read_stream = _; write_stream }) =
+      connection
+    in
+    Eio.Switch.check sw;
+    Eio.Stream.add write_stream message
+
+  let of_stream ~sw ~identity stream k =
     Eio.Buf_write.with_flow ~initial_size:max_size stream @@ fun write_buf ->
     let read_buf =
       Eio.Buf_read.of_flow ~initial_size:max_size ~max_size stream
@@ -90,20 +114,35 @@ module Connection = struct
     | true -> ()
     | false -> raise Invalid_handshake);
 
+    (* connected *)
     let owner = Network_handshake.Response.key recv_response in
-    k (Connection { owner; read_buf; write_buf })
+    let read_stream = Eio.Stream.create 0 in
+    let write_stream = Eio.Stream.create 0 in
 
-  let owner connection =
-    let (Connection { owner; read_buf = _; write_buf = _ }) = connection in
-    owner
-
-  let read connection =
-    let (Connection { owner = _; read_buf; write_buf = _ }) = connection in
-    Message.read read_buf
-
-  let write connection message =
-    let (Connection { owner = _; read_buf = _; write_buf }) = connection in
-    Message.write write_buf message
+    let rec read_loop () : unit =
+      Eio.Fiber.check ();
+      let () =
+        Parallel.parallel @@ fun () ->
+        let message = Message.read read_buf in
+        Eio.Stream.add read_stream message
+      in
+      read_loop ()
+    in
+    let rec write_loop () : unit =
+      Eio.Fiber.check ();
+      let () =
+        Parallel.parallel @@ fun () ->
+        let message = Eio.Stream.take write_stream in
+        Message.write write_buf message
+      in
+      write_loop ()
+    in
+    Eio.Fiber.all
+      [
+        (fun () -> read_loop ());
+        (fun () -> write_loop ());
+        (fun () -> k (Connection { sw; owner; read_stream; write_stream }));
+      ]
 end
 
 module Client = struct
@@ -144,7 +183,8 @@ module Server = struct
     in
     let rec loop () =
       Eio.Net.accept_fork ~sw socket ~on_error (fun stream _sockaddr ->
-          Connection.of_stream ~identity stream k);
+          Eio.Switch.run @@ fun sw ->
+          Connection.of_stream ~sw ~identity stream k);
       loop ()
     in
     loop ()

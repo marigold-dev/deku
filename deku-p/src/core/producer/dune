@@ -1,0 +1,3 @@
+(library
+ (name deku_producer)
+ (libraries deku_protocol deku_consensus))

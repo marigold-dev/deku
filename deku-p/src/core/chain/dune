@@ -1,5 +1,5 @@
 (library
  (name deku_chain)
- (libraries deku_consensus deku_gossip deku_ledger logs)
+ (libraries deku_consensus deku_gossip logs)
  (preprocess
   (pps ppx_deriving.show ppx_deriving.eq ppx_deriving.ord ppx_yojson_conv)))

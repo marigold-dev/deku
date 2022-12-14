@@ -1,5 +1,6 @@
 open Deku_stdlib
 
+(* TODO: max level to be 2 ** 56 *)
 type level
 type t = level [@@deriving show, eq, ord, yojson]
 

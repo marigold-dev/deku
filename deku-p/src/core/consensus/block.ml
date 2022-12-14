@@ -1,8 +1,6 @@
 open Deku_stdlib
 open Deku_crypto
 open Deku_concepts
-open Deku_protocol
-open Deku_ledger
 
 type block =
   | Block of {
@@ -13,9 +11,6 @@ type block =
       level : Level.t;
       (* TODO: nonce *)
       previous : Block_hash.t;
-      tezos_operations : Tezos_operation.t list;
-      withdrawal_handles_hash : Ledger.Withdrawal_handle.hash;
-      payload_hash : BLAKE2b.t;
       payload : string;
     }
 
@@ -33,57 +28,36 @@ let compare a b =
 
 let header_encoding =
   let open Data_encoding in
-  tup5 Key_hash.encoding Level.encoding Block_hash.encoding
-    (list Tezos_operation.encoding)
-    Ledger.Withdrawal_handle.Withdrawal_handle_hash.encoding
+  tup3 Key_hash.encoding Level.encoding Block_hash.encoding
 
-let hash ~author ~level ~previous ~tezos_operations ~withdrawal_handles_hash
-    ~payload =
+let hash ~author ~level ~previous ~payload =
   let payload =
-    let payload = BLAKE2b.hash payload in
     let header =
       Data_encoding.Binary.to_string_exn header_encoding
-        (author, level, previous, tezos_operations, withdrawal_handles_hash)
+        (author, level, previous)
     in
     let header = BLAKE2b.hash header in
+    let payload = BLAKE2b.hash payload in
     BLAKE2b.both header payload
   in
-  let hash =
-    let state_root_hash = BLAKE2b.hash "FIXME: we need to add the state root" in
-    Block_hash.hash ~block_level:level ~block_payload_hash:payload
-      ~state_root_hash ~withdrawal_handles_hash
+  let state_root_hash = BLAKE2b.hash "FIXME: we need to add the state root" in
+  let withdrawal_handles_hash =
+    BLAKE2b.hash "FIXME: we need to add the handles hash root"
   in
-  (payload, hash)
+  Block_hash.hash ~block_level:level ~block_payload_hash:payload
+    ~state_root_hash ~withdrawal_handles_hash
 
 let encoding =
   let open Data_encoding in
   conv_with_guard
     (fun block ->
-      let (Block
-            {
-              key;
-              signature;
-              hash = _;
-              author;
-              level;
-              previous;
-              tezos_operations;
-              withdrawal_handles_hash;
-              payload;
-              payload_hash = _;
-            }) =
+      let (Block { key; signature; hash = _; author; level; previous; payload })
+          =
         block
       in
-      ( (key, signature),
-        (author, level, previous, tezos_operations, withdrawal_handles_hash),
-        payload ))
-    (fun ( (key, signature),
-           (author, level, previous, tezos_operations, withdrawal_handles_hash),
-           payload ) ->
-      let payload_hash, hash =
-        hash ~author ~level ~previous ~tezos_operations ~withdrawal_handles_hash
-          ~payload
-      in
+      ((key, signature), (author, level, previous), payload))
+    (fun ((key, signature), (author, level, previous), payload) ->
+      let hash = hash ~author ~level ~previous ~payload in
       match
         Key_hash.(equal author (of_key key))
         &&
@@ -92,19 +66,7 @@ let encoding =
       with
       | true ->
           let block =
-            Block
-              {
-                key;
-                signature;
-                hash;
-                author;
-                level;
-                previous;
-                tezos_operations;
-                withdrawal_handles_hash;
-                payload;
-                payload_hash;
-              }
+            Block { key; signature; hash; author; level; previous; payload }
           in
           Ok block
       | false -> Error "Invalid_signature")
@@ -120,32 +82,15 @@ let yojson_of_t signed =
   let json = Data_encoding.Json.to_string json in
   Yojson.Safe.from_string json
 
-let produce ~identity ~level ~previous ~payload ~tezos_operations
-    ~withdrawal_handles_hash =
-  let payload = Payload.encode ~payload in
+let produce ~identity ~level ~previous ~payload =
   let author = Identity.key_hash identity in
-  let payload_hash, block_hash =
-    hash ~author ~level ~previous ~tezos_operations ~withdrawal_handles_hash
-      ~payload
-  in
+  let block_hash = hash ~author ~level ~previous ~payload in
   let key = Identity.key identity in
   let signature =
     let hash = Block_hash.to_blake2b block_hash in
     Identity.sign ~hash identity
   in
-  Block
-    {
-      key;
-      signature;
-      hash = block_hash;
-      author;
-      level;
-      previous;
-      payload;
-      payload_hash;
-      tezos_operations;
-      withdrawal_handles_hash;
-    }
+  Block { key; signature; hash = block_hash; author; level; previous; payload }
 
 let sign ~identity block =
   let (Block { hash; _ }) = block in

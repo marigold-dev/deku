@@ -1,7 +1,6 @@
 open Deku_stdlib
 open Deku_crypto
 open Deku_concepts
-open Deku_protocol
 
 type block = private
   | Block of {
@@ -13,9 +12,6 @@ type block = private
       (* TODO: why does it contain a level? *)
       level : Level.t;
       previous : Block_hash.t;
-      tezos_operations : Tezos_operation.t list;
-      withdrawal_handles_hash : BLAKE2b.t;
-      payload_hash : BLAKE2b.t;
       payload : string;
     }
 
@@ -25,9 +21,7 @@ val produce :
   identity:Identity.t ->
   level:Level.t ->
   previous:Block_hash.t ->
-  payload:Payload.t ->
-  tezos_operations:Tezos_operation.t list ->
-  withdrawal_handles_hash:BLAKE2b.t ->
+  payload:string ->
   block
 
 val encoding : block Data_encoding.t

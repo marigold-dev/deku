@@ -5,11 +5,8 @@
   deku_concepts
   deku_constants
   tezos-micheline
-  deku_external_vm
   deku_tezos
-  deku_ledger
-  deku_metrics
-  ocaml_wasm_vm)
+  deku_metrics)
  (preprocess
   (pps
    ppx_let_binding

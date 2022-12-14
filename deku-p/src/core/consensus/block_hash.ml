@@ -1,5 +1,7 @@
 open Deku_repr
+open Deku_concepts
 open Deku_crypto
+open Deku_tezos
 open BLAKE2b
 
 type block_hash = BLAKE2b.t
@@ -15,8 +17,9 @@ end)
 
 let hash ~block_level ~block_payload_hash ~state_root_hash
     ~withdrawal_handles_hash =
+  let block_level = Level.to_n block_level in
   let pre_hash =
-    Deku_tezos.Deku.Consensus.hash_block ~block_level ~block_payload_hash
+    Tezos_deku.Consensus.hash_block ~block_level ~block_payload_hash
       ~state_root_hash ~withdrawal_handles_hash
   in
   pre_hash |> to_raw |> hash |> to_blake2b

@@ -1,6 +1,7 @@
 open Data_encoding
 
 type message =
+  (* TODO: cstruct here, zero copies, data encoding*)
   | Message of { raw_header : string; raw_content : string }
   | Request of { raw_header : string; raw_content : string }
 

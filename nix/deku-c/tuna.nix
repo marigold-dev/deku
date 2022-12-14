@@ -23,7 +23,6 @@ buildDunePackage rec {
       root = ../..;
       include = [
         "deku.opam"
-        "deku-c/tunac"
         "dune-project"
       ];
     };
@@ -49,6 +48,4 @@ buildDunePackage rec {
   ];
 
   doCheck = false;
-
-  meta.mainProgram = "tunac";
 }

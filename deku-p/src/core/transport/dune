@@ -1,0 +1,3 @@
+(library
+ (name deku_transport)
+ (libraries deku_crypto deku_stdlib deku_concepts eio))

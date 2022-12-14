@@ -52,8 +52,9 @@ let test_deku_block_hashing () =
     |> Option.get
   in
   let hash =
-    Deku.Consensus.hash_block ~block_level:level ~block_payload_hash
-      ~state_root_hash ~withdrawal_handles_hash
+    let block_level = Level.to_n level in
+    Deku.Consensus.hash_block ~block_level ~block_payload_hash ~state_root_hash
+      ~withdrawal_handles_hash
     |> BLAKE2b.to_hex
   in
   Alcotest.(

@@ -1,9 +1,0 @@
-(cram
- (deps
-  ../bin/tunacc_test.exe
-  ../bin/tunacc_test_operation.exe
-  (glob_files ./**.tz)))
-
-(test
- (name compile_value)
- (libraries tunac alcotest))

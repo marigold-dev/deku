@@ -6,7 +6,6 @@
   deku_network
   deku_storage
   deku_gossip
-  deku_external_vm
   cmdliner
   logs.fmt
   fmt.tty)

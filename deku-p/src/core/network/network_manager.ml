@@ -36,19 +36,13 @@ let close_connection ~connection_id network =
   network.connections <-
     Connection_id.Map.remove connection_id network.connections
 
-let with_connection ~on_connection ~on_request ~on_message network k =
+let with_connection ~on_connection ~on_message network k =
   let connection_id = create_connection network in
   let handler ~sw connection =
     let write message =
       Eio.Fiber.fork ~sw @@ fun () -> Connection.write connection message
     in
-    let on_message message =
-      match message with
-      | Network_message.Message { raw_header; raw_content } ->
-          on_message ~raw_header ~raw_content
-      | Network_message.Request { raw_header; raw_content } ->
-          on_request ~connection:connection_id ~raw_header ~raw_content
-    in
+    let on_message message = on_message ~connection:connection_id ~message in
     let rec loop () =
       let message = Connection.read connection in
       on_message message;
@@ -66,8 +60,7 @@ let with_connection ~on_connection ~on_request ~on_message network k =
   in
   k handler
 
-let connect ~net ~clock ~host ~port ~on_connection ~on_request ~on_message
-    network =
+let connect ~net ~clock ~host ~port ~on_connection ~on_message network =
   let rec reconnect_loop ~identity ~net ~clock ~host ~port handler =
     try Network_protocol.Client.connect ~identity ~net ~host ~port handler
     with exn ->
@@ -78,10 +71,10 @@ let connect ~net ~clock ~host ~port ~on_connection ~on_request ~on_message
       reconnect_loop ~identity ~net ~clock ~host ~port handler
   in
   let identity = network.identity in
-  with_connection ~on_connection ~on_request ~on_message network
-  @@ fun handler -> reconnect_loop ~identity ~net ~clock ~host ~port handler
+  with_connection ~on_connection ~on_message network @@ fun handler ->
+  reconnect_loop ~identity ~net ~clock ~host ~port handler
 
-let listen ~net ~clock ~port ~on_connection ~on_request ~on_message network =
+let listen ~net ~clock ~port ~on_connection ~on_message network =
   let on_error exn =
     Logs.warn (fun m -> m "listen.connection: %s" (Printexc.to_string exn))
   in
@@ -94,18 +87,16 @@ let listen ~net ~clock ~port ~on_connection ~on_request ~on_message network =
   in
 
   let handler connection =
-    with_connection ~on_connection ~on_request ~on_message network
-    @@ fun handler -> handler connection
+    with_connection ~on_connection ~on_message network @@ fun handler ->
+    handler connection
   in
   let identity = network.identity in
   relisten ~identity ~net ~clock ~port ~on_error handler
 
-let connect ~net ~clock ~nodes ~on_connection ~on_request ~on_message network =
+let connect ~net ~clock ~nodes ~on_connection ~on_message network =
   Eio.Fiber.List.iter
     (fun (host, port) ->
-      try
-        connect ~clock ~net ~host ~port ~on_connection ~on_request ~on_message
-          network
+      try connect ~clock ~net ~host ~port ~on_connection ~on_message network
       with exn ->
         Logs.warn (fun m ->
             m "connect(%s:%d): %s" host port (Printexc.to_string exn)))
@@ -117,33 +108,14 @@ let send ~message ~write =
   with exn ->
     Logs.warn (fun m -> m "write.error: %s" (Printexc.to_string exn))
 
-let broadcast message network =
+let broadcast ~message network =
   Key_hash.Map.iter
     (fun _connection write -> send ~message ~write)
     network.connected_to
 
-let request ~raw_header ~raw_content network =
-  let request = Network_message.request ~raw_header ~raw_content in
-  broadcast request network
-
-let broadcast ~raw_header ~raw_content network =
-  let message = Network_message.message ~raw_header ~raw_content in
-  broadcast message network
-
-let send_request ~connection ~raw_header ~raw_content network =
+let send ~connection ~message network =
   match Connection_id.Map.find_opt connection network.connections with
-  | Some write ->
-      let message = Network_message.request ~raw_header ~raw_content in
-      send ~message ~write
-  | None ->
-      (* dead connection *)
-      ()
-
-let send ~connection ~raw_header ~raw_content network =
-  match Connection_id.Map.find_opt connection network.connections with
-  | Some write ->
-      let message = Network_message.message ~raw_header ~raw_content in
-      send ~message ~write
+  | Some write -> send ~message ~write
   | None ->
       (* dead connection *)
       ()
@@ -170,12 +142,20 @@ let test () =
       Logs.debug (fun m ->
           m "request(%s:%.3f): %d" raw_header (Unix.gettimeofday ())
             (String.length raw_content));
-      send ~connection ~raw_header ~raw_content network
+      let message = Network_message.message ~raw_header ~raw_content in
+      send ~connection ~message network
     in
     let on_message ~raw_header ~raw_content =
       Logs.debug (fun m ->
           m "message(%s:%.3f): %d" raw_header (Unix.gettimeofday ())
             (String.length raw_content))
+    in
+    let on_message ~connection ~message =
+      match message with
+      | Network_message.Message { raw_header; raw_content } ->
+          on_message ~raw_header ~raw_content
+      | Network_message.Request { raw_header; raw_content } ->
+          on_request ~connection ~raw_header ~raw_content
     in
     let raw_content = String.make 2_000_000 'a' in
     (* let rec loop counter =
@@ -191,7 +171,8 @@ let test () =
        in *)
     let rec loop counter =
       let raw_header = Format.sprintf "sh%d" counter in
-      broadcast ~raw_header ~raw_content network;
+      let message = Network_message.message ~raw_header ~raw_content in
+      broadcast ~message network;
 
       Eio.Time.sleep clock 0.5;
       loop (counter + 1)
@@ -199,12 +180,9 @@ let test () =
 
     Eio.Fiber.all
       [
+        (fun () -> listen ~net ~clock ~port ~on_connection ~on_message network);
         (fun () ->
-          listen ~net ~clock ~port ~on_connection ~on_request ~on_message
-            network);
-        (fun () ->
-          connect ~net ~clock ~nodes ~on_connection ~on_request ~on_message
-            network);
+          connect ~net ~clock ~nodes ~on_connection ~on_message network);
         (fun () -> loop 0);
       ]
   in

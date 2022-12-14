@@ -262,7 +262,78 @@ let run_benchmark ~formatter ~writer (module Bench : BENCH) =
   in
   ()
 
+<<<<<<< Updated upstream
 let benches : (module BENCH) list =
+=======
+module Ledger = struct
+  type ledger = int array
+  type t = ledger
+
+  let create ~size = Array.make size 0
+  let balance account (ledger : t) = Array.get ledger account
+  let commit account amount (ledger : t) = Array.set ledger account amount
+
+  let deposit account amount ledger =
+    let balance = balance account ledger in
+    let balance = balance + amount in
+    commit account balance ledger
+
+  let transfer ~source ~destination amount ledger =
+    let source_balance = balance source ledger in
+    match source_balance >= amount with
+    | true ->
+        let source_balance = source_balance - amount in
+        commit source source_balance ledger;
+
+        let destination_balance = balance destination ledger in
+        let destination_balance = destination_balance + amount in
+        commit destination destination_balance ledger
+    | false -> failwith "bad balance"
+
+  type transfer = { source : int; destination : int; amount : int }
+
+  let bench () =
+    let size = 5_000_000_000 in
+    let items = 10_000_000 in
+    let skip = 64 * 1024 * 1024 in
+    let prepare () =
+      let ledger = create ~size in
+      let rec init n =
+        match n < size with
+        | true ->
+            deposit n 1_000_000 ledger;
+            init (n + 1)
+        | false -> ()
+      in
+      init 0;
+      Format.eprintf "initialized\n%!";
+
+      let rec populate transfers counter position =
+        match counter = 0 with
+        | true -> transfers
+        | false ->
+            let seed = Random.int (64 * 1024 * 1024) in
+            let source = (position + seed) mod size in
+            let destination = (source + skip) mod size in
+            let amount = Random.int 10 in
+            let transfer = { source; destination; amount } in
+            populate (transfer :: transfers) (counter - 1) (destination + skip)
+      in
+      let transfers = populate [] items 0 in
+      (ledger, transfers)
+    in
+    bench "ledger2_transfer" ~items ~prepare @@ fun (ledger, transfers) ->
+    let () =
+      List.iter
+        (fun { source; destination; amount } ->
+          transfer ~source ~destination amount ledger)
+        transfers
+    in
+    ()
+end
+
+let _benches =
+>>>>>>> Stashed changes
   [
     (module Produce);
     (module Prepare_and_decode);
@@ -273,10 +344,14 @@ let benches : (module BENCH) list =
     (module Ledger_transfer);
   ]
 
+<<<<<<< Updated upstream
 let formatter ~name ~item_message ~data =
   Format.sprintf "%s with %s: %.3f\n" name item_message data
 
 let writer ~data = Format.eprintf "%s%!" data
+=======
+let benches = [ Ledger.bench ]
+>>>>>>> Stashed changes
 
 let () =
   Eio_main.run @@ fun env ->

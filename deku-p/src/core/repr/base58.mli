@@ -46,7 +46,7 @@ module Prefix : sig
   val chain_id : string
   val deku_contract_hash : string
   val deku_block_hash : string
-  val deku_operation_hash : string
+  val deku_raw_operation_hash : string
   val deku_handshake_challenge_hash : string
   val deku_message_hash : string
   val deku_request_hash : string

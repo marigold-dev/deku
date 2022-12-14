@@ -1,4 +1,5 @@
 module Header = struct
+  open Deku_crypto
   open Deku_concepts
 
   type header = Message_header of { hash : Message_hash.t; level : Level.t }
@@ -6,13 +7,17 @@ module Header = struct
 
   let make ~hash ~level = Message_header { hash; level }
 
-  let encode header =
-    let json = yojson_of_header header in
-    Yojson.Safe.to_string json
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun (Message_header { hash; level }) -> (hash, level))
+      (fun (hash, level) -> Message_header { hash; level })
+      (tup2 Message_hash.encoding Level.encoding)
+
+  let encode header = Data_encoding.Binary.to_string_exn encoding header
 
   let decode ~raw_header =
-    let json = Yojson.Safe.from_string raw_header in
-    header_of_yojson json
+    Data_encoding.Binary.of_string_exn encoding raw_header
 end
 
 module Content = struct
@@ -24,7 +29,8 @@ module Content = struct
   type content =
     | Content_block of Block.t
     | Content_vote of { level : Level.t; vote : Verified_signature.t }
-    | Content_operation of Operation.Signed.t
+    (* TODO: *)
+    | Content_operation of Protocol_operation.Raw.t
     | Content_accepted of { block : Block.t; votes : Verified_signature.t list }
 
   and t = content [@@deriving show, yojson]
@@ -43,7 +49,7 @@ module Content = struct
           (function
             | Content_vote { level; vote } -> Some (level, vote) | _ -> None)
           (fun (level, vote) -> Content_vote { level; vote });
-        case ~title:"Content_operation" (Tag 2) Operation.Signed.encoding
+        case ~title:"Content_operation" (Tag 2) Protocol_operation.Raw.encoding
           (function Content_operation operation -> Some operation | _ -> None)
           (fun operation -> Content_operation operation);
         case ~title:"Content_accepted" (Tag 3)

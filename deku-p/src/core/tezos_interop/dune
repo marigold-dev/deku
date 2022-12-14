@@ -1,6 +1,12 @@
 (library
  (name deku_tezos_interop)
- (libraries deku_stdlib tezos-micheline deku_crypto deku_tezos eio)
+ (libraries
+  deku_stdlib
+  tezos-micheline
+  deku_crypto
+  deku_tezos
+  deku_concepts
+  eio)
  (preprocess
   (pps
    ppx_yojson_conv

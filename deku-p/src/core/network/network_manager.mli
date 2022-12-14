@@ -11,12 +11,7 @@ val listen :
   clock:Eio.Time.clock ->
   port:int ->
   on_connection:(connection:Connection_id.t -> unit) ->
-  on_request:
-    (connection:Connection_id.t ->
-    raw_header:string ->
-    raw_content:string ->
-    unit) ->
-  on_message:(raw_header:string -> raw_content:string -> unit) ->
+  on_message:(connection:Connection_id.t -> message:Network_message.t -> unit) ->
   network ->
   'a
 
@@ -25,30 +20,12 @@ val connect :
   clock:Eio.Time.clock ->
   nodes:(string * int) list ->
   on_connection:(connection:Connection_id.t -> unit) ->
-  on_request:
-    (connection:Connection_id.t ->
-    raw_header:string ->
-    raw_content:string ->
-    unit) ->
-  on_message:(raw_header:string -> raw_content:string -> unit) ->
+  on_message:(connection:Connection_id.t -> message:Network_message.t -> unit) ->
   network ->
   unit
-
-val broadcast : raw_header:string -> raw_content:string -> network -> unit
-val request : raw_header:string -> raw_content:string -> network -> unit
 
 val send :
-  connection:Connection_id.t ->
-  raw_header:string ->
-  raw_content:string ->
-  network ->
-  unit
+  connection:Connection_id.t -> message:Network_message.t -> network -> unit
 
-val send_request :
-  connection:Connection_id.t ->
-  raw_header:string ->
-  raw_content:string ->
-  network ->
-  unit
-
+val broadcast : message:Network_message.t -> network -> unit
 val test : unit -> unit

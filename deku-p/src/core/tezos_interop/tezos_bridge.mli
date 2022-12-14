@@ -3,7 +3,7 @@ open Deku_tezos
 
 (* push *)
 module Listen_transaction : sig
-  type transaction = { entrypoint : string; value : Michelson.t }
+  type transaction = { entrypoint : string; value : Tezos_michelson.t }
   [@@deriving yojson]
 
   type t = { hash : string; transactions : transaction list }
@@ -34,7 +34,7 @@ val spawn :
   sw:Eio.Switch.t ->
   rpc_node:Uri.t ->
   secret:Secret.t ->
-  destination:Address.t ->
+  destination:Tezos_address.t ->
   on_transactions:(transactions:Listen_transaction.t -> unit) ->
   bridge
 

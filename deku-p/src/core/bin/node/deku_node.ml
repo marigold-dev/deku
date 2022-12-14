@@ -172,6 +172,24 @@ let main () =
   let cmd = Cmdliner.Cmd.v info term in
   exit (Cmdliner.Cmd.eval ~catch:true cmd)
 
+let bench () =
+  let open Deku_crypto in
+  let size = 128 in
+  let times = 1_000_000 in
+  let string = String.make size '\000' in
+  let t1 = Unix.gettimeofday () in
+  let rec loop counter =
+    match counter with
+    | 0 -> ()
+    | n ->
+        let _hash = BLAKE2b.hash string in
+        loop (n - 1)
+  in
+  let () = loop times in
+  let t2 = Unix.gettimeofday () in
+  let delta = t2 -. t1 in
+  Format.eprintf "total: %.3f, each : %f\n%!" delta (delta /. float_of_int times)
+
 (*
    let _ = main
    let main () = Node.test () *)

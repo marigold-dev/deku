@@ -8,15 +8,12 @@
   deku_tezos
   deku_tezos_interop
   deku_storage
-  deku_external_vm
   cmdliner
   logs
   logs.fmt
   fmt.tty
   piaf
   routes
-  ppx_yojson_conv
-  ocaml_wasm_vm
-  tunac)
+  ppx_yojson_conv)
  (preprocess
   (pps ppx_let_binding ppx_deriving_cmdliner ppx_yojson_conv)))
