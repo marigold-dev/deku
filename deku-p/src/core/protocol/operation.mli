@@ -38,6 +38,7 @@ module Initial : sig
       }
 
   type t = initial_operation [@@deriving show]
+  type hash_repr = Nonce.t * Level.t * operation
 
   val hash_encoding : (Nonce.t * Level.t * operation) Data_encoding.t
   val encoding : t Data_encoding.t

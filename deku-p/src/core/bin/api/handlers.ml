@@ -416,7 +416,7 @@ end
 
 module Encode_operation : HANDLERS = struct
   type path = unit
-  type body = Nonce.t * Level.t * Operation.t
+  type body = Operation.Initial.hash_repr
 
   let body_encoding = Operation.Initial.hash_encoding
 
@@ -433,14 +433,13 @@ module Encode_operation : HANDLERS = struct
   let path = Routes.(version / s "helpers" / s "encode-operation" /? nil)
   let route = Routes.(path @--> ())
 
-  let hash_encoding =
-    Data_encoding.tup3 Nonce.encoding Level.encoding Operation.encoding
-
   let handler ~path:_ ~body ~state:_ =
     let nonce, level, operation = body in
     let binary =
-      Data_encoding.Binary.to_string_exn hash_encoding (nonce, level, operation)
+      Data_encoding.Binary.to_string_exn Operation.Initial.hash_encoding
+        (nonce, level, operation)
     in
+    (* TODO: refactor this to re-use from Operation module *)
     let binary = "\x80" ^ binary in
     let bytes = binary |> Hex.of_string |> Hex.show in
     Ok { bytes }

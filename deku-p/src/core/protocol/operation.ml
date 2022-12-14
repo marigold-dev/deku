@@ -156,7 +156,9 @@ module Initial = struct
 
   and t = initial_operation [@@deriving show]
 
-  let hash_encoding =
+  type hash_repr = Nonce.t * Level.t * operation
+
+  let hash_encoding : hash_repr Data_encoding.t =
     let open Data_encoding in
     obj3
       (req "nonce" Nonce.encoding)
