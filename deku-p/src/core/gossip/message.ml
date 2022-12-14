@@ -15,16 +15,10 @@ module Header = struct
       (tup2 Deku_crypto.BLAKE2b.encoding Level.encoding)
 
   let make ~hash ~level = Message_header { hash; level }
-
-  let encode header =
-    let json = Data_encoding.Json.construct encoding header in
-    Data_encoding.Json.to_string json
+  let encode header = Data_encoding.Binary.to_string_exn encoding header
 
   let decode ~raw_header =
-    let json = Data_encoding.Json.from_string raw_header in
-    match json with
-    | Ok json -> Data_encoding.Json.destruct encoding json
-    | _ -> failwith "impossible to decode"
+    Data_encoding.Binary.of_string_exn encoding raw_header
 end
 
 module Content = struct
