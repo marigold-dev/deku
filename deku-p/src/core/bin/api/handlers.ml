@@ -64,9 +64,9 @@ module Get_block_by_level_or_hash : NO_BODY_HANDLERS = struct
   open Api_path
 
   type path = Level_or_hash.t
-  type response = Data_encoding.Json.t
+  type response = Block.t
 
-  let response_encoding = Data_encoding.Json.encoding
+  let response_encoding = Block.encoding
   let meth = `GET
 
   let path =
