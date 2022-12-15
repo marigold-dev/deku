@@ -1,6 +1,18 @@
-// dune exec ./tunacc_test_operation.exe invoke 'tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD' '(Pair (Pair (Pair 1 "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD")
-            (Some (Left (Left (Left Unit))))
-            (Left (Right Unit)))
-      None)'
+// dune exec ./tunacc_test_operation.exe invoke 'tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD' '(Right (Left (Pair (Pair 1 "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD") (Left (Left (Left Unit))))))'
 
-{"operation":"{ \"address\": \"tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD\",\n  \"argument\":\n    [ \"Pair\",\n      [ [ \"Pair\",\n          [ [ \"Pair\",\n              [ [ \"Int\", \"1\" ],\n                [ \"String\", \"tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD\" ] ] ],\n            [ \"Pair\",\n              [ [ \"Option\",\n                  [ \"Some\",\n                    [ \"Union\",\n                      [ \"Left\",\n                        [ \"Union\",\n                          [ \"Left\", [ \"Union\", [ \"Left\", [ \"Unit\" ] ] ] ] ] ] ] ] ],\n                [ \"Union\", [ \"Left\", [ \"Union\", [ \"Right\", [ \"Unit\" ] ] ] ] ] ] ] ] ],\n        [ \"Option\", [ \"None\", {} ] ] ] ] }","tickets":[]}
+{ "operation":
+    { "address": "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD",
+      "argument":
+        [ "Union",
+          [ "Right",
+            [ "Union",
+              [ "Left",
+                [ "Pair",
+                  [ [ "Pair",
+                      [ [ "Int", "1" ],
+                        [ "String", "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" ] ] ],
+                    [ "Union",
+                      [ "Left",
+                        [ "Union",
+                          [ "Left", [ "Union", [ "Left", [ "Unit" ] ] ] ] ] ] ] ] ] ] ] ] ] },
+  "tickets": [] }

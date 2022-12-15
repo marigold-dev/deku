@@ -1,4 +1,6 @@
-// dune exec bin/tunacc_test_operation.exe invoke 'ADDRESS' '(Pair (Pair (Pair 1 "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD") (Some (Left (Left (Right Unit)))) (Left (Right Unit))) None)'
+// dune exec ./tunacc_test_operation.exe invoke 'tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD' '(Right
+   (Left (Pair (Pair 1 "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD") (Left (Left (Right Unit))))))
+'
 
 { "operation":
     { "address": "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD",
