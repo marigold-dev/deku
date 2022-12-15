@@ -8,26 +8,26 @@ const _test_mint_mine =
    let contr = Test.to_contract(taddr);
    let _ = 
      Test.transfer_to_contract_exn(contr, (Delegate
-        ({onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+        ({authorizedKey: "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
           as address})), 1 as mutez);
    let _ = 
      Test.transfer_to_contract_exn(contr, (Mint
         ({operation: Cookie(),
          amount: 12000 as nat,
-         onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+         onBehalfOf: "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
           as address})), 1 as mutez);
    let _ = 
      Test.transfer_to_contract_exn(contr, (Mint
         ({operation: Mine(),
          amount: 1 as nat,
-         onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+         onBehalfOf: "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
           as address})), 1 as mutez);
    let authorizedKeys: set<address> = Set.empty;
    let authorizedKeys: set<address> = 
      Set.add("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
       as address, authorizedKeys);
    let expectedStorage: storage = 
-     Map.update("tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+     Map.update("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
       as address, Some
        ({bankCost: initialBankCost,
         banks: 0 as nat,
@@ -62,26 +62,26 @@ const _test_cannot_mint_mine =
    let contr = Test.to_contract(taddr);
    let _ = 
      Test.transfer_to_contract_exn(contr, (Delegate
-        ({onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+        ({authorizedKey: "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
           as address})), 1 as mutez);
    let _ = 
      Test.transfer_to_contract_exn(contr, (Mint
         ({operation: Cookie(),
          amount: 1 as nat,
-         onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+         onBehalfOf: "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
           as address})), 1 as mutez);
    let _ = 
      Test.transfer_to_contract_exn(contr, (Mint
         ({operation: Mine(),
          amount: 1 as nat,
-         onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+         onBehalfOf: "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
           as address})), 1 as mutez);
    let authorizedKeys: set<address> = Set.empty;
    let authorizedKeys: set<address> = 
      Set.add("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
       as address, authorizedKeys);
    let expectedStorage: storage = 
-     Map.update("tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+     Map.update("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
       as address, Some
        ({bankCost: initialBankCost,
         banks: 0 as nat,
