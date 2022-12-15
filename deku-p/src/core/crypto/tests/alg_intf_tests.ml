@@ -45,6 +45,12 @@ struct
 
     let to_sign =
       List.map (fun string -> Deku_crypto.BLAKE2b.hash string) to_hash
+
+    let signatures =
+      List.map
+        (fun sk ->
+          List.map (fun hash -> (Signature.sign sk hash, hash)) to_sign)
+        secret_keys
   end
 
   module Test_secret_key_data = struct
@@ -125,5 +131,19 @@ struct
       Alcotest.(check' string)
         ~msg:"presigned hashes are equal" ~expected:Tezos_data.to_sign
         ~actual:to_sign
+
+    let signatures () =
+      let signatures =
+        let out =
+          List.map
+            (fun sig_list ->
+              List.map (fun (sg, _) -> helper_string_signatures sg) sig_list)
+            Signature_data.signatures
+        in
+        String.concat "" (List.flatten out)
+      in
+      Alcotest.(check' string)
+        ~msg:"signatures are equal" ~expected:Tezos_data.signatures
+        ~actual:signatures
   end
 end
