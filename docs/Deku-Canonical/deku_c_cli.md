@@ -104,7 +104,7 @@ the contract and the raw code of the contract.
 The `invoke` command allows to call an entrypoint with a specific parameter. Usage:
 
 ```bash
-deku-cli wallet contract_address parameter
+deku-cli invoke wallet contract_address parameter
 ```
 
 where
@@ -118,7 +118,7 @@ The `parameter` can be provided by the Ligo compiler using the `ligo compile par
 To invoke a contract with a Ligo expression directly, use the `invoke-ligo` command:
 
 ```bash
-deku-cli wallet contract_address contract_path expression
+deku-cli invoke wallet contract_address contract_path expression
 ```
 
 where
