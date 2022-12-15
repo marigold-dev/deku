@@ -6,10 +6,18 @@ const _test_mint_shipment =
    let [taddr, _, _] = 
      Test.originate(main, initial_storage, 0 as tez);
    let contr = Test.to_contract(taddr);
-    let _ = 
-     Test.transfer_to_contract_exn(contr, (Mint({operation: Cookie(), amount: 5100000000 as nat, onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
    let _ = 
-     Test.transfer_to_contract_exn(contr, (Mint({operation: Shipment(), amount: 1 as nat, onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
+     Test.transfer_to_contract_exn(contr, (Mint
+        ({operation: Cookie(),
+         amount: 5100000000 as nat,
+         onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+          as address})), 1 as mutez);
+   let _ = 
+     Test.transfer_to_contract_exn(contr, (Mint
+        ({operation: Shipment(),
+         amount: 1 as nat,
+         onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+          as address})), 1 as mutez);
    let authorizedKeys: set<address> = Set.empty;
    let expectedStorage: storage = 
      Map.update("tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
@@ -34,7 +42,8 @@ const _test_mint_shipment =
         templeCost: initialTempleCost,
         temples: 0 as nat,
         shipmentCost: 5865000000 as nat,
-        shipments: 1 as nat, authorizedKeys:authorizedKeys}), initial_storage);
+        shipments: 1 as nat,
+        authorizedKeys: authorizedKeys}), initial_storage);
    let actualStorage = Test.get_storage(taddr);
    let _ = Test.log(["actual   storage: ", actualStorage]);
    let _ = Test.log(["expected storage: ", expectedStorage]);
@@ -48,10 +57,18 @@ const _test_cannot_mint_shipment =
    let [taddr, _, _] = 
      Test.originate(main, initial_storage, 0 as tez);
    let contr = Test.to_contract(taddr);
-    let _ = 
-     Test.transfer_to_contract_exn(contr, (Mint({operation: Cookie(), amount: 1 as nat, onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
    let _ = 
-     Test.transfer_to_contract_exn(contr, (Mint({operation: Shipment(), amount: 1 as nat, onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
+     Test.transfer_to_contract_exn(contr, (Mint
+        ({operation: Cookie(),
+         amount: 1 as nat,
+         onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+          as address})), 1 as mutez);
+   let _ = 
+     Test.transfer_to_contract_exn(contr, (Mint
+        ({operation: Shipment(),
+         amount: 1 as nat,
+         onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+          as address})), 1 as mutez);
    let expectedStorage: storage = 
      Map.update("tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
       as address, Some
@@ -75,7 +92,8 @@ const _test_cannot_mint_shipment =
         wizardCost: initialWizardCost,
         wizards: 0 as nat,
         shipmentCost: initialShipmentCost,
-        shipments: 0 as nat, authorizedKeys:authorizedKeys}), initial_storage);
+        shipments: 0 as nat,
+        authorizedKeys: authorizedKeys}), initial_storage);
    let actualStorage = Test.get_storage(taddr);
    let _ = Test.log(["actual   storage: ", actualStorage]);
    let _ = Test.log(["expected storage: ", expectedStorage]);
@@ -85,4 +103,5 @@ const _test_cannot_mint_shipment =
 
 const test_mint_shipment = _test_mint_shipment();
 
-const test_cannot_mint_shipment = _test_cannot_mint_shipment();
+const test_cannot_mint_shipment = 
+  _test_cannot_mint_shipment();
