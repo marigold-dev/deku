@@ -96,6 +96,8 @@ struct
       List.for_all
         (fun (signature, _) -> Signature.equal signature signature)
         (List.flatten signatures)
+
+    let zero = Signature.(to_b58 zero)
   end
 
   module Test_secret_key_data = struct
@@ -217,5 +219,10 @@ struct
       Alcotest.(check' bool)
         ~msg:"signature equality works" ~expected:Tezos_data.equality_signatures
         ~actual:Signature_data.equality_signatures
+
+    let zero () =
+      Alcotest.(check' string)
+        ~msg:"zeros are equal" ~expected:Tezos_data.zero
+        ~actual:Signature_data.zero
   end
 end
