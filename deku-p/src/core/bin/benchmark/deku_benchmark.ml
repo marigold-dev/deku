@@ -279,6 +279,7 @@ type params = { domains : int [@env "DEKU_DOMAINS"] [@default 16] }
 let main params =
   let { domains } = params in
   Eio_main.run @@ fun env ->
+  Format.eprintf "running with %d domains\n%!" domains;
   Format.printf "benchmark, items, duration\n%!";
   Parallel.Pool.run ~env ~domains @@ fun () ->
   List.iter (fun (module Bench : BENCH) -> run_benchmark (module Bench)) benches
