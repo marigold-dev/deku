@@ -51,6 +51,16 @@ struct
         (fun sk ->
           List.map (fun hash -> (Signature.sign sk hash, hash)) to_sign)
         secret_keys
+
+    let verified_normal_signatures =
+      let check_sig pk signatures =
+        List.map
+          (fun (signature, hash) -> Signature.verify pk signature hash)
+          signatures
+      in
+      List.map2
+        (fun key signatures -> check_sig key signatures)
+        public_keys signatures
   end
 
   module Test_secret_key_data = struct
@@ -145,5 +155,11 @@ struct
       Alcotest.(check' string)
         ~msg:"signatures are equal" ~expected:Tezos_data.signatures
         ~actual:signatures
+
+    let verified_normal_signatures () =
+      Alcotest.(check' (list (list bool)))
+        ~msg:"verified normal signatures are equal"
+        ~expected:Tezos_data.verified_normal_signatures
+        ~actual:Signature_data.verified_normal_signatures
   end
 end

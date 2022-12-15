@@ -113,6 +113,14 @@ struct
       List.map
         (fun sk -> List.map (fun hash -> (sign sk hash, hash)) byte_data)
         secret_keys
+
+    let verified_normal =
+      let check_sig pk signatures =
+        List.map (fun (signature, hash) -> check pk signature hash) signatures
+      in
+      List.map2
+        (fun key signatures -> check_sig key signatures)
+        public_keys signatures
   end
 
   module Print_secret_key = struct
@@ -195,5 +203,15 @@ struct
       in
       let out = String.concat "" (List.flatten out) in
       Format.printf "\"%s\"\n%!" out
+
+    let print_verified_normal_signatures () =
+      Format.printf "let verified_normal_signatures = [\n%!";
+      List.iter
+        (fun sig_list ->
+          Format.printf "[\n%!";
+          List.iter (Format.printf "%b;\n%!") sig_list;
+          Format.printf "];\n%!")
+        Sig.verified_normal;
+      Format.printf "]\n%!"
   end
 end
