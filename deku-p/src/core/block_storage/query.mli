@@ -26,8 +26,7 @@ val insert_message :
   pool ->
   unit result_promise
 
-val find_block_by_level :
-  level:Level.t -> pool -> Block.t option result_promise
+val find_block_by_level : level:Level.t -> pool -> Block.t option result_promise
 
 val find_block_by_hash :
   hash:Block_hash.t -> pool -> Block.t option result_promise
