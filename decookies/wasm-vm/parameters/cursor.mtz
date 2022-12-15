@@ -1,6 +1,4 @@
-# ligo compile parameter /Users/gauthier/Documents/workspace/deku/decookies/wasm-vm/src/index.jsligo "{operationType: Mint(), operation: Some(Cursor()), amount: 1 as nat, recipient: None() as option<address>, layerOneAddress: \"tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD\" as address }" --project-root /Users/gauthier/Documents/workspace/deku/decookies/wasm-vm
+# ligo compile parameter /Users/gauthier/Documents/workspace/deku/decookies/wasm-vm/src/index.jsligo "Mint({operation: Cursor(), amount: 1 as nat, onBehalfOf: \"tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD\" as address})" --project-root /Users/gauthier/Documents/workspace/deku/decookies/wasm-vm
 
-(Pair (Pair (Pair 1 "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD")
-            (Some (Left (Right (Left Unit))))
-            (Left (Right Unit)))
-      None)
+(Right
+   (Left (Pair (Pair 1 "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD") (Left (Right (Left Unit))))))

@@ -1,0 +1,11 @@
+// dune exec ./tunacc_test_operation.exe invoke 'tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD' '(Left (Left "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"))'
+
+{ "operation":
+    { "address": "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD",
+      "argument":
+        [ "Union",
+          [ "Left",
+            [ "Union",
+              [ "Left",
+                [ "String", "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" ] ] ] ] ] },
+  "tickets": [] }
