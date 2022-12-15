@@ -47,7 +47,7 @@ type transfer =
 
 type eat = {amount: nat, onBehalfOf: address};
 
-type delegate = {onBehalfOf: address};
+type delegate = {authorizedKey: address};
 
 type parameter =
   | ["Mint", mint]

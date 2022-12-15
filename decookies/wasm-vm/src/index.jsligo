@@ -242,12 +242,11 @@ const main =
           Map.update(rawRecipient as address, Some
             ({...recipient, cookies: recipientCookies}), cookieBakers);
         return cookieBakers} else {return cookieBakers}} else {return cookieBakers}},
-     Delegate: delegation => {let player = 
-        delegation.onBehalfOf;
+     Delegate: delegation => {let player = Tezos.get_sender();
       let cookieBaker: cookieBaker = 
         force_access(player as address, cookieBakers);
       let authorizedKeys = 
-        Set.add(Tezos.get_sender(), cookieBaker.authorizedKeys);
+        Set.add(delegation.authorizedKey, cookieBaker.authorizedKeys);
       let cookieBakers = 
         Map.update(player as address, Some
           ({...cookieBaker, authorizedKeys: authorizedKeys}), cookieBakers);
