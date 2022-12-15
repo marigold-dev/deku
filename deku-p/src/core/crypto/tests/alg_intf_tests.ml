@@ -91,6 +91,11 @@ struct
     let compare_signatures =
       List.sort compare
         (List.map (fun (signature, _) -> signature) (List.flatten signatures))
+
+    let equality_signatures =
+      List.for_all
+        (fun (signature, _) -> Signature.equal signature signature)
+        (List.flatten signatures)
   end
 
   module Test_secret_key_data = struct
@@ -207,5 +212,10 @@ struct
       Alcotest.(check' string)
         ~msg:"signature comparison works"
         ~expected:Tezos_data.compare_signatures ~actual:compare_signatures
+
+    let equality () =
+      Alcotest.(check' bool)
+        ~msg:"signature equality works" ~expected:Tezos_data.equality_signatures
+        ~actual:Signature_data.equality_signatures
   end
 end
