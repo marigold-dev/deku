@@ -33,29 +33,27 @@ type actions =
   | ["Bank"]
   | ["Temple"];
 
-type operationType = | ["Mint"] | ["Transfer"] | ["Eat"] | ["Delegate"];
+type operationType =
+  | ["Mint"]
+  | ["Transfer"]
+  | ["Eat"]
+  | ["Delegate"];
 
 type mint =
-  {
-    operation: actions,
-    amount: nat,
-    onBehalfOf: address
-  };
+  {operation: actions, amount: nat, onBehalfOf: address};
+
 type transfer =
-  {
-    amount: nat,
-    recipient: address,
-    onBehalfOf: address
-  };
-type eat =
-  {
-    amount: nat,
-    onBehalfOf: address
-  };
+  {amount: nat, recipient: address, onBehalfOf: address};
+
+type eat = {amount: nat, onBehalfOf: address};
 
 type delegate = {onBehalfOf: address};
 
-type parameter = | ["Mint", mint] | ["Transfer", transfer] | ["Eat", eat] | ["Delegate", delegate]
+type parameter =
+  | ["Mint", mint]
+  | ["Transfer", transfer]
+  | ["Eat", eat]
+  | ["Delegate", delegate];
 
 type return_ =
 

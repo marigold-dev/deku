@@ -6,11 +6,20 @@ const _test_transfer_cookie =
    let [taddr, _, _] = 
      Test.originate(main, initial_storage, 0 as tez);
    let contr = Test.to_contract(taddr);
-    let _ = 
-     Test.transfer_to_contract_exn(contr, (Mint({operation: Cookie(), amount: 200 as nat, onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
    let _ = 
-     Test.transfer_to_contract_exn(contr, (Transfer({amount: 100 as nat,recipient: ("tz1Tbj2G1MgPtyjQwEUNCAoiZFPfZ6XScFqZ" as address), onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
-  let authorizedKeys: set<address> = Set.empty;
+     Test.transfer_to_contract_exn(contr, (Mint
+        ({operation: Cookie(),
+         amount: 200 as nat,
+         onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+          as address})), 1 as mutez);
+   let _ = 
+     Test.transfer_to_contract_exn(contr, (Transfer
+        ({amount: 100 as nat,
+         recipient: ("tz1Tbj2G1MgPtyjQwEUNCAoiZFPfZ6XScFqZ"
+           as address),
+         onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+          as address})), 1 as mutez);
+   let authorizedKeys: set<address> = Set.empty;
    let expectedStorage: storage = 
      Map.update("tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
       as address, Some
@@ -30,7 +39,8 @@ const _test_transfer_cookie =
         mines: 0 as nat,
         passiveCPS: 0 as nat,
         templeCost: initialTempleCost,
-        temples: 0 as nat, authorizedKeys:authorizedKeys}), initial_storage);
+        temples: 0 as nat,
+        authorizedKeys: authorizedKeys}), initial_storage);
    let expectedStorage: storage = 
      Map.update("tz1Tbj2G1MgPtyjQwEUNCAoiZFPfZ6XScFqZ"
       as address, Some
@@ -50,7 +60,8 @@ const _test_transfer_cookie =
         mines: 0 as nat,
         passiveCPS: 0 as nat,
         templeCost: initialTempleCost,
-        temples: 0 as nat, authorizedKeys:authorizedKeys}), expectedStorage);
+        temples: 0 as nat,
+        authorizedKeys: authorizedKeys}), expectedStorage);
    let actualStorage = Test.get_storage(taddr);
    let _ = Test.log(["actual   storage: ", actualStorage]);
    let _ = Test.log(["expected storage: ", expectedStorage]);
@@ -65,11 +76,20 @@ const _test_cannot_transfer_cookie =
    let [taddr, _, _] = 
      Test.originate(main, initial_storage, 0 as tez);
    let contr = Test.to_contract(taddr);
-    let _ = 
-     Test.transfer_to_contract_exn(contr, (Mint({operation: Cookie(), amount: 1 as nat, onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
    let _ = 
-     Test.transfer_to_contract_exn(contr, (Transfer({amount: 200 as nat,recipient: ("tz1Tbj2G1MgPtyjQwEUNCAoiZFPfZ6XScFqZ" as address), onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" as address})), 1 as mutez);
-  let authorizedKeys: set<address> = Set.empty;
+     Test.transfer_to_contract_exn(contr, (Mint
+        ({operation: Cookie(),
+         amount: 1 as nat,
+         onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+          as address})), 1 as mutez);
+   let _ = 
+     Test.transfer_to_contract_exn(contr, (Transfer
+        ({amount: 200 as nat,
+         recipient: ("tz1Tbj2G1MgPtyjQwEUNCAoiZFPfZ6XScFqZ"
+           as address),
+         onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+          as address})), 1 as mutez);
+   let authorizedKeys: set<address> = Set.empty;
    let expectedStorage: storage = 
      Map.update("tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
       as address, Some
@@ -89,7 +109,8 @@ const _test_cannot_transfer_cookie =
         mines: 0 as nat,
         passiveCPS: 0 as nat,
         templeCost: initialTempleCost,
-        temples: 0 as nat, authorizedKeys:authorizedKeys}), initial_storage);
+        temples: 0 as nat,
+        authorizedKeys: authorizedKeys}), initial_storage);
    let actualStorage = Test.get_storage(taddr);
    let _ = Test.log(["actual   storage: ", actualStorage]);
    let _ = Test.log(["expected storage: ", expectedStorage]);
