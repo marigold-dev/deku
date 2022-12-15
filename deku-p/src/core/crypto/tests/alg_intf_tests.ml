@@ -98,6 +98,7 @@ struct
         (List.flatten signatures)
 
     let zero = Signature.(to_b58 zero)
+    let size = Signature.size
   end
 
   module Test_secret_key_data = struct
@@ -224,5 +225,10 @@ struct
       Alcotest.(check' string)
         ~msg:"zeros are equal" ~expected:Tezos_data.zero
         ~actual:Signature_data.zero
+
+    let size () =
+      Alcotest.(check' int)
+        ~msg:"sizes are equal" ~expected:Tezos_data.size
+        ~actual:Signature_data.size
   end
 end

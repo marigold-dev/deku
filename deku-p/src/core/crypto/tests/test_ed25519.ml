@@ -109,5 +109,6 @@ let run () =
           test_case "compare" `Quick Test_signature_data.compare;
           test_case "equality" `Quick Test_signature_data.equality;
           test_case "zero" `Quick Test_signature_data.zero;
+          test_case "size" `Quick Test_signature_data.size;
         ] );
     ]
