@@ -87,6 +87,10 @@ struct
       List.map2
         (fun key signatures -> check_sig key signatures)
         public_keys b58_to_signatures
+
+    let compare_signatures =
+      List.sort compare
+        (List.map (fun (signature, _) -> signature) (List.flatten signatures))
   end
 
   module Test_secret_key_data = struct
@@ -194,5 +198,14 @@ struct
         ~msg:"verified post conversion signatures are equal"
         ~expected:Tezos_data.verified_after_conversion
         ~actual:Signature_data.verified_after_conversion
+
+    let compare () =
+      let compare_signatures =
+        List.map helper_string_signatures Signature_data.compare_signatures
+        |> String.concat ""
+      in
+      Alcotest.(check' string)
+        ~msg:"signature comparison works"
+        ~expected:Tezos_data.compare_signatures ~actual:compare_signatures
   end
 end
