@@ -25,6 +25,9 @@ struct
   module Key_hash_data = struct
     let key_hashes = List.map (fun id -> id.public_key_hash) ids
     let compared_key_hashes = List.sort Key_hash.compare key_hashes
+
+    let equality_key_hashes =
+      List.for_all (fun kh -> Key_hash.equal kh kh) key_hashes
   end
 
   module Test_secret_key_data = struct
@@ -63,5 +66,10 @@ struct
       Alcotest.(check' (list string))
         ~msg:"key hash comparison works"
         ~expected:Tezos_data.compared_key_hashes ~actual:compared_key_hashes
+
+    let equality () =
+      Alcotest.(check' bool)
+        ~msg:"key hash equality works" ~expected:Tezos_data.equality_key_hashes
+        ~actual:Key_hash_data.equality_key_hashes
   end
 end
