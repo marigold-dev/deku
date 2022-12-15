@@ -7,6 +7,10 @@ const _test_transfer_cookie =
      Test.originate(main, initial_storage, 0 as tez);
    let contr = Test.to_contract(taddr);
    let _ = 
+     Test.transfer_to_contract_exn(contr, (Delegate
+        ({onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+          as address})), 1 as mutez);
+   let _ = 
      Test.transfer_to_contract_exn(contr, (Mint
         ({operation: Cookie(),
          amount: 200 as nat,
@@ -20,6 +24,9 @@ const _test_transfer_cookie =
          onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
           as address})), 1 as mutez);
    let authorizedKeys: set<address> = Set.empty;
+   let authorizedKeys: set<address> = 
+     Set.add("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
+      as address, authorizedKeys);
    let expectedStorage: storage = 
      Map.update("tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
       as address, Some
@@ -61,7 +68,7 @@ const _test_transfer_cookie =
         passiveCPS: 0 as nat,
         templeCost: initialTempleCost,
         temples: 0 as nat,
-        authorizedKeys: authorizedKeys}), expectedStorage);
+        authorizedKeys: Set.empty as set<address>}), expectedStorage);
    let actualStorage = Test.get_storage(taddr);
    let _ = Test.log(["actual   storage: ", actualStorage]);
    let _ = Test.log(["expected storage: ", expectedStorage]);
@@ -77,6 +84,10 @@ const _test_cannot_transfer_cookie =
      Test.originate(main, initial_storage, 0 as tez);
    let contr = Test.to_contract(taddr);
    let _ = 
+     Test.transfer_to_contract_exn(contr, (Delegate
+        ({onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
+          as address})), 1 as mutez);
+   let _ = 
      Test.transfer_to_contract_exn(contr, (Mint
         ({operation: Cookie(),
          amount: 1 as nat,
@@ -90,6 +101,9 @@ const _test_cannot_transfer_cookie =
          onBehalfOf: "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
           as address})), 1 as mutez);
    let authorizedKeys: set<address> = Set.empty;
+   let authorizedKeys: set<address> = 
+     Set.add("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
+      as address, authorizedKeys);
    let expectedStorage: storage = 
      Map.update("tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD"
       as address, Some
