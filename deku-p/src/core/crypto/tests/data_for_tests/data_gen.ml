@@ -95,6 +95,21 @@ struct
       List.for_all (fun kh -> Public_key_hash.equal kh kh) key_hashes
   end
 
+  module Sig = struct
+    let secret_keys = List.map (fun id -> id.secret_key) ids
+    let public_keys = List.map (fun id -> id.public_key) ids
+
+    let byte_data =
+      List.map
+        (fun string -> String.to_bytes string)
+        [ "1"; "2"; "3"; "4"; "5" ]
+
+    let to_sign =
+      List.map
+        (fun string -> Blake2B.hash_bytes string |> Blake2B.to_bytes)
+        (List.map (fun bytes -> [ bytes ]) byte_data)
+  end
+
   module Print_secret_key = struct
     let print_public_keys () =
       Format.printf "let public_keys = [\n%!";
@@ -113,6 +128,8 @@ struct
     let print_equality_secret_keys () =
       Format.printf "let equality_secret_keys = %b\n%!"
         Skt_key.equality_secret_keys
+
+    (* TODO: encoding *)
   end
 
   module Print_key = struct
@@ -125,6 +142,8 @@ struct
 
     let print_equality_public_keys () =
       Format.printf "let equality_public_keys = %b\n%!" Ky.equality_public_keys
+
+    (* TODO: encoding *)
   end
 
   module Print_key_hash = struct
@@ -139,5 +158,26 @@ struct
 
     let print_equality_key_hash () =
       Format.printf "let equality_key_hash = %b\n%!" Ky_hash.equality_key_hash
+
+    (* TODO: encoding *)
+  end
+
+  module Print_signatures = struct
+    let helper_print_signatures signature =
+      let signature = to_b58check signature in
+      let string_list =
+        String.fold_right
+          (fun char acc -> (Char.code char |> Int.to_string) :: acc)
+          signature []
+      in
+      String.concat "" string_list
+
+    let print_to_sign () =
+      let to_sign =
+        List.map Bytes.to_string Sig.to_sign
+        |> String.concat ""
+        |> String.map (fun char -> (Char.code char |> Int.to_string).[0])
+      in
+      Format.printf "let to_sign = \"%s\"\n%!" to_sign
   end
 end

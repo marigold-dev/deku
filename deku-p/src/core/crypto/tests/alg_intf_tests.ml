@@ -38,6 +38,15 @@ struct
       List.for_all (fun kh -> Key_hash.equal kh kh) key_hashes
   end
 
+  module Signature_data = struct
+    let secret_keys = List.map (fun id -> id.secret_key) ids
+    let public_keys = List.map (fun id -> id.public_key) ids
+    let to_hash = [ "1"; "2"; "3"; "4"; "5" ]
+
+    let to_sign =
+      List.map (fun string -> Deku_crypto.BLAKE2b.hash string) to_hash
+  end
+
   module Test_secret_key_data = struct
     let public_keys () =
       let public_keys =
@@ -95,5 +104,26 @@ struct
       Alcotest.(check' bool)
         ~msg:"key hash equality works" ~expected:Tezos_data.equality_key_hashes
         ~actual:Key_hash_data.equality_key_hashes
+  end
+
+  module Test_signature_data = struct
+    let helper_string_signatures signature =
+      let signature = Signature.to_b58 signature in
+      let string_list =
+        String.fold_right
+          (fun char acc -> (Char.code char |> Int.to_string) :: acc)
+          signature []
+      in
+      String.concat "" string_list
+
+    let to_sign () =
+      let to_sign =
+        List.map Deku_crypto.BLAKE2b.to_raw Signature_data.to_sign
+        |> String.concat ""
+        |> String.map (fun char -> (Char.code char |> Int.to_string).[0])
+      in
+      Alcotest.(check' string)
+        ~msg:"presigned hashes are equal" ~expected:Tezos_data.to_sign
+        ~actual:to_sign
   end
 end
