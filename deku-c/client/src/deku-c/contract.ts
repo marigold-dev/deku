@@ -37,6 +37,10 @@ const parseContractState = (json: JSONType): JSONType => {
       const first = json[1] as Array<JSONType>;
       return first.map((json) => parseContractState(json));
     }
+    case "Set": {
+      const first = json[1] as Array<JSONType>;
+      return first.map((json) => parseContractState(json));
+    }
     case "Union": {
       const first = json[1] as Array<JSONType>;
       const type = first[0] as string;
