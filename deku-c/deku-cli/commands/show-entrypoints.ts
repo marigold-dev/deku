@@ -19,7 +19,7 @@ async function main(
     }
   } catch (e: any) {
     console.error("An error occurred:");
-    console.error(e.message);
+    console.error(e);
     process.exit(1);
   }
 }

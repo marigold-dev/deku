@@ -24,7 +24,7 @@ async function main(
     console.log(state);
   } catch (e: any) {
     console.error("An error occurred:");
-    console.error(e.message);
+    console.error(e);
     process.exit(1);
   }
 }
