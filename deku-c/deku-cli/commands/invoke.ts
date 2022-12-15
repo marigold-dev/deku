@@ -76,6 +76,7 @@ async function invokeLigoMain(
     console.log("Operation hash:", hash);
   } catch (e: any) {
     console.error("An error occurred:");
+    // TODO: this error is totally opaque if the expression is malformed.
     console.error(e);
     process.exit(1);
   }
