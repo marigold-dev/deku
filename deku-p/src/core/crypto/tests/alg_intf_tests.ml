@@ -52,6 +52,22 @@ struct
           List.map (fun hash -> (Signature.sign sk hash, hash)) to_sign)
         secret_keys
 
+    let signatures_to_b58 =
+      List.map
+        (fun sig_list ->
+          List.map
+            (fun (signature, hash) -> (Signature.to_b58 signature, hash))
+            sig_list)
+        signatures
+
+    let b58_to_signatures =
+      List.map
+        (fun sig_list ->
+          List.map
+            (fun (b58, hash) -> (Option.get @@ Signature.of_b58 b58, hash))
+            sig_list)
+        signatures_to_b58
+
     let verified_normal_signatures =
       let check_sig pk signatures =
         List.map
@@ -61,6 +77,16 @@ struct
       List.map2
         (fun key signatures -> check_sig key signatures)
         public_keys signatures
+
+    let verified_after_conversion =
+      let check_sig pk signatures =
+        List.map
+          (fun (signature, hash) -> Signature.verify pk signature hash)
+          signatures
+      in
+      List.map2
+        (fun key signatures -> check_sig key signatures)
+        public_keys b58_to_signatures
   end
 
   module Test_secret_key_data = struct
@@ -161,5 +187,12 @@ struct
         ~msg:"verified normal signatures are equal"
         ~expected:Tezos_data.verified_normal_signatures
         ~actual:Signature_data.verified_normal_signatures
+
+    (* We convert the signatures to b58 and back to ensure no data is lost *)
+    let verified_after_conversion () =
+      Alcotest.(check' (list (list bool)))
+        ~msg:"verified post conversion signatures are equal"
+        ~expected:Tezos_data.verified_after_conversion
+        ~actual:Signature_data.verified_after_conversion
   end
 end
