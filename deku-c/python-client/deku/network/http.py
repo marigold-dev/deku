@@ -54,8 +54,11 @@ class DekuAPI:
         level_ = cast(level, _get(self.deku_url, "chain/level"))
         return int(level_["level"])
 
-    def balance(self, ticket: TicketID, address: Address) -> int:
-        data = [address, ticket.ticketer, ticket.data.decode()]
+    def balance(self, address: Address, ticket: TicketID) -> int:
+        ticket_data = ticket.data.decode()
+        if len(ticket_data) == 0:
+            ticket_data = "0x"
+        data = [address, ticket.ticketer, ticket_data]
         balance = _get(self.deku_url, "balance", data)
         return balance["balance"]
 
