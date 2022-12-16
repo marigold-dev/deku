@@ -2,16 +2,15 @@ import pytezos
 import time
 from deku.deku import DekuChain
 from deku.core.ticket import Ticket
-from deku.utils import b58decode
 
 # Assuming you have a ticketer contract originated, such as
 # deku/dummy_ticket.mligo
-DUMMY_TICKET = "KT1CqsMwZqcd3BgPQawLLzh6pKbfb8zZQSZa"
+DUMMY_TICKET = "KT1KCkwGxAsFmy6jkF1owQyGkQoYVtajkeGb"
 
 alice = "tz1cXjXadqbG4Pp3DFZJETi3vCPwBM77LBpi"
 alice_secret = "edsk3MG557SuyCMyyjBa6n9MeZsLGRkHnXPpJedu8UrbUoEFh5q64K"
 
-ptc = pytezos.pytezos.using("ghostnet", key=alice_secret)
+ptc = pytezos.pytezos.using("https://ghostnet.tezos.marigold.dev", key=alice_secret)
 dk = DekuChain(tezos_client=ptc)
 
 deku_consensus_addr = dk.info()["consensus"]
@@ -33,7 +32,7 @@ ticket2 = ticket.with_amount(50)
 withdraw_hash = dk.withdraw(dummy_ticket.address, ticket2)
 print("Withdraw hash is", withdraw_hash)
 
-time.sleep(45)
+time.sleep(80)
 
 proof_obj = dk.withdraw_proof(withdraw_hash)
 proof_obj = proof_obj.b58decode()
