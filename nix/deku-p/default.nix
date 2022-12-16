@@ -39,7 +39,11 @@
       static = true;
     };
 
-    ligo = inputs.ligo.packages.${system}.ligoLight;
+    ligo =
+      # TODO: support ligo on more systems in our flake
+      if system == "x86_64-linux"
+      then inputs.ligo.packages.${system}.ligoLight
+      else pkgs.hello;
 
     docker = pkgs.callPackage ./docker.nix {inherit deku ligo;};
   in {
