@@ -32,6 +32,8 @@ jobs:
           done
       - name: Check formatting
         run: nix fmt -- --fail-on-change
+      - name: Check all packages
+        run: nix flake -L check
       - name: Build default
         run: nix --log-format raw -L build '.#deku'
       - name: Build static
