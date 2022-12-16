@@ -465,9 +465,10 @@ module Decode_operation : HANDLERS = struct
 
   let handler ~path:_ ~body ~state:_ =
     let { data } = body in
-    let data = Hex.of_string data |> Hex.to_bytes in
+    let removedMagicByte = String.sub data 2 (String.length data - 2) in
+    let binary = Hex.to_string (`Hex removedMagicByte) in
     let nonce, level, operation =
-      Data_encoding.Binary.of_bytes_exn Operation.Initial.hash_encoding data
+      Data_encoding.Binary.of_string_exn Operation.Initial.hash_encoding binary
     in
     Ok (nonce, level, operation)
 end
