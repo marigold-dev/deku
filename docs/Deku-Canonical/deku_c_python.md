@@ -45,4 +45,4 @@ Two examples are given in the `examples/` directory:
   [faucet](https://faucet.ghostnet.teztnets.xyz/) to refill it.
 * `examples/contracts.py` shows the origination of a contract on Deku and invocation of an
   entrypoint of this contract. You can then observe that the contract storage has changed using the
-  [Deku TypeScript CLI](https://deku.marigold.dev/docs/Deku-Canonical/deku_c_cli).
+  [Deku CLI](https://deku.marigold.dev/docs/Deku-Canonical/deku_c_cli).
