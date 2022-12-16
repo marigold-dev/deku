@@ -38,10 +38,8 @@ let close_connection ~connection_id network =
 
 let with_connection ~on_connection ~on_request ~on_message network k =
   let connection_id = create_connection network in
-  let handler ~sw connection =
-    let write message =
-      Eio.Fiber.fork ~sw @@ fun () -> Connection.write connection message
-    in
+  let handler connection =
+    let write message = Connection.write connection message in
     let on_message message =
       match message with
       | Network_message.Message { raw_header; raw_content } ->
@@ -62,7 +60,7 @@ let with_connection ~on_connection ~on_request ~on_message network k =
   let handler connection =
     Fun.protect
       ~finally:(fun () -> close_connection ~connection_id network)
-      (fun () -> Eio.Switch.run @@ fun sw -> handler ~sw connection)
+      (fun () -> handler connection)
   in
   k handler
 
@@ -112,15 +110,14 @@ let connect ~net ~clock ~nodes ~on_connection ~on_request ~on_message network =
     nodes
 
 let send ~message ~write =
-  (* write always includes a fork *)
   try write message
   with exn ->
     Logs.warn (fun m -> m "write.error: %s" (Printexc.to_string exn))
 
 let broadcast message network =
-  Key_hash.Map.iter
-    (fun _connection write -> send ~message ~write)
-    network.connected_to
+  Eio.Fiber.List.iter
+    (fun (_connection, write) -> send ~message ~write)
+    (Key_hash.Map.bindings network.connected_to)
 
 let request ~raw_header ~raw_content network =
   let request = Network_message.request ~raw_header ~raw_content in
