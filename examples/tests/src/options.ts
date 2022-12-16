@@ -80,7 +80,7 @@ export const TICKETER = option({
   description:
     "The address of an originated dummy ticket contract, by default it will use the already orignated contract on ghostnet.",
   parser: (string) => string,
-  default: "KT1WqDmVx6AEB4V4MFoTjSKKt9XhvvihrVJC",
+  default: "KT1KCkwGxAsFmy6jkF1owQyGkQoYVtajkeGb",
 });
 
 export const SECRET_WITH_TEZ = option({
