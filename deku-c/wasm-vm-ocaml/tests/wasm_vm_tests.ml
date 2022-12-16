@@ -6,6 +6,6 @@ let () =
         [
           test_case "Originate/invoke increment" `Quick Increment_test.test;
           test_case "Originate/invoke tickets" `Quick Ticket_test.test;
-          (* Decookie.decookie_test; *)
+          Decookie.decookie_test;
         ] );
     ]
