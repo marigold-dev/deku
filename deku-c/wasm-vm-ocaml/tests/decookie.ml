@@ -1,8 +1,43 @@
-let decookie_invoke_mint_cookie =
-  let str =
+let decookie_invoke_delegate address =
+  let str address =
     {|  
 { "operation":
-    { "address": "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD",
+    { "address": "DK1NmndDdhkWdWpX7NMArqEjjnWR3xLfM4Kf",
+      "argument":
+        [ "Union",
+          [ "Left",
+            [ "Union",
+              [ "Left",
+                [ "String","|}
+    ^ address ^ {|" ] ] ] ] ] },
+  "tickets": [] }
+  |}
+  in
+  let res =
+    match Data_encoding.Json.from_string (str address) with
+    | Ok json ->
+        Data_encoding.Json.destruct Ocaml_wasm_vm.Operation_payload.encoding
+          json
+    | Error _ -> failwith "ok"
+  in
+  match res.operation with
+  | Call { address = _; argument } ->
+      Ocaml_wasm_vm.Operation.Call
+        {
+          address =
+            Deku_ledger.Address.of_contract_address
+              ( Deku_ledger.Contract_address.of_user_operation_hash
+                  (Deku_crypto.BLAKE2b.hash "tutturu"),
+                None );
+          argument;
+        }
+  | _ -> failwith "impossible"
+
+let decookie_invoke_mint_cookie address =
+  let str address =
+    {|  
+{ "operation":
+    { "address": "DK1NmndDdhkWdWpX7NMArqEjjnWR3xLfM4Kf",
       "argument":
         [ "Union",
           [ "Right",
@@ -11,7 +46,9 @@ let decookie_invoke_mint_cookie =
                 [ "Pair",
                   [ [ "Pair",
                       [ [ "Int", "1" ],
-                        [ "String", "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" ] ] ],
+                        [ "String", "|}
+    ^ address
+    ^ {|" ] ] ],
                     [ "Union",
                       [ "Left",
                         [ "Union",
@@ -20,7 +57,7 @@ let decookie_invoke_mint_cookie =
   |}
   in
   let res =
-    match Data_encoding.Json.from_string str with
+    match Data_encoding.Json.from_string (str address) with
     | Ok json ->
         Data_encoding.Json.destruct Ocaml_wasm_vm.Operation_payload.encoding
           json
@@ -39,11 +76,11 @@ let decookie_invoke_mint_cookie =
         }
   | _ -> failwith "impossible"
 
-let decookie_invoke_mint_fifteen_cookies =
-  let str =
+let decookie_invoke_mint_fifteen_cookies address =
+  let str address =
     {|  
 { "operation":
-    { "address": "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD",
+    { "address": "DK1NmndDdhkWdWpX7NMArqEjjnWR3xLfM4Kf",
       "argument":
         [ "Union",
           [ "Right",
@@ -52,7 +89,9 @@ let decookie_invoke_mint_fifteen_cookies =
                 [ "Pair",
                   [ [ "Pair",
                       [ [ "Int", "15" ],
-                        [ "String", "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" ] ] ],
+                        [ "String", "|}
+    ^ address
+    ^ {|" ] ] ],
                     [ "Union",
                       [ "Left",
                         [ "Union",
@@ -61,7 +100,7 @@ let decookie_invoke_mint_fifteen_cookies =
 |}
   in
   let res =
-    match Data_encoding.Json.from_string str with
+    match Data_encoding.Json.from_string (str address) with
     | Ok json ->
         Data_encoding.Json.destruct Ocaml_wasm_vm.Operation_payload.encoding
           json
@@ -80,10 +119,10 @@ let decookie_invoke_mint_fifteen_cookies =
         }
   | _ -> failwith "impossible"
 
-let decookie_invoke_mint_cursor =
-  let str =
+let decookie_invoke_mint_cursor address =
+  let str address =
     {|  { "operation":
-    { "address": "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD",
+    { "address": "DK1NmndDdhkWdWpX7NMArqEjjnWR3xLfM4Kf",
       "argument":
         [ "Union",
           [ "Right",
@@ -92,7 +131,9 @@ let decookie_invoke_mint_cursor =
                 [ "Pair",
                   [ [ "Pair",
                       [ [ "Int", "1" ],
-                        [ "String", "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" ] ] ],
+                        [ "String", "|}
+    ^ address
+    ^ {|" ] ] ],
                     [ "Union",
                       [ "Left",
                         [ "Union",
@@ -100,7 +141,7 @@ let decookie_invoke_mint_cursor =
   "tickets": [] }|}
   in
   let res =
-    match Data_encoding.Json.from_string str with
+    match Data_encoding.Json.from_string (str address) with
     | Ok json ->
         Data_encoding.Json.destruct Ocaml_wasm_vm.Operation_payload.encoding
           json
@@ -203,7 +244,8 @@ let decookie_test =
               state = state.state;
               ticket_table = Ticket_table.init [];
             }
-          ~operation:decookie_invoke_mint_cookie
+          ~operation:
+            (decookie_invoke_delegate (Deku_ledger.Address.to_b58 addr))
       in
       let state = Result.get_ok x in
       (let (State_entry.Entry { storage; _ }) =
@@ -214,32 +256,111 @@ let decookie_test =
        in
        let json =
          Data_encoding.Json.from_string
-           {|
+           ({|
                  [ "Map",
-                     [ [ [ "String", "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw" ],
-                         [ "Pair",
-                           [ [ "Pair",
-                               [ [ "Pair",
-                                   [ [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "1400000" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "1" ], [ "Int", "15" ] ] ] ] ],
-                                     [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "0" ], [ "Int", "130000" ] ] ] ] ] ] ],
-                                 [ "Pair",
-                                   [ [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "1100" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "100" ], [ "Int", "0" ] ] ] ] ],
-                                     [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "12000" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "0" ], [ "Int", "20000000" ] ] ] ] ] ] ] ] ],
-                             [ "Int", "0" ]
-                             ]
-                           ]
-                       ]
-                   ]
-                 ]
+                  [ [ [ "String", "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw" ],
+                      [ "Pair",
+                        [ [ "Pair",
+                            [ [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair",
+                                        [ [ "Set",
+                                            [ [ "String",
+                                                "|}
+           ^ Deku_ledger.Address.to_b58 addr
+           ^ {|" ] ] ],
+                                          [ "Int", "1400000" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "15" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ] ] ] ] ],
+                              [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "130000" ], [ "Int", "1100" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "100" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "0" ], [ "Int", "12000" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ] ] ] ] ] ] ],
+                          [ "Pair", [ [ "Int", "20000000" ], [ "Int", "0" ] ] ] ] ] ] ] ]
                |}
+           )
+       in
+       let json = Result.get_ok json in
+       let rawExpectedState = Data_encoding.Json.destruct Value.encoding json in
+       let modifiedState =
+         match rawExpectedState with
+         | Value.Map t ->
+             let v =
+               Value.Map.find
+                 (Value.String "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw") t
+             in
+             let v =
+               Value.Map.add
+                 (Value.String
+                    (Base.String.substr_replace_all ~pattern:"\"" ~with_:""
+                       (Data_encoding.Json.to_string
+                          (Data_encoding.Json.construct Env.Address.encoding
+                             addr))))
+                 v t
+             in
+             Value.Map.remove
+               (Value.String "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw") v
+         | _ -> failwith "unreachable!"
+       in
+       let expectedState = Value.Map modifiedState in
+       (check storage_testable) "Invoking Delegation" expectedState storage);
+      let x =
+        Env.execute
+          ~operation_hash:(Deku_crypto.BLAKE2b.hash "tutturu")
+          ~tickets:[]
+          Env.
+            {
+              source = addr;
+              sender = addr;
+              ledger = Deku_ledger.Ledger.initial;
+              state = state.state;
+              ticket_table = Ticket_table.init [];
+            }
+          ~operation:
+            (decookie_invoke_mint_cookie (Deku_ledger.Address.to_b58 addr))
+      in
+      let state = Result.get_ok x in
+      (let (State_entry.Entry { storage; _ }) =
+         State.fetch_contract state.state
+           Deku_ledger.(
+             Contract_address.of_user_operation_hash
+               (Deku_crypto.BLAKE2b.hash "tutturu"))
+       in
+       let json =
+         Data_encoding.Json.from_string
+           ({|
+                 [ "Map",
+                  [ [ [ "String", "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw" ],
+                      [ "Pair",
+                        [ [ "Pair",
+                            [ [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair",
+                                        [ [ "Set",
+                                            [ [ "String",
+                                                "|}
+           ^ Deku_ledger.Address.to_b58 addr
+           ^ {|" ] ] ],
+                                          [ "Int", "1400000" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "1" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "15" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ] ] ] ] ],
+                              [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "130000" ], [ "Int", "1100" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "100" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "0" ], [ "Int", "12000" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ] ] ] ] ] ] ],
+                          [ "Pair", [ [ "Int", "20000000" ], [ "Int", "0" ] ] ] ] ] ] ] ]
+               |}
+           )
        in
        let json = Result.get_ok json in
        let rawExpectedState = Data_encoding.Json.destruct Value.encoding json in
@@ -265,6 +386,7 @@ let decookie_test =
        in
        let expectedState = Value.Map modifiedState in
        (check storage_testable) "Invoking Cookie minting" expectedState storage);
+
       let x =
         Env.execute
           ~operation_hash:(Deku_crypto.BLAKE2b.hash "tutturu")
@@ -277,7 +399,9 @@ let decookie_test =
               state = state.state;
               ticket_table = Ticket_table.init [];
             }
-          ~operation:decookie_invoke_mint_fifteen_cookies
+          ~operation:
+            (decookie_invoke_mint_fifteen_cookies
+               (Deku_ledger.Address.to_b58 addr))
       in
       let state = Result.get_ok x in
       (let (State_entry.Entry { storage; _ }) =
@@ -288,32 +412,34 @@ let decookie_test =
        in
        let json =
          Data_encoding.Json.from_string
-           {|
+           ({|
                  [ "Map",
-                     [ [ [ "String", "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw" ],
-                         [ "Pair",
-                           [ [ "Pair",
-                               [ [ "Pair",
-                                   [ [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "1400000" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "16" ], [ "Int", "15" ] ] ] ] ],
-                                     [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "0" ], [ "Int", "130000" ] ] ] ] ] ] ],
-                                 [ "Pair",
-                                   [ [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "1100" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "100" ], [ "Int", "0" ] ] ] ] ],
-                                     [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "12000" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "0" ], [ "Int", "20000000" ] ] ] ] ] ] ] ] ],
-                             [ "Int", "0" ]
-                             ]
-                           ]
-                       ]
-                   ]
-                 ]
+                  [ [ [ "String", "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw" ],
+                      [ "Pair",
+                        [ [ "Pair",
+                            [ [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair",
+                                        [ [ "Set",
+                                            [ [ "String",
+                                                "|}
+           ^ Deku_ledger.Address.to_b58 addr
+           ^ {|" ] ] ],
+                                          [ "Int", "1400000" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "16" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "15" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ] ] ] ] ],
+                              [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "130000" ], [ "Int", "1100" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "100" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "0" ], [ "Int", "12000" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ] ] ] ] ] ] ],
+                          [ "Pair", [ [ "Int", "20000000" ], [ "Int", "0" ] ] ] ] ] ] ] ]
                |}
+           )
        in
        let json = Result.get_ok json in
        let rawExpectedState = Data_encoding.Json.destruct Value.encoding json in
@@ -352,7 +478,8 @@ let decookie_test =
               state = state.state;
               ticket_table = Ticket_table.init [];
             }
-          ~operation:decookie_invoke_mint_cursor
+          ~operation:
+            (decookie_invoke_mint_cursor (Deku_ledger.Address.to_b58 addr))
       in
 
       let state = Result.get_ok x in
@@ -364,32 +491,34 @@ let decookie_test =
        in
        let json =
          Data_encoding.Json.from_string
-           {|
+           ({|
                  [ "Map",
-                     [ [ [ "String", "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw" ],
-                         [ "Pair",
-                           [ [ "Pair",
-                               [ [ "Pair",
-                                   [ [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "1400000" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "1" ], [ "Int", "17" ] ] ] ] ],
-                                     [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "1" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "0" ], [ "Int", "130000" ] ] ] ] ] ] ],
-                                 [ "Pair",
-                                   [ [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "1100" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "100" ], [ "Int", "0" ] ] ] ] ],
-                                     [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "12000" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "1" ], [ "Int", "20000000" ] ] ] ] ] ] ] ] ],
-                             [ "Int", "0" ]
-                             ]
-                           ]
-                       ]
-                   ]
-                 ]
+                  [ [ [ "String", "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw" ],
+                      [ "Pair",
+                        [ [ "Pair",
+                            [ [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair",
+                                        [ [ "Set",
+                                            [ [ "String",
+                                                "|}
+           ^ Deku_ledger.Address.to_b58 addr
+           ^ {|" ] ] ],
+                                          [ "Int", "1400000" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "1" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "17" ], [ "Int", "1" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ] ] ] ] ],
+                              [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "130000" ], [ "Int", "1100" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "100" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "0" ], [ "Int", "12000" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "1" ] ] ] ] ] ] ] ] ],
+                          [ "Pair", [ [ "Int", "20000000" ], [ "Int", "0" ] ] ] ] ] ] ] ]
                |}
+           )
        in
        let json = Result.get_ok json in
        let rawExpectedState = Data_encoding.Json.destruct Value.encoding json in
@@ -427,7 +556,8 @@ let decookie_test =
               state = state.state;
               ticket_table = Ticket_table.init [];
             }
-          ~operation:decookie_invoke_mint_cookie
+          ~operation:
+            (decookie_invoke_mint_cookie (Deku_ledger.Address.to_b58 addr))
       in
       let state = Result.get_ok x in
       (let (State_entry.Entry { storage; _ }) =
@@ -438,32 +568,34 @@ let decookie_test =
        in
        let json =
          Data_encoding.Json.from_string
-           {|
+            ({|
                  [ "Map",
-                     [ [ [ "String", "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw" ],
-                         [ "Pair",
-                           [ [ "Pair",
-                               [ [ "Pair",
-                                   [ [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "1400000" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "2" ], [ "Int", "17" ] ] ] ] ],
-                                     [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "1" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "0" ], [ "Int", "130000" ] ] ] ] ] ] ],
-                                 [ "Pair",
-                                   [ [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "1100" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "100" ], [ "Int", "0" ] ] ] ] ],
-                                     [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "12000" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "1" ], [ "Int", "20000000" ] ] ] ] ] ] ] ] ],
-                             [ "Int", "0" ]
-                             ]
-                           ]
-                       ]
-                   ]
-                 ]
+                  [ [ [ "String", "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw" ],
+                      [ "Pair",
+                        [ [ "Pair",
+                            [ [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair",
+                                        [ [ "Set",
+                                            [ [ "String",
+                                                "|}
+           ^ Deku_ledger.Address.to_b58 addr
+           ^ {|" ] ] ],
+                                          [ "Int", "1400000" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "2" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "17" ], [ "Int", "1" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ] ] ] ] ],
+                              [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "130000" ], [ "Int", "1100" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "100" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "0" ], [ "Int", "12000" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "1" ] ] ] ] ] ] ] ] ],
+                          [ "Pair", [ [ "Int", "20000000" ], [ "Int", "0" ] ] ] ] ] ] ] ]
                |}
+           )
        in
        let json = Result.get_ok json in
        let rawExpectedState = Data_encoding.Json.destruct Value.encoding json in
