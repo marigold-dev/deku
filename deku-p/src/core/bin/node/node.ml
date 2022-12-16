@@ -48,19 +48,17 @@ let send_blocks ~connection ~above node =
       send_while above
   | None -> ()
 
-let rec handle_chain_actions ~sw ~env ~actions node =
-  List.iter
+let rec apply_chain_actions ~sw ~env ~actions node =
+  Eio.Fiber.List.iter
     (fun action ->
-      let on_error exn =
+      try apply_chain_action ~sw ~env ~action node
+      with exn ->
         Logs.err (fun m ->
             m "chain/action: action %a, exception %s" Chain.pp_action action
-              (Printexc.to_string exn))
-      in
-      Eio.Fiber.fork_sub ~sw ~on_error @@ fun sw ->
-      handle_chain_action ~sw ~env ~action node)
+              (Printexc.to_string exn)))
     actions
 
-and handle_chain_action ~sw ~env ~action node =
+and apply_chain_action ~sw ~env ~action node =
   let open Chain in
   match action with
   | Chain_timeout { until } -> start_timeout ~sw ~env ~until node
@@ -70,7 +68,7 @@ and handle_chain_action ~sw ~env ~action node =
       Network_manager.send ~connection ~raw_header ~raw_content node.network
   | Chain_send_request { raw_header; raw_content } ->
       Network_manager.request ~raw_header ~raw_content node.network
-  | Chain_fragment { fragment } -> handle_chain_fragment ~sw ~env ~fragment node
+  | Chain_fragment { fragment } -> apply_chain_fragment ~sw ~env ~fragment node
   | Chain_save_block { block; network } -> (
       match node.indexer with
       | Some indexer ->
@@ -98,8 +96,7 @@ and handle_chain_action ~sw ~env ~action node =
 (* FIXME: this is probably an indication of bad abstraction but being lazy right now *)
 (* failwith "Node was not initialized with Tezos interop enabled.") *)
 
-and handle_chain_fragment ~sw ~env ~fragment node =
-  Eio.Fiber.fork ~sw @@ fun () ->
+and apply_chain_fragment ~sw ~env ~fragment node =
   let identity = node.identity in
   let default_block_size = node.default_block_size in
   let outcome =
@@ -111,10 +108,9 @@ and handle_chain_fragment ~sw ~env ~fragment node =
 
 and on_chain_outcome ~sw ~env ~current ~outcome node =
   let identity = node.identity in
-
   let chain, actions = Chain.apply ~identity ~current ~outcome node.chain in
   write_chain ~chain node;
-  handle_chain_actions ~sw ~env ~actions node
+  apply_chain_actions ~sw ~env ~actions node
 
 and start_timeout ~sw ~env ~until node =
   node.cancel ();
@@ -137,18 +133,26 @@ and on_timeout ~sw ~env ~current node =
   let identity = node.identity in
   let chain, actions = Chain.timeout ~identity ~current node.chain in
   write_chain ~chain node;
-  handle_chain_actions ~sw ~env ~actions node
+  apply_chain_actions ~sw ~env ~actions node
+
+let fork_sub ~sw msg f =
+  let on_error exn =
+    Logs.err (fun m -> m "%s: exception %s" msg (Printexc.to_string exn))
+  in
+  Eio.Fiber.fork_sub ~sw ~on_error f
 
 let on_network_message ~sw ~env ~raw_header ~raw_content node =
+  fork_sub ~sw "node/message" @@ fun sw ->
   let chain, fragment = Chain.incoming ~raw_header ~raw_content node.chain in
   write_chain ~chain node;
   match fragment with
-  | Some fragment -> handle_chain_fragment ~sw ~env ~fragment node
+  | Some fragment -> apply_chain_fragment ~sw ~env ~fragment node
   | None -> ()
 
 let on_network_request ~sw ~env ~connection ~raw_header ~raw_content node =
+  fork_sub ~sw "node/request" @@ fun sw ->
   let fragment = Chain.request ~connection ~raw_header ~raw_content in
-  handle_chain_fragment ~sw ~env ~fragment node
+  apply_chain_fragment ~sw ~env ~fragment node
 
 let make ~identity ~default_block_size ~dump ~chain ~indexer =
   let network = Network_manager.make ~identity in
@@ -177,6 +181,7 @@ let to_tezos_operation transaction =
   | _ -> None
 
 let handle_tezos_operation ~sw ~env ~operation node =
+  fork_sub ~sw "node/tezos" @@ fun sw ->
   let Tezos_interop.{ hash; transactions } = operation in
   let operations = List.filter_map to_tezos_operation transactions in
   let tezos_operation = Tezos_operation.make hash operations in
@@ -184,13 +189,13 @@ let handle_tezos_operation ~sw ~env ~operation node =
     Chain.incoming_tezos_operation ~tezos_operation node.chain
   in
   write_chain ~chain node;
-  handle_chain_actions ~sw ~env ~actions node
+  apply_chain_actions ~sw ~env ~actions node
 
 let reload ~sw ~env node =
   let current = current () in
   let chain, actions = Chain.reload ~current node.chain in
   write_chain ~chain node;
-  handle_chain_actions ~sw ~env ~actions node
+  apply_chain_actions ~sw ~env ~actions node
 
 let start ~sw ~env ~port ~nodes ~tezos node =
   let on_connection ~connection =
@@ -223,9 +228,9 @@ let start ~sw ~env ~port ~nodes ~tezos node =
   | None -> ());
   let net = Eio.Stdenv.net env in
   let clock = Eio.Stdenv.clock env in
+  let () = reload ~sw ~env node in
   Eio.Fiber.all
     [
-      (fun () -> reload ~sw ~env node);
       (fun () ->
         Network_manager.listen ~net ~clock ~port ~on_connection ~on_message
           ~on_request node.network);
