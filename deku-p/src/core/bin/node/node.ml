@@ -32,20 +32,22 @@ let write_chain ~chain node =
 let send_blocks ~connection ~above node =
   match node.indexer with
   | Some indexer ->
-      let rec send_while level =
+      let rec send_while acc level =
         let level = Level.next level in
         Logs.info (fun m ->
             m "Sending block %a at time %.3f" Level.pp level
               (Unix.gettimeofday ()));
         match Block_storage.find_block_and_votes_by_level ~level indexer with
-        | Some network ->
+        | Some network -> (
             let (Network_message { raw_header; raw_content }) = network in
             Network_manager.send ~connection ~raw_header ~raw_content
               node.network;
-            send_while level
+            match acc >= 60 with
+            | true -> ()
+            | false -> send_while (acc + 1) level)
         | None -> ()
       in
-      send_while above
+      send_while 0 above
   | None -> ()
 
 let rec apply_chain_actions ~sw ~env ~actions node =
