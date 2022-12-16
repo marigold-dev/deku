@@ -1,0 +1,7 @@
+build/*
+dist/*
+env/*
+*.sw?
+*/*.sw?
+__pycache__
+*/__pycache__

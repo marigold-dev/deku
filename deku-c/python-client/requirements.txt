@@ -1,0 +1,8 @@
+pytezos==3.7.2
+attrs==21.4.0
+
+# FIXME I don't know why, but I have to manually list those
+# From pytezos:
+bson==0.5.10
+pysodium==0.7.10
+
