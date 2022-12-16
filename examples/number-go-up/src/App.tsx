@@ -57,8 +57,7 @@ export const App = () => {
           "https://deku-canonical-vm0.deku-v1.marigold.dev/api/v1/state/unix"
         );
         const data = await result.json();
-        const storage = JSON.parse(data[contractAddr]);
-        const counterState = storage.state[1];
+        const counterState = data[contractAddr].state[1];
         console.log("setting state:", counterState);
         setCounterState(counterState);
       })();
