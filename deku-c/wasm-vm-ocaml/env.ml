@@ -49,9 +49,14 @@ let rec execute t ~operation_hash ~tickets ~operation =
               | Imports.Type_error -> Error "type_error"
               | Ticket_table.Table error ->
                   Error (Ticket_table.show_error error)
-              | ( Wasm.Eval.Crash _ | Wasm.Eval.Exhaustion _ | Wasm.Eval.Link _
-                | Wasm.Eval.Trap _ ) as exn ->
-                  Error (Printexc.to_string exn)
+              | Wasm.Eval.Crash (source_region, message)
+              | Wasm.Eval.Exhaustion (source_region, message)
+              | Wasm.Eval.Link (source_region, message)
+              | Wasm.Eval.Trap (source_region, message) ->
+                  Error
+                    (Format.sprintf "%s: %s"
+                       (Wasm.Source.string_of_region source_region)
+                       message)
               | e -> raise e);
             effc =
               (fun (type a) (eff : a t) ->
