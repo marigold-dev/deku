@@ -5,7 +5,7 @@ open Message
 type gossip =
   | Gossip of {
       (* TODO: this is clearly not ideal *)
-      pending_request : bool;
+      pending_request : float option;
       message_pool : Message_pool.t; [@opaque]
     }
 
@@ -15,7 +15,7 @@ let encoding =
   let open Data_encoding in
   conv
     (fun (Gossip { pending_request = _; message_pool }) -> message_pool)
-    (fun message_pool -> Gossip { pending_request = false; message_pool })
+    (fun message_pool -> Gossip { pending_request = None; message_pool })
     Message_pool.encoding
 
 type fragment =
@@ -59,7 +59,7 @@ type action =
   | Gossip_fragment of { fragment : fragment }
 
 let initial =
-  Gossip { pending_request = false; message_pool = Message_pool.initial }
+  Gossip { pending_request = None; message_pool = Message_pool.initial }
 
 let broadcast_message ~content =
   let fragment = Message_pool.encode ~content in
@@ -84,13 +84,22 @@ let send_message ~connection ~content =
 
 let send_request ~above gossip =
   let (Gossip { pending_request; message_pool }) = gossip in
-  match pending_request with
-  | true -> (gossip, None)
-  | false ->
+  (* TODO: This should be timestamp.t *)
+  let current = Unix.gettimeofday () in
+  let can_request =
+    match pending_request with
+    | Some time ->
+        let delta = current -. time in
+        delta >= Deku_constants.request_timeout
+    | None -> true
+  in
+  match can_request with
+  | true ->
       let (Request { hash = _; above = _; network }) = Request.encode ~above in
-      let pending_request = true in
+      let pending_request = Some current in
       let gossip = Gossip { pending_request; message_pool } in
       (gossip, Some network)
+  | false -> (gossip, None)
 
 let incoming_request ~connection ~raw_header ~raw_content =
   Fragment_incoming_request { connection; raw_header; raw_content }
@@ -161,8 +170,6 @@ let apply ~outcome gossip =
       (gossip, None)
 
 let close ~until gossip =
-  let (Gossip { pending_request = _; message_pool }) = gossip in
-  (* TODO: if you had progress, you can probably request again *)
-  let pending_request = false in
+  let (Gossip { pending_request; message_pool }) = gossip in
   let message_pool = Message_pool.close ~until message_pool in
   Gossip { pending_request; message_pool }
