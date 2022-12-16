@@ -117,6 +117,8 @@ let minimum_block_latency =
   | Some x -> Option.value ~default:0.0 (Float.of_string_opt x)
   | None -> 0.0
 
+let next_sleep_until = ref 0.0
+
 (* after gossip *)
 let apply_consensus_action chain consensus_action =
   let open Consensus in
@@ -136,7 +138,10 @@ let apply_consensus_action chain consensus_action =
       in
       (match minimum_block_latency with
       | 0. -> ()
-      | minimum_block_latency -> Unix.sleepf minimum_block_latency);
+      | minimum_block_latency ->
+          let () = Clock.sleep_until !next_sleep_until in
+          let now = Clock.now () in
+          next_sleep_until := now +. minimum_block_latency);
       (chain, [ Chain_fragment { fragment } ])
   | Consensus_vote { level; vote } ->
       let content = Message.Content.vote ~level ~vote in
