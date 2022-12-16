@@ -1,3 +1,5 @@
+exception Type_error
+
 module FuncType = struct
   open Wasm
 
@@ -6,8 +8,6 @@ module FuncType = struct
   let i32 = Wasm.Types.(NumType I32Type)
   let func (name, typ, f) = (name, Instance.ExternFunc (Func.alloc_host typ f))
 end
-
-exception Type_error
 
 let ppt (t, _) = print_endline @@ Format.sprintf "Error occurs here: %d\n" t
 
@@ -21,7 +21,11 @@ module Vec = struct
 
   type t = { mutable counter : Int64.t; contents : Value.t Table.t }
 
-  let empty = { counter = Int64.min_int; contents = Table.create 4000 }
+  let empty =
+    let table = Table.create 4000 in
+    Table.replace table 0L (Value.Bool 0);
+    Table.replace table 1L (Value.Bool 1);
+    { counter = Int64.min_int; contents = table }
 
   let alloc t item =
     let counter = t.counter in
@@ -33,8 +37,16 @@ module Vec = struct
     let value = Table.find_opt t.contents idx in
     match value with
     | Some x ->
-        Table.remove t.contents idx;
+        (match x with Value.Bool _ -> () | _ -> Table.remove t.contents idx);
         x
+    | None ->
+        ppt (__LINE_OF__ ());
+        raise Type_error
+
+  let read t idx =
+    let value = Table.find_opt t.contents idx in
+    match value with
+    | Some x -> x
     | None ->
         ppt (__LINE_OF__ ());
         raise Type_error
@@ -104,6 +116,8 @@ open Syntax
 
 let reset () =
   Vec.Table.clear vec.contents;
+  Vec.Table.replace vec.contents 0L (Value.Bool 0);
+  Vec.Table.replace vec.contents 1L (Value.Bool 1);
   vec.counter <- Int64.min_int
 
 let car =
@@ -454,8 +468,7 @@ let neq =
       match args with
       | Wasm.Values.[ Num (I64 x) ] ->
           let x = Vec.get_and_remove vec x %-< int in
-          let result = if Z.(not @@ equal zero x) then Bool 1 else Bool 0 in
-          let result = Vec.alloc vec result in
+          let result = if Z.(not @@ equal zero x) then 1L else 0L in
           wasm_i64 result
       | _ ->
           ppt (__LINE_OF__ ());
@@ -470,8 +483,7 @@ let eq =
       match args with
       | Wasm.Values.[ Num (I64 x) ] ->
           let x = Vec.get_and_remove vec x %-< int in
-          let result = if Z.(equal x zero) then Bool 1 else Bool 0 in
-          let result = Vec.alloc vec result in
+          let result = if Z.(equal x zero) then 1L else 0L in
           wasm_i64 result
       | _ ->
           ppt (__LINE_OF__ ());
@@ -486,8 +498,7 @@ let gt =
       match args with
       | Wasm.Values.[ Num (I64 x) ] ->
           let x = Vec.get_and_remove vec x %-< int in
-          let result = if Z.(gt x zero) then Bool 1 else Bool 0 in
-          let result = Vec.alloc vec result in
+          let result = if Z.(gt x zero) then 1L else 0L in
           wasm_i64 result
       | _ ->
           ppt (__LINE_OF__ ());
@@ -502,8 +513,7 @@ let ge =
       match args with
       | Wasm.Values.[ Num (I64 x) ] ->
           let x = Vec.get_and_remove vec x %-< int in
-          let result = if Z.(geq x zero) then Bool 1 else Bool 0 in
-          let result = Vec.alloc vec result in
+          let result = if Z.(geq x zero) then 1L else 0L in
           wasm_i64 result
       | _ ->
           ppt (__LINE_OF__ ());
@@ -518,8 +528,7 @@ let lt =
       match args with
       | Wasm.Values.[ Num (I64 x) ] ->
           let x = Vec.get_and_remove vec x %-< int in
-          let result = if Z.(lt x zero) then Bool 1 else Bool 0 in
-          let result = Vec.alloc vec result in
+          let result = if Z.(lt x zero) then 1L else 0L in
           wasm_i64 result
       | _ ->
           ppt (__LINE_OF__ ());
@@ -534,8 +543,7 @@ let le =
       match args with
       | Wasm.Values.[ Num (I64 x) ] ->
           let x = Vec.get_and_remove vec x %-< int in
-          let result = if Z.(leq x zero) then Bool 1 else Bool 0 in
-          let result = Vec.alloc vec result in
+          let result = if Z.(leq x zero) then 1L else 0L in
           wasm_i64 result
       | _ ->
           ppt (__LINE_OF__ ());
@@ -543,8 +551,8 @@ let le =
 
 let or_ =
   let or_ = function
-    | Bool x, Bool y -> Bool (x lor y)
-    | Int x, Int y -> Int Z.(x lor y)
+    | Bool x, Bool y -> x lor y |> Int64.of_int
+    | Int x, Int y -> Int Z.(x lor y) |> Vec.alloc vec
     | _ ->
         ppt (__LINE_OF__ ());
         raise Type_error
@@ -559,7 +567,6 @@ let or_ =
           let x = Vec.get_and_remove vec x in
           let y = Vec.get_and_remove vec y in
           let result = or_ (x, y) in
-          let result = Vec.alloc vec result in
           wasm_i64 result
       | _ ->
           ppt (__LINE_OF__ ());
@@ -651,8 +658,8 @@ let map_ =
 
 let xor_ =
   let xor_ = function
-    | Bool x, Bool y -> Bool (x lxor y)
-    | Int x, Int y -> Int Z.(x lxor y)
+    | Bool x, Bool y -> x lxor y |> Int64.of_int
+    | Int x, Int y -> Int Z.(x lxor y) |> Vec.alloc vec
     | _ ->
         ppt (__LINE_OF__ ());
         raise Type_error
@@ -667,7 +674,6 @@ let xor_ =
           let x = Vec.get_and_remove vec x in
           let y = Vec.get_and_remove vec y in
           let result = xor_ (x, y) in
-          let result = Vec.alloc vec result in
           wasm_i64 result
       | _ ->
           ppt (__LINE_OF__ ());
@@ -675,8 +681,8 @@ let xor_ =
 
 let and_ =
   let and_ = function
-    | Bool x, Bool y -> Bool (x land y)
-    | Int x, Int y -> Int Z.(x land y)
+    | Bool x, Bool y -> x land y |> Int64.of_int
+    | Int x, Int y -> Int Z.(x land y) |> Vec.alloc vec
     | _ ->
         ppt (__LINE_OF__ ());
         raise Type_error
@@ -691,7 +697,6 @@ let and_ =
           let x = Vec.get_and_remove vec x in
           let y = Vec.get_and_remove vec y in
           let result = and_ (x, y) in
-          let result = Vec.alloc vec result in
           wasm_i64 result
       | _ ->
           ppt (__LINE_OF__ ());
@@ -705,10 +710,9 @@ let not =
       Wasm.Instance.burn_gas !inst 100L;
       match args with
       | Wasm.Values.[ Num (I64 x) ] ->
-          let x = Vec.get_and_remove vec x %-< bool in
-          let result = Bool (if Int.equal 0 x then 1 else 0) in
-          let result = Vec.alloc vec result in
-          wasm_i64 result
+          let x = Vec.read vec x %-< bool in
+          let result = if Int.equal 0 x then 1 else 0 in
+          wasm_i64 (Int64.of_int result)
       | _ ->
           ppt (__LINE_OF__ ());
           raise Type_error )
@@ -1116,7 +1120,8 @@ let deref_bool =
       Wasm.Instance.burn_gas !inst 100L;
       match args with
       | Wasm.Values.[ Num (I64 x) ] ->
-          let x = Vec.get_and_remove vec x %-< bool in
+          Format.printf "arg %Ld" x;
+          let x = Vec.read vec x %-< bool in
           wasm_i32 @@ Int32.of_int x
       | _ ->
           ppt (__LINE_OF__ ());
@@ -1486,7 +1491,7 @@ let true_ =
     fun inst args ->
       Wasm.Instance.burn_gas !inst 100L;
       match (args : Wasm.Values.value list) with
-      | [] -> wasm_i64 (Vec.alloc vec (Bool 1))
+      | [] -> wasm_i64 1L
       | _ ->
           ppt (__LINE_OF__ ());
           raise Type_error )
@@ -1498,7 +1503,7 @@ let false_ =
     fun inst args ->
       Wasm.Instance.burn_gas !inst 100L;
       match (args : Wasm.Values.value list) with
-      | [] -> wasm_i64 (Vec.alloc vec (Bool 0))
+      | [] -> wasm_i64 0L
       | _ ->
           ppt (__LINE_OF__ ());
           raise Type_error )
