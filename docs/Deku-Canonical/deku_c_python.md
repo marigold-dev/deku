@@ -38,7 +38,7 @@ directory](https://github.com/marigold-dev/deku/tree/main/deku-c/python-client).
 
 ## Examples
 
-Two examples are given in the `examples/` directory:
+Two examples are given [in the `examples/` directory](https://github.com/marigold-dev/deku/tree/main/deku-c/python-client/examples):
 * `examples/bridge.py` demonstrates a deposit from Tezos to Deku using a pre-deployed contract on
   Ghostnet, as well as the withdraw operation. This contract uses a pre-defined implicit account on
   Ghostnet, but you may have to change it and/or use the
