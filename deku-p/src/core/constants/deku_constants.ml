@@ -22,3 +22,4 @@ let async_on_error exn =
 let genesis_time = 0.0
 let trusted_cycle = Option.get (N.of_z (Z.of_int 600))
 let max_payload_chunks = 32
+let request_timeout = 30.0
