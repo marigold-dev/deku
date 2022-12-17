@@ -201,6 +201,7 @@ let main params style_renderer log_level =
   Eio_main.run @@ fun env ->
   Eio.Switch.run @@ fun sw ->
   Parallel.Pool.run ~env ~domains @@ fun () ->
+  Logs.info (fun m -> m "Using %d domains" domains);
   let net = Eio.Stdenv.net env in
   let clock = Eio.Stdenv.clock env in
   let domains = Eio.Stdenv.domain_mgr env in
