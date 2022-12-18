@@ -1,14 +1,14 @@
 {
   "name": "@marigold-dev/deku-tester",
   "description": "Test several aspects of deku",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "main": "dist/index.js",
   "license": "MIT",
   "bin": {
     "deku-tester": "dist/index.js"
   },
   "dependencies": {
-    "@marigold-dev/deku": "0.1.0",
+    "@marigold-dev/deku": "0.1.4-rc6",
     "@taquito/signer": "^14.1.0",
     "@taquito/taquito": "^14.2.0",
     "@tzstamp/helpers": "^0.3.4",

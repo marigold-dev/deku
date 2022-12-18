@@ -1,7 +1,7 @@
 {
-    "compilerOptions": {    
-      "esModuleInterop": true,
-      "outDir": "dist"
-    },
-    "include": ["src/*"],
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "outDir": "dist"
+  },
+  "include": ["src/*"]
 }

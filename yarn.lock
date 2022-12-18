@@ -4103,6 +4103,16 @@
     npmlog "^6.0.2"
     write-file-atomic "^4.0.1"
 
+"@marigold-dev/deku@0.1.4-rc6":
+  version "0.1.4-rc6"
+  resolved "https://registry.yarnpkg.com/@marigold-dev/deku/-/deku-0.1.4-rc6.tgz#4002c3f66a447733788ef584353f7ebfe7afdb3d"
+  integrity sha512-8hcyWcy1LlpOtUtNRsJXafsIrD40YwBsPHcpYcNZo21WoyWrvqYZYf0047q6M2stDpa7Vt5XEycPSEiv5LbX/w==
+  dependencies:
+    "@taquito/taquito" "^13.0.1"
+    "@tzstamp/helpers" "^0.3.4"
+    blakejs "^1.2.1"
+    bs58check "^2.1.2"
+
 "@mdx-js/mdx@^1.6.22":
   version "1.6.22"
   resolved "https://registry.yarnpkg.com/@mdx-js/mdx/-/mdx-1.6.22.tgz#8a723157bf90e78f17dc0f27995398e6c731f1ba"
