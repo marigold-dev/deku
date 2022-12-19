@@ -1,7 +1,5 @@
-use core::time;
-use std::fs::{File, OpenOptions};
 use std::io::{prelude::*, BufReader};
-use std::net::{TcpListener, TcpStream};
+use std::net::{TcpListener};
 use std::sync::mpsc::{self, Receiver, Sender, TryRecvError};
 use std::thread;
 // Note: Game BoyTM, Game Boy PocketTM, Super Game BoyTM and Game Boy ColorTM are registered trademarks of
@@ -10,8 +8,7 @@ use std::thread;
 use gameboy::gpu::{SCREEN_H, SCREEN_W};
 use gameboy::joypad;
 use gameboy::motherboard::MotherBoard;
-use std::io::{self, BufRead};
-use std::path::Path;
+use std::io::{BufRead};
 
 #[cfg(not(feature = "audio"))]
 fn initialize_audio(_: &gameboy::motherboard::MotherBoard) {
