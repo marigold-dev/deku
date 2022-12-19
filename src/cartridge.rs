@@ -23,12 +23,15 @@ struct RealTimeClock {
     zero: u64,
 }
 
+// HACK: I think we can make this a no-op since first-gen Pokemon didn't
+// utilize the RTC at all
 impl RealTimeClock {
     fn power_up() -> Self {
-        let zero = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
+        // let zero = SystemTime::now()
+        //     .duration_since(SystemTime::UNIX_EPOCH)
+        //     .unwrap()
+        //     .as_secs();
+        let zero = 0;
         Self {
             zero,
             s: 0,
@@ -40,27 +43,28 @@ impl RealTimeClock {
     }
 
     fn tic(&mut self) {
-        let d = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs()
-            - self.zero;
+        ()
+        //     let d = SystemTime::now()
+        //         .duration_since(SystemTime::UNIX_EPOCH)
+        //         .unwrap()
+        //         .as_secs()
+        //         - self.zero;
 
-        self.s = (d % 60) as u8;
-        self.m = (d / 60 % 60) as u8;
-        self.h = (d / 3600 % 24) as u8;
-        let days = (d / 3600 / 24) as u16;
-        self.dl = (days % 256) as u8;
-        match days {
-            0x0000..=0x00ff => {}
-            0x0100..=0x01ff => {
-                self.dh |= 0x01;
-            }
-            _ => {
-                self.dh |= 0x01;
-                self.dh |= 0x80;
-            }
-        }
+        //     self.s = (d % 60) as u8;
+        //     self.m = (d / 60 % 60) as u8;
+        //     self.h = (d / 3600 % 24) as u8;
+        //     let days = (d / 3600 / 24) as u16;
+        //     self.dl = (days % 256) as u8;
+        //     match days {
+        //         0x0000..=0x00ff => {}
+        //         0x0100..=0x01ff => {
+        //             self.dh |= 0x01;
+        //         }
+        //         _ => {
+        //             self.dh |= 0x01;
+        //             self.dh |= 0x80;
+        //         }
+        //     }
     }
 }
 
