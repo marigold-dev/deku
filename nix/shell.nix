@@ -1,7 +1,6 @@
 {
   pkgs,
   deku,
-  ligo,
   tuna,
   deploy-rs,
 }:
@@ -17,9 +16,6 @@ with ocamlPackages;
 
       # Typescript for decookie
       nodePackages.typescript
-
-      # Tezos tooling
-      ligo
 
       # OCaml developer tooling
       ocaml

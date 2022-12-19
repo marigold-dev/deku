@@ -1,7 +1,6 @@
 {
   pkgs,
   deku,
-  ligo,
 }: let
   baseImage = pkgs.dockerTools.pullImage {
     imageName = "node";
@@ -37,7 +36,7 @@ in
     copyToRoot = pkgs.buildEnv {
       name = "image-root";
       pathsToLink = ["/app" "/bin" "/var/lib/deku"];
-      paths = [script pkgs.bash pkgs.curl ligo];
+      paths = [script pkgs.bash pkgs.curl pkgs.ligo];
     };
     config = {
       author = "marigold.dev";

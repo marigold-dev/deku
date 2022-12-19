@@ -15,7 +15,6 @@
     dream2nix.url = "github:nix-community/dream2nix";
     dream2nix.inputs.nixpkgs.follows = "nixpkgs";
 
-    ligo.url = "gitlab:ligolang/ligo";
     tezos.url = "github:marigold-dev/tezos-nix";
     tezos.inputs = {
       nixpkgs.follows = "nixpkgs";
@@ -33,7 +32,6 @@
     dream2nix,
     tezos,
     deploy-rs,
-    ligo,
     treefmt,
     ...
   }:
@@ -76,10 +74,6 @@
           };
           devShells.default = import ./nix/shell.nix {
             inherit pkgs;
-            ligo =
-              if system == "x86_64-linux"
-              then ligo.packages.${system}.ligoLight
-              else pkgs.hello;
             deku = self'.packages.deku;
             tuna = self'.packages.tuna;
             deploy-rs = deploy-rs.packages.${system}.default;
