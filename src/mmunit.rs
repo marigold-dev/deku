@@ -7,7 +7,7 @@ use super::convention::Term;
 use super::gpu::{Gpu, Hdma, HdmaMode};
 use super::intf::Intf;
 use super::joypad::Joypad;
-use super::memory::Memory;
+use super::memory::{Memory, Memory_};
 use super::serial::Serial;
 use super::timer::Timer;
 use std::cell::RefCell;
@@ -243,5 +243,13 @@ impl Memory for Mmunit {
             0xffff => self.inte = v,
             _ => {}
         }
+    }
+
+    fn dump(&self) -> (usize, Vec<u64>) {
+        panic!("FIXME:")
+    }
+
+    fn load(&mut self, all: Vec<u64>) {
+        panic!("FIXME:")
     }
 }

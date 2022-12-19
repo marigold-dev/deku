@@ -1,6 +1,6 @@
 use super::clock::Clock;
 use super::cpu;
-use super::memory::Memory;
+use super::memory::Memory_;
 use blip_buf::BlipBuf;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -482,7 +482,7 @@ impl ChannelSquare {
     }
 }
 
-impl Memory for ChannelSquare {
+impl Memory_ for ChannelSquare {
     fn get(&self, a: u16) -> u8 {
         match a {
             0xff10 | 0xff15 => self.reg.borrow().nrx0,
@@ -599,7 +599,7 @@ impl ChannelWave {
     }
 }
 
-impl Memory for ChannelWave {
+impl Memory_ for ChannelWave {
     fn get(&self, a: u16) -> u8 {
         match a {
             0xff1a => self.reg.borrow().nrx0,
@@ -706,7 +706,7 @@ impl ChannelNoise {
     }
 }
 
-impl Memory for ChannelNoise {
+impl Memory_ for ChannelNoise {
     fn get(&self, a: u16) -> u8 {
         match a {
             0xff1f => self.reg.borrow().nrx0,
@@ -904,7 +904,7 @@ const RD_MASK: [u8; 48] = [
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 ];
 
-impl Memory for Apu {
+impl Memory_ for Apu {
     fn get(&self, a: u16) -> u8 {
         let r = match a {
             0xff10..=0xff14 => self.channel1.get(a),

@@ -9,10 +9,10 @@
 //   - http://gbdev.gg8.se/wiki/articles/The_Cartridge_Header
 //   - http://gbdev.gg8.se/wiki/articles/Memory_Bank_Controllers
 use super::memory::Memory;
+use std::convert::TryFrom;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-use std::time::SystemTime;
 
 struct RealTimeClock {
     s: u8,
@@ -88,6 +88,32 @@ impl Memory for RealTimeClock {
             0x0b => self.dl = v,
             0x0c => self.dh = v,
             _ => panic!("No entry"),
+        }
+    }
+
+    fn dump(&self) -> (usize, Vec<u64>) {
+        (
+            5,
+            vec![
+                self.s as u64,
+                self.m as u64,
+                self.h as u64,
+                self.dl as u64,
+                self.dh as u64,
+            ],
+        )
+    }
+
+    fn load(&mut self, all: Vec<u64>) {
+        match all.as_slice() {
+            [s, m, h, dl, dh] => {
+                self.s = u8::try_from(s.clone()).unwrap();
+                self.m = u8::try_from(m.clone()).unwrap();
+                self.h = u8::try_from(h.clone()).unwrap();
+                self.dl = u8::try_from(dl.clone()).unwrap();
+                self.dh = u8::try_from(dh.clone()).unwrap();
+            }
+            _ => panic!("Failed to load cartridge state"),
         }
     }
 }
@@ -228,6 +254,32 @@ impl Memory for Mbc3 {
             }
             _ => {}
         }
+    }
+
+    fn dump(&self) -> (usize, Vec<u64>) {
+        let max_rom_size = 16384 * 512;
+        
+        let rom: Vec<u64> = self.rom.iter().map(|x| x.clone() as u64).collect();
+        let rom = rom.resize(max_rom_size, 0);
+
+        let max_ram_size = 1024 *128;
+        let rom: Vec<u64> = self.ram.iter().map(|x| x.clone() as u64).collect();
+        let ram = self.ram.clone().resize(max_ram_size, 0);
+
+        let (rtc_len, rtc_bytes) = self.rtc.dump();
+        
+        let ram: Vec<u64> = self.ram.iter().map(|x| x.clone() as u64).collect();
+        let rom_bank = self.rom_bank as u64;
+        let ram_bank = self.ram_bank as u64;
+        let ram_enable = u64::from(self.ram_enable);
+        (
+            length,
+            vec![rom, ram, vec![rom_bank, ram_bank, ram_enable]].concat(),
+        )
+    }
+
+    fn load(&mut self, all: Vec<u64>) {
+        let rom = 
     }
 }
 

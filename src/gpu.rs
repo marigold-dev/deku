@@ -87,6 +87,12 @@ impl Memory for Hdma {
             _ => panic!(""),
         };
     }
+    fn load(&mut self, all: Vec<u64>) {
+        panic!()
+    }
+    fn dump(&self) -> (usize, Vec<u64>) {
+        panic!()
+    }
 }
 
 // LCDC is the main LCD Control register. Its bits toggle what elements are displayed on the screen, and how.
@@ -859,5 +865,12 @@ impl Memory for Gpu {
             }
             _ => panic!(""),
         }
+    }
+
+    fn dump(&self) -> (usize, Vec<u64>) {
+        panic!("Not implemented")
+    }
+    fn load(&mut self, all: Vec<u64>) {
+        panic!("Not implemented")
     }
 }

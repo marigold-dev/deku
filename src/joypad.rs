@@ -18,6 +18,7 @@ use super::intf::{Flag, Intf};
 use super::memory::Memory;
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::convert::TryFrom;
 
 #[rustfmt::skip]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -74,5 +75,21 @@ impl Memory for Joypad {
     fn set(&mut self, a: u16, v: u8) {
         assert_eq!(a, 0xff00);
         self.select = v;
+    }
+
+    fn dump(&self) -> (usize, Vec<u64>) {
+        let intf = self.intf.borrow().data;
+        (3, vec![intf as u64, self.matrix as u64, self.select as u64])
+    }
+
+    fn load(&mut self, all: Vec<u64>) {
+        match all.as_slice() {
+            [intf, matrix, select] => {
+                self.intf.borrow_mut().data = u8::try_from(intf.clone()).unwrap();
+                self.matrix = u8::try_from(matrix.clone()).unwrap();
+                self.select = u8::try_from(select.clone()).unwrap();
+            }
+            _ => panic!("Failed to load joypad state"),
+        }
     }
 }
