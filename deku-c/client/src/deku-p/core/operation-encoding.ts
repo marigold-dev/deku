@@ -1,4 +1,3 @@
-import { JSONType } from "../utils/json";
 import { OperationHash as OperationHashType } from "./operation-hash";
 import { hashOperation } from "../utils/hash";
 import { Nonce } from "./nonce";
@@ -17,6 +16,20 @@ export const TicketId = (ticketer: string, data: string) =>
 export type Level = Nominal<number, "Level">;
 export const Level = (level: number) => level as Level;
 
+export type JoypadKey =
+  | "Down"
+  | "Up"
+  | "Left"
+  | "Right"
+  | "Start"
+  | "Select"
+  | "B"
+  | "A";
+
+export type GovernanceMode = "Anarchy" | "Democracy";
+
+export type Vote = JoypadKey | GovernanceMode;
+
 export type Operation_json =
   | {
       type: "ticket_transfer";
@@ -26,13 +39,26 @@ export type Operation_json =
       amount: string;
     }
   | {
-      type: "vm_transaction";
+      type: "attest_twitch_handle";
       sender: KeyHash;
-      operation: {
-        // TODO: better type for WASM operations. We can do this with JSON Schema.
-        operation: JSONType;
-        tickets: [TicketId, Amount][];
-      };
+      twitch_handle: string;
+    }
+  | {
+      type: "attest_deku_address";
+      sender: KeyHash;
+      deku_address: KeyHash;
+      twitch_handle: string;
+    }
+  | {
+      type: "vote";
+      sender: KeyHash;
+      vote: Vote;
+    }
+  | {
+      type: "delegated_vote";
+      sender: KeyHash;
+      twitch_handle: string;
+      vote: Vote;
     }
   | {
       type: "withdraw";
@@ -82,22 +108,90 @@ export const createTicketTransfer = async (
   return { bytes, hash, nonce, level, operation };
 };
 
-export const createVmOperation = async (
+export const createAttestTwitchHandle = async (
   encodeOperation: encodeOperation,
   level: Level,
   nonce: Nonce,
   sender: KeyHash,
-  payload: JSONType,
-  tickets: { ticket_id: TicketId; amount: number }[]
+  twitch_handle: string
 ): Promise<Initial_operation> => {
-  const tickets_payload = tickets.map(
-    ({ ticket_id, amount }) =>
-      [ticket_id, amount.toString()] as [TicketId, Amount]
-  );
   const operation: Operation_json = {
-    type: "vm_transaction",
+    type: "attest_twitch_handle",
     sender,
-    operation: { operation: payload, tickets: tickets_payload },
+    twitch_handle,
+  };
+  const bytes = await encodeOperation(nonce, level, operation);
+  const hash = hashOperation(bytes);
+  return {
+    bytes,
+    hash,
+    nonce,
+    level,
+    operation,
+  };
+};
+export const createAttestDekuAddress = async (
+  encodeOperation: encodeOperation,
+  level: Level,
+  nonce: Nonce,
+  sender: KeyHash,
+  twitch_handle: string,
+  deku_address: KeyHash
+): Promise<Initial_operation> => {
+  const operation: Operation_json = {
+    type: "attest_deku_address",
+    sender,
+    twitch_handle,
+    deku_address,
+  };
+  const bytes = await encodeOperation(nonce, level, operation);
+  const hash = hashOperation(bytes);
+  return {
+    bytes,
+    hash,
+    nonce,
+    level,
+    operation,
+  };
+};
+
+export const createVote = async (
+  encodeOperation: encodeOperation,
+  level: Level,
+  nonce: Nonce,
+  sender: KeyHash,
+  vote: Vote
+): Promise<Initial_operation> => {
+  const operation: Operation_json = {
+    type: "vote",
+    sender,
+    vote,
+  };
+  console.log("Operation json:", operation);
+  const bytes = await encodeOperation(nonce, level, operation);
+  const hash = hashOperation(bytes);
+  return {
+    bytes,
+    hash,
+    nonce,
+    level,
+    operation,
+  };
+};
+
+export const createDelegatedVote = async (
+  encodeOperation: encodeOperation,
+  level: Level,
+  nonce: Nonce,
+  sender: KeyHash,
+  vote: Vote,
+  twitch_handle: string
+): Promise<Initial_operation> => {
+  const operation: Operation_json = {
+    type: "delegated_vote",
+    sender,
+    vote,
+    twitch_handle,
   };
   const bytes = await encodeOperation(nonce, level, operation);
   const hash = hashOperation(bytes);

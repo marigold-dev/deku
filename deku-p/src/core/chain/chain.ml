@@ -76,10 +76,10 @@ type action =
     }
 [@@deriving show]
 
-let make ~validators =
+let make ~validators ?twitch_oracle_address () =
   let gossip = Gossip.initial in
   let validators = Validators.of_key_hash_list validators in
-  let protocol = Protocol.initial () in
+  let protocol = Protocol.initial ?twitch_oracle_address () in
   let consensus = Consensus.make ~validators in
   let producer = Producer.empty in
   Chain { gossip; protocol; consensus; producer }
@@ -473,7 +473,7 @@ let test () =
     [ key_hash ]
   in
 
-  let chain = make ~validators in
+  let chain = make ~validators () in
   let block =
     let (Block { hash = current_block; level = current_level; _ }) =
       Genesis.block

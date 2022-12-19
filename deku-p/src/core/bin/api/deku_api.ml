@@ -8,6 +8,7 @@ open Api_state
 open Deku_protocol
 open Deku_consensus
 open Deku_concepts
+open Deku_crypto
 
 let make_dump_loop ~sw ~env ~data_folder =
   let resolver_ref = Atomic.make None in
@@ -166,6 +167,7 @@ type params = {
   database_uri : Uri.t; [@env "DEKU_API_DATABASE_URI"]
   domains : int; [@default 8] [@env "DEKU_API_DOMAINS"]
   data_folder : string; [@env "DEKU_API_DATA_FOLDER"]
+  twitch_oracle_address : Key_hash.t; [@env "DEKU_TWITCH_ORACLE_ADDRESS"]
 }
 [@@deriving cmdliner]
 
@@ -195,6 +197,7 @@ let main params style_renderer log_level =
     database_uri;
     domains;
     data_folder;
+    twitch_oracle_address;
   } =
     params
   in
@@ -231,7 +234,9 @@ let main params style_renderer log_level =
     match state with
     | None ->
         (* FIXME: *)
-        let twitch_oracle_address = assert false in
+        let twitch_oracle_address =
+          Deku_ledger.Address.of_key_hash twitch_oracle_address
+        in
         let protocol = Protocol.initial ~twitch_oracle_address () in
         let current_block = Genesis.block in
         let receipts = Operation_hash.Map.empty in

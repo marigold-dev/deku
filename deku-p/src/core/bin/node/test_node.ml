@@ -35,7 +35,7 @@ let main () =
   in
 
   let start ~sw ~identity ~port =
-    let chain = Chain.make ~validators in
+    let chain = Chain.make ~validators () in
     let dump _chain = () in
     let node =
       Node.make ~identity ~default_block_size:100_000 ~dump ~chain ~indexer:None

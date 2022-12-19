@@ -5598,6 +5598,11 @@
   resolved "https://registry.npmjs.org/@types/node/-/node-17.0.45.tgz"
   integrity sha512-w+tIMs3rq2afQdsPJlODhoUEKzFP1ayaoyl1CcnwtIlsVe7K7bA1NGm4s3PraqTLlXnbIN84zuBlxBWo1u9BLw==
 
+"@types/node@^18.11.17":
+  version "18.11.17"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.11.17.tgz#5c009e1d9c38f4a2a9d45c0b0c493fe6cdb4bcb5"
+  integrity sha512-HJSUJmni4BeDHhfzn6nF0sVmd1SMezP7/4F0Lq+aXzmp2xm9O7WXrUtHW/CHlYVtZUbByEvWidHqRtcJXGF2Ng==
+
 "@types/normalize-package-data@^2.4.0":
   version "2.4.1"
   resolved "https://registry.npmjs.org/@types/normalize-package-data/-/normalize-package-data-2.4.1.tgz"
@@ -5761,7 +5766,7 @@
 
 "@types/tmi.js@^1.8.2":
   version "1.8.2"
-  resolved "https://registry.npmjs.org/@types/tmi.js/-/tmi.js-1.8.2.tgz"
+  resolved "https://registry.yarnpkg.com/@types/tmi.js/-/tmi.js-1.8.2.tgz#7345399a4b74c39b9baa98540a397e24fa3a9e5c"
   integrity sha512-meCZPCqs8zuCvw8Wl+0UXy2D6L/31Vskc99B/dZeQtIZvzX3EEzWSLTmRRxwI36m5hQFi3xjoLcnmEL8hBPqHA==
 
 "@types/trusted-types@^2.0.2":

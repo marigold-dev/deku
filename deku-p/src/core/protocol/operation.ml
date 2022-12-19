@@ -72,7 +72,7 @@ let encoding =
           Operation_attest_twitch_handle { sender; twitch_handle });
       case ~title:"attest_deku_address" (Tag 2)
         (obj4
-           (req "type" (constant "attest_twitch_handle"))
+           (req "type" (constant "attest_deku_address"))
            (req "sender" (Data_encoding.dynamic_size Address.encoding))
            (req "deku_address" (Data_encoding.dynamic_size Address.encoding))
            (req "twitch_handle" string))
@@ -96,7 +96,7 @@ let encoding =
         (fun ((), sender, vote) -> Operation_vote { sender; vote });
       case ~title:"delegated_vote" (Tag 4)
         (obj4
-           (req "type" (constant "vote"))
+           (req "type" (constant "delegated_vote"))
            (req "sender" (Data_encoding.dynamic_size Address.encoding))
            (req "twitch_handle" string)
            (req "vote" Game.Vote.encoding))
@@ -185,7 +185,7 @@ let%expect_test "Operation encoding" =
         "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
         "twitch_handle": "d4hines" }
       ---------
-      { "type": "attest_twitch_handle",
+      { "type": "attest_deku_address",
         "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
         "deku_address": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
         "twitch_handle": "d4hines" }
@@ -196,7 +196,7 @@ let%expect_test "Operation encoding" =
       { "type": "vote", "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
         "vote": "Anarchy" }
       ---------
-      { "type": "vote", "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
+      { "type": "delegated_vote", "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
         "twitch_handle": "d4hines", "vote": "A" }
       ---------
       { "type": "ticket_transfer",
@@ -352,7 +352,8 @@ module Initial = struct
       Hex: 00000001000000000100040000001600005d9ac49706a3566b65f1ad56dd1433e4569a036700000007643468696e6573000000000100
       Json: { "nonce": "0", "level": 0,
               "operation":
-                { "type": "vote", "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
+                { "type": "delegated_vote",
+                  "sender": "tz1UAxwRXXDvpZ5sAanbbP8tjKBoa2dxKUHE",
                   "twitch_handle": "d4hines", "vote": "Anarchy" } } |}]
 
   let includable_operation_window = Deku_constants.includable_operation_window
