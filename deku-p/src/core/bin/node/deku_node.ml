@@ -52,6 +52,7 @@ type params = {
       [@env "DEKU_TEZOS_CONSENSUS_ADDRESS"]
       (** The address of the consensus contract on Tezos.  *)
   api_uri : string; [@env "DEKU_API_URI"] [@default "127.0.0.1:5550"]
+  twitch_oracle_address : Key_hash.t; [@env "DEKU_TWITCH_ORACLE_ADDRESS"]
 }
 [@@deriving cmdliner]
 
@@ -86,6 +87,7 @@ let main params style_renderer log_level =
     tezos_secret;
     tezos_consensus_address;
     api_uri;
+    twitch_oracle_address;
   } =
     params
   in
@@ -95,6 +97,9 @@ let main params style_renderer log_level =
   Parallel.Pool.run ~env ~domains @@ fun () ->
   Logs.info (fun m -> m "Using %d domains" domains);
   Logs.info (fun m -> m "Default block size: %d" default_block_size);
+  let twitch_oracle_address =
+    Deku_ledger.Address.of_key_hash twitch_oracle_address
+  in
   let indexer =
     let domains = Eio.Stdenv.domain_mgr env in
     let worker = Parallel.Worker.make ~domains ~sw in
@@ -128,7 +133,9 @@ let main params style_renderer log_level =
   let chain = Storage.Chain.read ~env ~folder:data_folder in
   Logs.info (fun m -> m "Loaded chain from disk");
   let chain =
-    match chain with Some chain -> chain | None -> Chain.make ~validators
+    match chain with
+    | Some chain -> chain
+    | None -> Chain.make ~validators ~twitch_oracle_address ()
   in
   let dump = make_dump_loop ~sw ~env ~folder:data_folder in
   let node =

@@ -41,7 +41,11 @@ type action = private
     }
 [@@deriving show]
 
-val make : validators:Key_hash.t list -> chain
+val make :
+  validators:Deku_crypto.Key_hash.key_hash list ->
+  ?twitch_oracle_address:Deku_ledger.Address.address ->
+  unit ->
+  t
 
 val incoming :
   raw_header:string -> raw_content:string -> chain -> chain * fragment option

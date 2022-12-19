@@ -19,7 +19,9 @@ const connectBeaconWallet = async () => {
 
 export const App = () => {
   const [twitch_handle, set_twitch_handle] = useState("");
-  const [deku_client, set_deku_client] = useState<DekuPClient | undefined>();
+  const [[deku_client, tz1_address], set_deku_client] = useState<
+    [DekuPClient | undefined, string]
+  >([undefined, "[your tz1 address]"]);
 
   const inputEnabled = !!deku_client;
 
@@ -28,12 +30,13 @@ export const App = () => {
       <button
         onClick={async () => {
           try {
-            let { signer } = await connectBeaconWallet().then();
+            let { signer } = await connectBeaconWallet();
             const deku = new DekuPClient({
               dekuRpc: apiURL,
               dekuSigner: signer,
             });
-            set_deku_client(deku);
+            const tz1_address = await signer.publicKeyHash();
+            set_deku_client([deku, tz1_address]);
           } catch (error) {
             console.error("failed to connect with beacon: ", error);
           }
@@ -48,7 +51,7 @@ export const App = () => {
   const input_button = () => (
     <>
       <label>
-        Enter your Twitch handle:
+        Enter your Twitch handle: &nbsp;
         <input
           type="text"
           value={twitch_handle}
@@ -68,23 +71,27 @@ export const App = () => {
     <div>
       <h2>Welcome to Deku Plays Pokemon!</h2>
       <h2>Instructions</h2>
-      <h4>Step 1: Connecting your accounts</h4>
       The primary way to play the game is in the{" "}
       <a href="https://twitch.tv/d4hines">twitch stream</a>. You can input votes
       in the chat, but first you need to connect your Tezos wallet to your
       Twitch account.
-      <ul>
-        <li>
-          Connect your wallet via Beacon (only works with AirGap, Kukai, and
-          Temple Mobile for now)
-        </li>
-        <li>
-          Enter the command <code>!attest [your tz1 address]</code> into the
-          Twitch chat
-        </li>
-      </ul>
+      <h4>Step 1: Connecting your Wallet to Twitch</h4>
+      <p>
+        Click on the button below to connect via Beacon (only works with AirGap,
+        Kukai, and Temple Mobile for now).
+      </p>
+      <p>
+        Once connected, submit a signed operation attesting your Twitch handle
+        by entering your handle into the input box and clicking "Submit".
+      </p>
+      <br />
       {inputEnabled ? input_button() : connectButton()}
-      <h4>Step 2: Play the Game!</h4>
+      <h4>Step 2: Connect your Twitch account to your Wallet</h4>
+      Go to the <a href="https://twitch.tv/d4hines">twitch stream</a> and attest
+      your TZ1 address by entering this command into the chat:
+      <br />
+      <code>!attest {tz1_address}</code>
+      <h4>Step 3: Play the Game!</h4>
       <ul>
         <li>
           Vote on the next move Deku will perform by typing commands into the
