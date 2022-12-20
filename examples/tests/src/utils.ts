@@ -7,13 +7,13 @@ import { Base58 } from "@tzstamp/helpers";
  */
 export const handleResult =
   (promise) =>
-  (...params) =>
-    promise(...params)
-      .then(console.log)
-      .catch((err) => {
-        console.error(err);
-        process.exit(1);
-      });
+    (...params) =>
+      promise(...params)
+        .then(console.log)
+        .catch((err) => {
+          console.error(err);
+          process.exit(1);
+        });
 
 /**
  * Wait for an operation to be included
@@ -50,7 +50,7 @@ export const toBytes = (b58) => {
 /**
  * Initial storage of the following contract
  */
-export const initialStorage = "0";
+export const initialStorage = 0;
 
 /**
  * Counter example with 3 entrypoints:

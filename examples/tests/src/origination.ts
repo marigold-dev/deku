@@ -10,7 +10,7 @@ const run = async ({ dekuRpc, ligoRpc, secret }): Promise<string> => {
   const { operation, address } = await deku.originateLigo({
     kind: "jsligo",
     source,
-    initialStorage,
+    initialStorage: initialStorage.toString(),
   });
   // The operation should be included
   await wait(dekuRpc, operation);
