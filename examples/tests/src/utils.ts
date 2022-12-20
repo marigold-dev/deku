@@ -50,7 +50,7 @@ export const toBytes = (b58) => {
 /**
  * Initial storage of the following contract
  */
-export const initialStorage = "0";
+export const initialStorage = 0;
 
 /**
  * Counter example with 3 entrypoints:
@@ -58,56 +58,25 @@ export const initialStorage = "0";
  *  - Decrement(int) to decrement the counter
  *  - Reset() to reset to 0 the counter
  */
-export const code = `
+export const source = `
 type storage = int;
 
-const empty: storage = 0;
-
 type parameter =
-    | ["Increment", int]
-    | ["Decrement", int]
-    | ["Reset"];
+| ["Increment", int]
+| ["Decrement", int]
+| ["Reset"];
 
-const increment = (storage: storage, delta: int) => storage + delta;
-const decrement = (storage: storage, delta: int) => storage - delta;
-const reset = () => empty;
+type return_ =
 
-const main = (action: parameter, storage: storage) : [list<operation>, storage] => {
-    return [
-        list([]),
-        (match(action, {
-            Increment: delta => increment(storage, delta),
-            Decrement: delta => decrement(storage, delta),
-            Reset: () => reset(),
-        }))
-    ]
-}`;
+[list<operation>,
+storage];
 
-/**
- * Increment entrypoint
- * michelson: (Left (Right n))
- * @param n the delta to increment
- * @returns the payload of the operation
- */
-export const increment = (n) => [
-  "Union",
-  ["Left", ["Union", ["Right", ["Int", n.toString()]]]],
-];
-
-/**
- * Decrement entrypoint
- * michelson: (Left (Left n))
- * @param n the delta to decrement
- * @returns the payload of the operation
- */
-export const decrement = (n) => [
-  "Union",
-  ["Left", ["Union", ["Left", ["Int", n.toString()]]]],
-];
-
-/**
- * Reset the state of the contract
- * michelson: (Right Unit)
- * @returns the payload of the operation
- */
-export const reset = () => ["Union", ["Right", ["Unit"]]];
+const main =
+(action: parameter, store: storage): return_ => {
+    let storage = match(action, {
+        Increment: n => store + n,
+        Decrement: n => store - n,
+        Reset: () => 0
+    });
+    return [list([]), storage]};
+`;

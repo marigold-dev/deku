@@ -1,6 +1,6 @@
 import { DekuCClient, fromMemorySigner } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
-import { code, initialStorage, wait } from "./utils";
+import { source, initialStorage, wait } from "./utils";
 
 const run = async ({ dekuRpc, ligoRpc, secret }): Promise<string> => {
   const signer = new InMemorySigner(secret);
@@ -9,8 +9,8 @@ const run = async ({ dekuRpc, ligoRpc, secret }): Promise<string> => {
   // Originate a contract
   const { operation, address } = await deku.originateLigo({
     kind: "jsligo",
-    source: code,
-    initialStorage,
+    source,
+    initialStorage: initialStorage.toString(),
   });
   // The operation should be included
   await wait(dekuRpc, operation);
