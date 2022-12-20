@@ -29,6 +29,7 @@ $ pyenv activate deku
 ```
 
 Then you can install the library using:
+
 ```bash
 $ pip3 install .
 ```
@@ -39,10 +40,11 @@ directory](https://github.com/marigold-dev/deku/tree/main/deku-c/python-client).
 ## Examples
 
 Two examples are given [in the `examples/` directory](https://github.com/marigold-dev/deku/tree/main/deku-c/python-client/examples):
-* `examples/bridge.py` demonstrates a deposit from Tezos to Deku using a pre-deployed contract on
+
+- `examples/bridge.py` demonstrates a deposit from Tezos to Deku using a pre-deployed contract on
   Ghostnet, as well as the withdraw operation. This contract uses a pre-defined implicit account on
   Ghostnet, but you may have to change it and/or use the
   [faucet](https://faucet.ghostnet.teztnets.xyz/) to refill it.
-* `examples/contracts.py` shows the origination of a contract on Deku and invocation of an
+- `examples/contracts.py` shows the origination of a contract on Deku and invocation of an
   entrypoint of this contract. You can then observe that the contract storage has changed using the
   [Deku CLI](https://deku.marigold.dev/docs/Deku-Canonical/deku_c_cli).
