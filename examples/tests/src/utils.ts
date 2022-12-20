@@ -7,13 +7,13 @@ import { Base58 } from "@tzstamp/helpers";
  */
 export const handleResult =
   (promise) =>
-    (...params) =>
-      promise(...params)
-        .then(console.log)
-        .catch((err) => {
-          console.error(err);
-          process.exit(1);
-        });
+  (...params) =>
+    promise(...params)
+      .then(console.log)
+      .catch((err) => {
+        console.error(err);
+        process.exit(1);
+      });
 
 /**
  * Wait for an operation to be included
@@ -80,32 +80,3 @@ const main =
     });
     return [list([]), storage]};
 `;
-
-/**
- * Increment entrypoint
- * michelson: (Left (Right n))
- * @param n the delta to increment
- * @returns the payload of the operation
- */
-export const increment = (n) => [
-  "Union",
-  ["Left", ["Union", ["Right", ["Int", n.toString()]]]],
-];
-
-/**
- * Decrement entrypoint
- * michelson: (Left (Left n))
- * @param n the delta to decrement
- * @returns the payload of the operation
- */
-export const decrement = (n) => [
-  "Union",
-  ["Left", ["Union", ["Left", ["Int", n.toString()]]]],
-];
-
-/**
- * Reset the state of the contract
- * michelson: (Right Unit)
- * @returns the payload of the operation
- */
-export const reset = () => ["Union", ["Right", ["Unit"]]];
