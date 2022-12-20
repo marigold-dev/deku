@@ -117,7 +117,7 @@ let minimum_block_latency =
   | Some x -> Option.value ~default:0.0 (Float.of_string_opt x)
   | None -> 0.0
 
-let next_sleep_until = ref 0.0
+let last_sleep : float ref = ref @@ Unix.gettimeofday ()
 
 (* after gossip *)
 let apply_consensus_action chain consensus_action =
@@ -139,9 +139,10 @@ let apply_consensus_action chain consensus_action =
       (match minimum_block_latency with
       | 0. -> ()
       | minimum_block_latency ->
-          let () = Clock.sleep_until !next_sleep_until in
-          let now = Clock.now () in
-          next_sleep_until := now +. minimum_block_latency);
+          let now = Unix.gettimeofday () in
+          let sleep = minimum_block_latency -. (now -. !last_sleep) in
+          if sleep > 0.0 then Unix.sleepf sleep;
+          last_sleep := Unix.gettimeofday ());
       (chain, [ Chain_fragment { fragment } ])
   | Consensus_vote { level; vote } ->
       let content = Message.Content.vote ~level ~vote in

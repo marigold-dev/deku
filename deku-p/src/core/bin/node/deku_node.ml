@@ -93,7 +93,6 @@ let main params style_renderer log_level =
   Eio_main.run @@ fun env ->
   Eio.Switch.run @@ fun sw ->
   Parallel.Pool.run ~env ~domains @@ fun () ->
-  Clock.init (Eio.Stdenv.clock env);
   Logs.info (fun m -> m "Using %d domains" domains);
   Logs.info (fun m -> m "Default block size: %d" default_block_size);
   let indexer =

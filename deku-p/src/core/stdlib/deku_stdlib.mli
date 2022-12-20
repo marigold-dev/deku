@@ -11,4 +11,3 @@ module IO = Io
 
 module Parallel = Parallel
 module List = List_ext
-module Clock = Clock

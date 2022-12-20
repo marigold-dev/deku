@@ -6,4 +6,3 @@ module IO = Io
 include Let_syntax
 module Parallel = Parallel
 module List = List_ext
-module Clock = Clock
