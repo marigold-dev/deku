@@ -15,6 +15,7 @@
   "scripts": {
     "build:client": "yarn --cwd deku-c/client build",
     "build:cli": "yarn --cwd deku-c/deku-cli build",
+    "build:tests": "yarn --cwd examples/tests build",
     "start:deku-p-react": "yarn --cwd examples/deku-p-react start"
   }
 }
