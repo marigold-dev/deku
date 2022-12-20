@@ -63,7 +63,7 @@ function encodeValue(value) {
 
 function inspect_all(exports) {
     console.log('Stack pointer ', exports.stack.value)
-    console.log('Heap pointer ', exports.heap.value)
+    // console.log('Heap pointer ', exports.heap.value)
     console.log('Stack')
 
     let stack = exports.stack.value
@@ -102,6 +102,7 @@ function compileMichelsonCode(code) {
 
 async function wasmModuleOfMichelson(code) {
     await compileMichelsonCode(code)
+    console.log(process.cwd())
     const wasm = fs.readFileSync('./mod.wasm')
     return WebAssembly.compile(wasm)
 }
@@ -131,10 +132,15 @@ async function eval(code, parameter, storage, context = {}) {
 
     const imports = {
         env: {
+            log(ptr) {
+                console.log('Log from contract %d', ptr)
+            },
             parameter_size() {
+                console.log('parameter_size: Parameter length: %d', parameterBuffer.length)
                 return parameterBuffer.length
             },
             parameter_load(ptr) {
+                console.log('parameter_load: Pointer location: %d', ptr)
                 // console.log('Parameter at %d', ptr)
                 for (let i = 0; i < parameterBuffer.length; i++) {
                     bytes[i + ptr] = parameterBuffer[i]
@@ -143,6 +149,7 @@ async function eval(code, parameter, storage, context = {}) {
                 return 0
             },
             save_storage(ptr, size) {
+                console.log('save_storage: Pointer location: %d, size: %d.', ptr, size)
                 storageBuffer = Buffer.alloc(size)
 
                 for (let i = 0; i < size; i++) {
@@ -205,7 +212,8 @@ async function eval(code, parameter, storage, context = {}) {
                 }
 
                 return addrLookup[descriptor]
-            }
+            },
+            __stack_pointer: new WebAssembly.Global({ value: 'i32', mutable: true })
         }
     }
     const instance = new WebAssembly.Instance(module, imports)
@@ -222,7 +230,7 @@ async function eval(code, parameter, storage, context = {}) {
     }
 
     try {
-        instance.exports.main()
+        instance.exports._start()
     } catch (e) {
         if (failure === null) {
             throw e
@@ -690,7 +698,7 @@ async function test_fa12() {
             totalSupply: 1_000_000_000
         })
     )
-    // assertStorage(res, '')
+    assertStorage(res, '')
 }
 
-test_fa12()
+// test_fa12()

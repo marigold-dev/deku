@@ -243,17 +243,4 @@ let compile_ir ~memory ~optimize ~debug ~shared_memory wasm_mod contract =
   if optimize then
     Module.optimize wasm_mod;
 
-  let linking =
-    let open Linking in
-    [ Symbol_table [ { kind  = Symtab_function
-                     ; flags = [ Sym_exported ]
-                     ; index = 10l
-                     ; name  = Some "main" }
-                   ; { kind  = Symtab_function
-                     ; flags = [ Sym_undefined ]
-                     ; index = 9l
-                     ; name  = None } ] ]
-  in
-  Linking.add_linking_metadata wasm_mod linking;
-
   wasm_mod

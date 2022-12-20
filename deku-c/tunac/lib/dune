@@ -2,3 +2,13 @@
  (name tunac)
  (libraries tezos-micheline binaryen proto-alpha-utils)
  (preprocess (pps ppx_deriving.show)))
+
+(install
+ (files runtime.wasm)
+ (section share)
+ (package deku))
+
+(rule
+ (targets runtime.wasm)
+ (action (run clang --target=wasm32 -c -o %{targets} %{deps}))
+ (deps runtime.c))

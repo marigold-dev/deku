@@ -41,7 +41,7 @@ let report error =
 let report_error = function
   Ok c -> c | Error err -> report err; exit 1
 
-let compile_contract ~config contract =
+let compile_contract ~config:_ contract =
   let open Lwt_result.Syntax in
   let open Proto_alpha_utils.Memory_proto_alpha in
   let canonical_contract = Result.get_ok @@ Protocol.Michelson_v1_primitives.prims_of_strings contract in
@@ -54,34 +54,22 @@ let compile_contract ~config contract =
   in
   let contract = report_error @@ IR_of_michelson.compile_contract typed_contract in
 
-  let () =
-    Llvm_all_backends.initialize ();
-    let llvm_mod = Llvm_of_ir.compile_ir contract in
-    ignore llvm_mod
-    (* let target = Llvm_target.Target.by_triple "wasm32-unknown-unknown" in
-    let target_machine =
-      Llvm_target.TargetMachine.create
-        ~triple:"wasm32-unknown-unknown"
-        target
-    in
-    Llvm_target.TargetMachine.emit_to_file
-      llvm_mod
-      Llvm_target.CodeGenFileType.ObjectFile
-      "michelson_contract_from_llvm.wasm"
-      target_machine *)
-  in
+  let obj =
+    let filename, output = Filename.open_temp_file ~mode:[] "contract" ".ll" in
+    let fmt = Format.formatter_of_out_channel output in
+    Llvm_of_ir.compile_ir fmt contract;
+    close_out output;
 
-  let wasm_mod = Binaryen.Module.create () in
-  Wasm_of_ir.compile_ir
-    ~memory:config.memory
-    ~optimize:config.optimize
-    ~debug:config.debug
-    ~shared_memory:config.shared_memory
-    wasm_mod
-    contract
+    let objfile = Filename.temp_file "contract" ".wasm" in
+    Llvm_of_ir.compile_llvm_to_wasm filename objfile;
+    objfile
+  in
+  obj
 
 let compile_contract ~config contract =
   let contract = Tezos_micheline.Micheline.strip_locations contract in
   Lwt_result.map_error (fun _ -> "Error") @@ compile_contract ~config contract
 
 let compile_value = Serialize.compile_value
+
+let link = Linking.link_contract

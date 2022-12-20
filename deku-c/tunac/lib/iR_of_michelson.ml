@@ -81,8 +81,32 @@ let compile_pair ~env =
   Env.free_local env item;
   block
 
-let compile_dig ~env:_ n =
-  Cassign (0, Cop (Capply "michelson_dig", [ Cconst_i32 n ]))
+let compile_dig ~env n =
+  let n = Int32.sub n 1l in
+  let counter =  Env.alloc_local env in
+  let node = Env.alloc_local env in
+  let loop =
+    Cblock
+      [ Cassign (counter, Cconst_i32 n)
+      ; Cassign (node, Cglobal "__michelson_stack")
+      ; Cwhile (Cvar counter,
+          Cblock
+            [ Cassign (counter, Data.dec (Cvar counter))
+            ; Cassign (node, Data.cdr (Cvar node)) ]) ]
+  in
+  Env.free_local env counter;
+  let a = Env.alloc_local env in
+  let block =
+    Cblock
+      [ loop
+      ; Cassign (a, Data.cdr (Cvar node))
+      ; Cstore (1, Cvar node, Data.cdr (Cvar a))
+      ; Cstore (1, Cvar a, Cglobal "__michelson_stack")
+      ; Cglobal_assign ("__michelson_stack", Cvar a) ]
+  in
+  Env.free_local env a;
+  Env.free_local env node;
+  block  
 
 let compile_dug ~env n =
   let n = Int32.sub n 1l in
@@ -133,7 +157,6 @@ let compile_drop ~env n =
   block
 
 let compile_dup ~env n =
-  let n = Int32.sub n 1l in
   let counter = Env.alloc_local env in
   let node = Env.alloc_local env in
   let inner_loop =
@@ -654,6 +677,10 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
     let statement = compile_push ~env (Cconst_i32 addr) in
     Cblock [ statement; compile_instruction env k ]
 
+  | IConst (_, Bool_t, v, k) ->
+    let statement = compile_push ~env (Cconst_i32 (if v then -1l else 0l)) in
+    Cblock [ statement; compile_instruction env k ]
+
   | IEmpty_map (_, _, _, k) ->
     let statement = compile_push ~env (Cconst_i32 0l) in
     Cblock [ statement; compile_instruction env k ]
@@ -679,11 +706,11 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
     Cblock [ statement; compile_instruction env k ]
 
   | IDup (_, k) ->
-    let statement = compile_dup ~env 1l in
+    let statement = compile_dup ~env 0l in
     Cblock [ statement; compile_instruction env k ]
 
   | IDup_n (_, n, _, k) ->
-    let statement = compile_dup ~env (Int32.of_int n) in
+    let statement = compile_dup ~env (Int32.of_int (n - 1)) in
     Cblock [ statement; compile_instruction env k ]
 
   | IDipn (_, n, _, b, k) ->

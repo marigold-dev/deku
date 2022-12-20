@@ -11,6 +11,8 @@ type config =
 
 val parse : string -> contract
 
-val compile_contract : config:config -> contract -> (Binaryen.Module.t, string) Lwt_result.t
+val compile_contract : config:config -> contract -> (string, string) Lwt_result.t
 
 val compile_value : node -> bytes
+
+val link : string list -> string -> unit
