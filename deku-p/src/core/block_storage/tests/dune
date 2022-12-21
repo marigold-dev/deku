@@ -1,0 +1,16 @@
+(executable
+ (name block_storage_tests)
+ (libraries
+  deku_block_storage
+  deku_crypto
+  deku_protocol
+  deku_stdlib
+  alcotest
+  deku_consensus))
+
+(rule
+ (alias runtest)
+ (deps
+  (:exe ./block_storage_tests.exe))
+ (action
+  (run %{exe})))
