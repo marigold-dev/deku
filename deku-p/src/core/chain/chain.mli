@@ -39,6 +39,7 @@ type action = private
       validators : Key_hash.t list;
       withdrawal_handles_hash : Deku_ledger.Ledger.Withdrawal_handle.hash;
     }
+  | Chain_sleep of { duration: float }
 [@@deriving show]
 
 val make : validators:Key_hash.t list -> vm_state:Ocaml_wasm_vm.State.t -> chain
