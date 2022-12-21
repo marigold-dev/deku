@@ -131,8 +131,7 @@ let test_200k_block_load env () =
 
     let retrieved_block =
       match Block_storage.find_block_by_level ~level block_storage with
-      | Some json ->
-          Data_encoding.Json.destruct Deku_consensus.Block.encoding json
+      | Some block -> block
       | None -> Genesis.block
     in
 
@@ -142,10 +141,6 @@ let test_200k_block_load env () =
 
     Eio.Switch.fail sw Test_finished
   with _ -> ()
-
-(* TODO: Add tests with only one env threaded through all tests *)
-let eio_test_case : (Eio.Stdenv.t -> unit -> unit) -> unit -> unit =
- fun f () -> Eio_main.run (fun env -> f env ())
 
 let run () =
   Eio_main.run (fun env ->
