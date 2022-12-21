@@ -138,9 +138,8 @@ let test_200k_block_load env () =
     in
 
     Alcotest.(check' block_testable)
-      ~msg:"level loaded 200k block is equal to saved block" ~expected:block
+      ~msg:"level loaded block is equal to saved block" ~expected:block
       ~actual:retrieved_block;
-
     Eio.Switch.fail sw Test_finished
   with _ -> ()
 
@@ -176,7 +175,7 @@ let test_200k_block_and_votes env () =
       | None -> default_return
     in
     Alcotest.(check' (pair block_testable (list vote_testable)))
-      ~msg:"retrieved 200k block and one vote equal saved"
+      ~msg:"retrieved empty block and one vote equal saved"
       ~expected:(block, votes) ~actual:retrieved_block_and_votes;
 
     Eio.Switch.fail sw Test_finished
@@ -227,12 +226,25 @@ let test_ordered_parallel_read_write env () =
     Eio.Switch.fail sw Test_finished
   with _ -> ()
 
+let test_extreme_parallel_read_write env () =
+  try
+    Parallel.Pool.run ~env ~domains:6 @@ fun () ->
+    Eio.Switch.run @@ fun sw ->
+    let calls = 100 in
+    let block_storage = make_block_storage env sw in
+    let thunk_list = Generative.build_random_list (calls / 2) block_storage in
+    List.iter
+      (fun f -> Eio.Fiber.fork ~sw (Parallel.parallel (fun () -> f ())))
+      thunk_list;
+    Eio.Switch.fail sw Test_finished
+  with _ -> ()
+
 let run () =
   Eio_main.run (fun env ->
       let open Alcotest in
       run "Block_storage" ~and_exit:false
         [
-          ( "block storage",
+          ( "simple",
             [
               test_case "empty_block is returned" `Quick
                 (test_empty_block_load env);
@@ -244,12 +256,9 @@ let run () =
                 (test_200k_block_and_votes env);
               test_case "parallel read and write" `Quick
                 (test_ordered_parallel_read_write env);
+              test_case "parallel extreme read and write" `Quick
+                (test_extreme_parallel_read_write env);
             ] );
         ])
 
 let () = run ()
-
-(* TODO: Tests
-   try all combinations of what's in the block_storage.mli. Use it with different block sizes, do it in parallel, try reading and writing at the same time, try reading a query that doesn't exist
-   try reading something right before you write it and vice versa,
-   try reading or writing two things at once *)
