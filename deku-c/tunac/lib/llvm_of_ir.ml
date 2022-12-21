@@ -215,6 +215,11 @@ let compile_ir output contract =
   Format.fprintf output "declare ptr @sender()\n";
   Format.fprintf output "declare ptr @transfer_tokens(ptr, ptr, ptr)\n";
 
+  Format.fprintf output "declare void @michelson_dup_n(ptr)\n";
+  Format.fprintf output "declare void @michelson_drop_n(ptr)\n";
+  Format.fprintf output "declare void @michelson_dug_n(ptr)\n";
+  Format.fprintf output "declare void @michelson_dig_n(ptr)\n";
+
   (* TODO: Remove these while we don't have a better design for logging *)
   Format.fprintf output "declare void @log(ptr)\n";
   Format.fprintf output "declare void @inspect_stack()\n";

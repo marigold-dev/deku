@@ -82,100 +82,34 @@ let compile_pair ~env =
   block
 
 let compile_dig ~env n =
-  let n = Int32.sub n 1l in
-  let counter =  Env.alloc_local env in
-  let node = Env.alloc_local env in
-  let loop =
-    Cblock
-      [ Cassign (counter, Cconst_i32 n)
-      ; Cassign (node, Cglobal "__michelson_stack")
-      ; Cwhile (Cvar counter,
-          Cblock
-            [ Cassign (counter, Data.dec (Cvar counter))
-            ; Cassign (node, Data.cdr (Cvar node)) ]) ]
+  let p = Env.alloc_local env in
+  let s =
+    Cassign (p, Cop (Capply "michelson_dig_n", [ Cconst_i32 n ]))
   in
-  Env.free_local env counter;
-  let a = Env.alloc_local env in
-  let block =
-    Cblock
-      [ loop
-      ; Cassign (a, Data.cdr (Cvar node))
-      ; Cstore (1, Cvar node, Data.cdr (Cvar a))
-      ; Cstore (1, Cvar a, Cglobal "__michelson_stack")
-      ; Cglobal_assign ("__michelson_stack", Cvar a) ]
-  in
-  Env.free_local env a;
-  Env.free_local env node;
-  block  
+  Env.free_local env p;
+  s
 
 let compile_dug ~env n =
-  let n = Int32.sub n 1l in
-  let node = Env.alloc_local env in
-  let counter = Env.alloc_local env in
-  let inner_loop =
-    Cblock
-      [ Cassign (counter, Cconst_i32 n)
-      ; Cassign (node, Data.cdr (Cglobal "__michelson_stack"))
-      ; Cwhile (Cvar counter,
-          Cblock
-            [ Cassign (counter, Data.dec (Cvar counter))
-            ; Cassign (node, Data.cdr (Cvar node)) ]) ]
+  let p = Env.alloc_local env in
+  let s =
+    Cassign (p, Cop (Capply "michelson_dug_n", [ Cconst_i32 n ]))
   in
-  Env.free_local env counter;
-  let head = Env.alloc_local env in
-  let block =
-    Cblock
-      [ inner_loop
-      ; Cassign (head, Cglobal "__michelson_stack")
-      ; Cglobal_assign ("__michelson_stack", Data.cdr (Cvar head))
-      ; Cstore (1, Cvar head, Data.cdr (Cvar node))
-      ; Cstore (1, Cvar node, Cvar head) ]
-  in
-  Env.free_local env node;
-  Env.free_local env head;
-  block
+  Env.free_local env p;
+  s
 
 let compile_drop ~env n =
-  let counter = Env.alloc_local env in
-  let node = Env.alloc_local env in
-  let inner_loop =
-    Cblock
-      [ Cassign (counter, Cconst_i32 n)
-      ; Cassign (node, Cglobal "__michelson_stack")
-      ; Cwhile (Cvar counter,
-         Cblock
-          [ Cassign (counter, Data.dec (Cvar counter))
-          ; Cassign (node, Data.cdr (Cvar node)) ] ) ]
+  let p = Env.alloc_local env in
+  let s =
+    Cassign (p, Cop (Capply "michelson_drop_n", [ Cconst_i32 n ]))
   in
-  Env.free_local env counter;
-  let block =
-    Cblock
-      [ inner_loop
-      ; Cglobal_assign ("__michelson_stack", Cvar node) ]
-  in
-  Env.free_local env node;
-  block
+  Env.free_local env p;
+  s
 
 let compile_dup ~env n =
-  let counter = Env.alloc_local env in
-  let node = Env.alloc_local env in
-  let inner_loop =
-    Cblock
-      [ Cassign (counter, Cconst_i32 n)
-      ; Cassign (node, Cglobal "__michelson_stack")
-      ; Cwhile (Cvar counter
-          , Cblock
-             [ Cassign (counter, Data.dec (Cvar counter))
-             ; Cassign (node, Data.cdr (Cvar node)) ] ) ]
-  in
-  Env.free_local env counter;
-  let block =
-    Cblock
-      [ inner_loop
-      ; compile_push ~env (Data.car (Cvar node)) ]
-  in
-  Env.free_local env node;
-  block
+  let p = Env.alloc_local env in
+  let s = Cassign (p, Cop (Capply "michelson_dup_n", [ Cconst_i32 n ])) in
+  Env.free_local env p;
+  s
 
 let compile_dip ~env n block =
   let n = Int32.sub n 1l in
@@ -690,11 +624,11 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
     Cblock [ statement; compile_instruction env k ]
   
   | IDig (_, n, _, k) ->
-    let statement = compile_dig ~env (Int32.of_int n) in
+    let statement = compile_dig ~env (Int32.of_int (n - 1)) in
     Cblock [ statement; compile_instruction env k ]
 
   | IDug (_, n, _, k) ->
-    let statement = compile_dug ~env (Int32.of_int n) in
+    let statement = compile_dug ~env (Int32.of_int (n - 1)) in
     Cblock [ statement; compile_instruction env k ]
 
   | IDrop (_, k) ->
