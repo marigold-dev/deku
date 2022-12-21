@@ -1120,7 +1120,6 @@ let deref_bool =
       Wasm.Instance.burn_gas !inst 100L;
       match args with
       | Wasm.Values.[ Num (I64 x) ] ->
-          Format.printf "arg %Ld" x;
           let x = Vec.read vec x %-< bool in
           wasm_i32 @@ Int32.of_int x
       | _ ->
