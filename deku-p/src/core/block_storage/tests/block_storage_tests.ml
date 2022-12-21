@@ -142,6 +142,44 @@ let test_200k_block_load env () =
     Eio.Switch.fail sw Test_finished
   with _ -> ()
 
+let test_200k_block_and_votes env () =
+  try
+    Eio.Switch.run @@ fun sw ->
+    let block_storage = make_block_storage env sw in
+    let (Block { hash; level; _ } as block) =
+      block ~default_block_size:200_000
+    in
+    let vote = make_vote ~hash identity in
+    let votes = Verified_signature.Set.add vote Verified_signature.Set.empty in
+    let votes = Verified_signature.Set.elements votes in
+    let content = Deku_gossip.Message.Content.accepted ~block ~votes in
+    let (Deku_gossip.Message.Message { header = _; content = _; network }) =
+      Deku_gossip.Message.encode ~content
+    in
+    Block_storage.save_block_and_votes ~level ~network block_storage;
+
+    let retrieved_block_and_votes =
+      let default_return = (Genesis.block, []) in
+      match
+        Block_storage.find_block_and_votes_by_level ~level block_storage
+      with
+      | Some (Message.Network.Network_message { raw_header; raw_content }) -> (
+          let expected = Message.Header.decode ~raw_header in
+          let (Message.Message { content; _ }) =
+            Message.decode ~expected ~raw_content
+          in
+          match content with
+          | Content_accepted { block; votes } -> (block, votes)
+          | _ -> default_return)
+      | None -> default_return
+    in
+    Alcotest.(check' (pair block_testable (list vote_testable)))
+      ~msg:"retrieved empty block and one vote equal saved"
+      ~expected:(block, votes) ~actual:retrieved_block_and_votes;
+
+    Eio.Switch.fail sw Test_finished
+  with _ -> ()
+
 let run () =
   Eio_main.run (fun env ->
       let open Alcotest in
@@ -155,6 +193,8 @@ let run () =
                 (test_empty_block_and_votes env);
               test_case "200k_block is returned" `Slow
                 (test_200k_block_load env);
+              test_case "200k_block_and_votes is returned" `Slow
+                (test_200k_block_and_votes env);
             ] );
         ])
 
