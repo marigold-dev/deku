@@ -21,9 +21,11 @@ let make_vote ~hash identity =
   let hash = Block_hash.to_blake2b hash in
   Verified_signature.sign hash identity
 
-let block ~default_block_size =
-  let above = Genesis.block in
-  let withdrawal_handles_hash = BLAKE2b.hash "potato" in
+let block ?(above = Genesis.block) ~default_block_size () =
+  let withdrawal_handles_hash =
+    let randn = Stdlib.Random.int 230 in
+    Deku_crypto.BLAKE2b.hash (Int.to_string randn)
+  in
   let producer = Producer.empty in
   Producer.produce ~identity ~default_block_size ~above ~withdrawal_handles_hash
     producer
@@ -47,7 +49,7 @@ let test_empty_block_load env () =
   try
     Eio.Switch.run @@ fun sw ->
     let block_storage = make_block_storage env sw in
-    let (Block { hash; level; _ } as block) = block ~default_block_size:0 in
+    let (Block { hash; level; _ } as block) = block ~default_block_size:0 () in
     Deku_block_storage.Block_storage.save_block ~block block_storage;
     let retrieved_block =
       match
@@ -80,7 +82,7 @@ let test_empty_block_and_votes env () =
   try
     Eio.Switch.run @@ fun sw ->
     let block_storage = make_block_storage env sw in
-    let (Block { hash; level; _ } as block) = block ~default_block_size:0 in
+    let (Block { hash; level; _ } as block) = block ~default_block_size:0 () in
     let vote = make_vote ~hash identity in
     let votes = Verified_signature.Set.add vote Verified_signature.Set.empty in
     let votes = Verified_signature.Set.elements votes in
@@ -117,7 +119,7 @@ let test_200k_block_load env () =
     Eio.Switch.run @@ fun sw ->
     let block_storage = make_block_storage env sw in
     let (Block { hash; level; _ } as block) =
-      block ~default_block_size:200_000
+      block ~default_block_size:200_000 ()
     in
     Block_storage.save_block ~block block_storage;
     let retrieved_block =
@@ -136,7 +138,7 @@ let test_200k_block_load env () =
     in
 
     Alcotest.(check' block_testable)
-      ~msg:"level loaded block is equal to saved block" ~expected:block
+      ~msg:"level loaded 200k block is equal to saved block" ~expected:block
       ~actual:retrieved_block;
 
     Eio.Switch.fail sw Test_finished
@@ -147,7 +149,7 @@ let test_200k_block_and_votes env () =
     Eio.Switch.run @@ fun sw ->
     let block_storage = make_block_storage env sw in
     let (Block { hash; level; _ } as block) =
-      block ~default_block_size:200_000
+      block ~default_block_size:200_000 ()
     in
     let vote = make_vote ~hash identity in
     let votes = Verified_signature.Set.add vote Verified_signature.Set.empty in
@@ -174,8 +176,53 @@ let test_200k_block_and_votes env () =
       | None -> default_return
     in
     Alcotest.(check' (pair block_testable (list vote_testable)))
-      ~msg:"retrieved empty block and one vote equal saved"
+      ~msg:"retrieved 200k block and one vote equal saved"
       ~expected:(block, votes) ~actual:retrieved_block_and_votes;
+
+    Eio.Switch.fail sw Test_finished
+  with _ -> ()
+
+let test_ordered_parallel_read_write env () =
+  try
+    Parallel.Pool.run ~env ~domains:5 @@ fun () ->
+    Eio.Switch.run @@ fun sw ->
+    let block_storage = make_block_storage env sw in
+    let (Block { hash = _hash1; level = _level1; _ } as block1) =
+      block ~default_block_size:0 ()
+    in
+    let (Block { hash = _hash2; level = _level2; _ } as block2) =
+      block ~default_block_size:0 ()
+    in
+    Parallel.parallel (fun () ->
+        Block_storage.save_block ~block:block1 block_storage);
+    Parallel.parallel (fun () ->
+        Block_storage.save_block ~block:block2 block_storage);
+    let hash_loaded_block1 =
+      match
+        Parallel.parallel (fun () ->
+            Block_storage.find_block_by_hash ~block_hash:_hash1 block_storage)
+      with
+      | Some block -> block
+      | None -> Genesis.block
+    in
+    let hash_loaded_block2 =
+      match
+        Parallel.parallel (fun () ->
+            Block_storage.find_block_by_hash ~block_hash:_hash2 block_storage)
+      with
+      | Some block -> block
+      | None -> Genesis.block
+    in
+    Alcotest.(check' block_testable)
+      ~msg:
+        "first hash parallel loaded block is the same as the parallel saved \
+         block"
+      ~expected:block1 ~actual:hash_loaded_block1;
+    Alcotest.(check' block_testable)
+      ~msg:
+        "second hash parallel loaded block is the same as the parallel saved \
+         block"
+      ~expected:block2 ~actual:hash_loaded_block2;
 
     Eio.Switch.fail sw Test_finished
   with _ -> ()
@@ -185,7 +232,7 @@ let run () =
       let open Alcotest in
       run "Block_storage" ~and_exit:false
         [
-          ( "simple",
+          ( "block storage",
             [
               test_case "empty_block is returned" `Quick
                 (test_empty_block_load env);
@@ -195,6 +242,8 @@ let run () =
                 (test_200k_block_load env);
               test_case "200k_block_and_votes is returned" `Slow
                 (test_200k_block_and_votes env);
+              test_case "parallel read and write" `Quick
+                (test_ordered_parallel_read_write env);
             ] );
         ])
 
