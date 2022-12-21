@@ -48,15 +48,9 @@ let writer_reader (index, (Block { hash; _ } as block : Block.t)) block_storage
   let reader () =
     let retrieved_block =
       match Atomic.get written with
-      | true -> (
-          match
+      | true -> 
             Deku_block_storage.Block_storage.find_block_by_hash ~block_hash:hash
               block_storage
-          with
-          | Some json ->
-              Some
-                (Data_encoding.Json.destruct Deku_consensus.Block.encoding json)
-          | None -> None)
       | false -> None
     in
     let expected =
