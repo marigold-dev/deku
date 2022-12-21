@@ -81,7 +81,9 @@ export const makeEndpoints = (root: string): endpoints => ({
     ),
     expectedStatus: 200,
     parse: (json: JSONValue) => {
-      return json.at("balance").as_int();
+      const balance = json.at("balance").as_string();
+      if (balance === null) return balance;
+      return Number.parseInt(balance);
     },
   }),
   GET_PROOF: (operation_hash: string) => ({
@@ -135,6 +137,7 @@ const parse = async <T>(
 
 export const get = async <T>(endpoint: endpoint<T>): Promise<T> => {
   const uri = endpoint.uri;
+  console.log(uri);
   const response = await fetch(uri);
 
   const status = response.status;
