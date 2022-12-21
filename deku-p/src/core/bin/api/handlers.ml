@@ -1,6 +1,5 @@
 open Deku_consensus
 open Deku_block_storage
-open Deku_stdlib
 open Deku_concepts
 open Deku_gossip
 open Deku_network
@@ -158,14 +157,14 @@ module Get_balance : NO_BODY_HANDLERS = struct
     ticket_id : Deku_ledger.Ticket_id.t;
   }
 
-  type response = { balance : int }
+  type response = { balance : Amount.t }
 
   let response_encoding =
     let open Data_encoding in
     conv
       (fun { balance } -> balance)
       (fun balance -> { balance })
-      (obj1 (req "balance" int8))
+      (obj1 (req "balance" Amount.encoding))
 
   let meth = `GET
 
@@ -184,7 +183,6 @@ module Get_balance : NO_BODY_HANDLERS = struct
     let Api_state.{ protocol; _ } = state in
     let (Protocol { ledger; _ }) = protocol in
     let amount = Deku_ledger.Ledger.balance address ticket_id ledger in
-    let amount = Amount.to_n amount |> N.to_z |> Z.to_int in
     Ok { balance = amount }
 end
 
