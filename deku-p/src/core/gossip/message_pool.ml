@@ -35,7 +35,9 @@ let message_state_encoding =
 let encoding =
   let open Data_encoding in
   conv
-    (fun (Message_pool { current; by_level }) -> (current, by_level))
+    (* TOOD: maybe store by_level information? Problematic with intermediary states *)
+      (fun (Message_pool { current; by_level = _ }) ->
+      (current, Level.Map.empty))
     (fun (current, by_level) -> Message_pool { current; by_level })
     (tup2 Level.encoding
        (Level.Map.encoding (Message_hash.Map.encoding message_state_encoding)))

@@ -44,7 +44,7 @@ type outcome =
   | Outcome_produce of { block : Block.t }
   | Outcome_apply of {
       block : Block.t;
-      votes : Verified_signature.t Key_hash.Map.t;
+      votes : Verified_signature.Set.t;
       protocol : Protocol.t;
       receipts : Receipt.t list;
     }
@@ -117,6 +117,8 @@ let minimum_block_latency =
   | Some x -> Option.value ~default:0.0 (Float.of_string_opt x)
   | None -> 0.0
 
+let last_sleep : float ref = ref @@ Unix.gettimeofday ()
+
 (* after gossip *)
 let apply_consensus_action chain consensus_action =
   let open Consensus in
@@ -136,7 +138,11 @@ let apply_consensus_action chain consensus_action =
       in
       (match minimum_block_latency with
       | 0. -> ()
-      | minimum_block_latency -> Unix.sleepf minimum_block_latency);
+      | minimum_block_latency ->
+          let now = Unix.gettimeofday () in
+          let sleep = minimum_block_latency -. (now -. !last_sleep) in
+          if sleep > 0.0 then Unix.sleepf sleep;
+          last_sleep := Unix.gettimeofday ());
       (chain, [ Chain_fragment { fragment } ])
   | Consensus_vote { level; vote } ->
       let content = Message.Content.vote ~level ~vote in
@@ -153,9 +159,7 @@ let apply_consensus_action chain consensus_action =
          in *)
       let apply = Fragment_apply { block; votes; protocol } in
       let apply = Chain_fragment { fragment = apply } in
-      let store = Fragment_store { block; votes } in
-      let store = Chain_fragment { fragment = store } in
-      (chain, [ apply; store ])
+      (chain, [ apply ])
   | Consensus_request { above } ->
       let (Chain ({ gossip; _ } as chain)) = chain in
       let gossip, network = Gossip.send_request ~above gossip in
@@ -312,41 +316,53 @@ let apply_protocol_produce ~block chain =
 let apply_protocol_apply ~identity ~current ~block ~votes ~protocol ~receipts
     chain =
   let (Chain ({ consensus; producer; _ } as chain)) = chain in
-  match Consensus.finished ~identity ~current ~block consensus with
-  | Ok (consensus, actions) ->
-      (* TODO: make this parallel *)
-      let (Block { tezos_operations; _ }) = block in
-      let producer = Producer.clean ~receipts ~tezos_operations producer in
-      let chain = Chain { chain with protocol; consensus; producer } in
+  let chain, actions =
+    match Consensus.finished ~identity ~current ~block consensus with
+    | Ok (consensus, actions) ->
+        (* TODO: make this parallel *)
+        let (Block { tezos_operations; _ }) = block in
+        let producer = Producer.clean ~receipts ~tezos_operations producer in
+        let chain = Chain { chain with protocol; consensus; producer } in
 
-      (* FIXME: need a time-based procedure for tezos commits, not block-based *)
-      (* FIXME: rediscuss the need to commit the previous block instead *)
-      (* FIXME: validators have to watch when commit did not happen *)
-      let (Consensus { validators; _ }) = consensus in
-      let current_block = Consensus.trusted_block consensus in
-      let (Block.Block { level = current_level; author = last_block_author; _ })
-          =
-        current_block
-      in
+        (* FIXME: need a time-based procedure for tezos commits, not block-based *)
+        (* FIXME: rediscuss the need to commit the previous block instead *)
+        (* FIXME: validators have to watch when commit did not happen *)
+        let (Consensus { validators; _ }) = consensus in
+        let current_block = Consensus.trusted_block consensus in
+        let (Block.Block
+              { level = current_level; author = last_block_author; _ }) =
+          current_block
+        in
 
-      (* TODO: only the producer should commit on Tezos *)
-      let chain, actions = apply_consensus_actions chain actions in
-      let actions =
-        let level = Level.to_n current_level |> N.to_z |> Z.to_int in
-        let self = Identity.key_hash identity in
-        match level mod 15 = 0 && Key_hash.equal self last_block_author with
-        | true ->
-            let validators = Validators.to_key_hash_list validators in
-            commit ~current_level ~block ~votes ~validators :: actions
-        | false -> actions
-      in
-      (chain, actions)
-  | Error `No_pending_block ->
-      Logs.warn (fun m -> m "chain: no pending block");
-      (Chain chain, [])
-  | Error `Wrong_pending_block ->
-      Logs.warn (fun m -> m "chain: wrong pending block");
-      (Chain chain, [])
+        (* TODO: only the producer should commit on Tezos *)
+        let chain, actions = apply_consensus_actions chain actions in
+        let actions =
+          let level = Level.to_n current_level |> N.to_z |> Z.to_int in
+          let self = Identity.key_hash identity in
+          match level mod 15 = 0 && Key_hash.equal self last_block_author with
+          | true ->
+              let votes =
+                Verified_signature.Set.fold
+                  (fun vote map ->
+                    let key_hash = Verified_signature.key_hash vote in
+                    Key_hash.Map.add key_hash vote map)
+                  votes Key_hash.Map.empty
+              in
+              let validators = Validators.to_key_hash_list validators in
+              commit ~current_level ~block ~votes ~validators :: actions
+          | false -> actions
+        in
+        (chain, actions)
+    | Error `No_pending_block ->
+        Logs.warn (fun m -> m "chain: no pending block");
+        (Chain chain, [])
+    | Error `Wrong_pending_block ->
+        Logs.warn (fun m -> m "chain: wrong pending block");
+        (Chain chain, [])
+  in
+  let store = Fragment_store { block; votes } in
+  let store = Chain_fragment { fragment = store } in
+  (chain, store :: actions)
 
 let apply_store_outcome ~block ~network chain =
   let (Chain ({ gossip; _ } as chain)) = chain in
@@ -403,13 +419,7 @@ let compute ~identity ~default_block_size fragment =
           Logs.warn (fun m ->
               m "Error while applying block: %s" (Printexc.to_string error)))
         errors;
-      let votes =
-        Verified_signature.Set.fold
-          (fun vote map ->
-            let key_hash = Verified_signature.key_hash vote in
-            Key_hash.Map.add key_hash vote map)
-          votes Key_hash.Map.empty
-      in
+
       (* TODO: this is a workaround *)
       let () = Gc.major () in
       let () =

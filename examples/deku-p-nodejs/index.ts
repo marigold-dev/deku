@@ -19,7 +19,7 @@ const dekuSigner = fromMemorySigner(
   console.log("Getting the balance");
   const balance = await deku.getBalance(
     "tz1L7zaWD1aRYBTQvSdxEdc9KDzfwG4DydDu",
-    { ticketer: "KT1WqDmVx6AEB4V4MFoTjSKKt9XhvvihrVJC", data }
+    { ticketer: "KT1KCkwGxAsFmy6jkF1owQyGkQoYVtajkeGb", data }
   );
 
   console.log(`The new balance is: ${balance}`);

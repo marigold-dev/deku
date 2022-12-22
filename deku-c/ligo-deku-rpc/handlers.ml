@@ -76,6 +76,15 @@ let rec get_compilation_target = function
   | ("target", [ "wasm" ]) :: _ -> Wasm_target
   | _ :: tl -> get_compilation_target tl
 
+module Nonce = struct
+  let nonce : int ref = ref 0
+
+  let take () =
+    let tmp = !nonce in
+    nonce := tmp + 1;
+    tmp
+end
+
 module Compile_contract : HANDLERS = struct
   type path = unit
 
@@ -157,9 +166,9 @@ module Compile_contract : HANDLERS = struct
     let michelson_code, michelson_storage =
       match lang with
       | Michelson -> (source, storage)
-      | _ -> (
+      | _ ->
           let lang = lang_to_string lang in
-          let hash = Hash.make source in
+          let hash = Hash.make source (Nonce.take ()) in
           let filename_ligo = Printf.sprintf "%s.%s" hash lang in
           Logs.info (fun m -> m "filename_ligo: %s" filename_ligo);
           let filename_tz = Printf.sprintf "%s.tz" hash in
@@ -167,33 +176,19 @@ module Compile_contract : HANDLERS = struct
           Logs.info (fun m -> m "storage: %s" storage);
           let ligo_path = Eio.Path.(Eio.Stdenv.cwd env / filename_ligo) in
           let tz_path = Eio.Path.(Eio.Stdenv.cwd env / filename_tz) in
-          let tz_already_exists =
-            try Some (Eio.Path.load tz_path) |> Option.is_some with _ -> false
+          let () = Eio.Path.save ~create:(`Exclusive 0o600) ligo_path source in
+          let () =
+            Ligo_commands.compile_contract ~env ~lang ~filename_ligo
+              ~filename_tz ()
           in
-          match tz_already_exists with
-          | false ->
-              let () =
-                try Eio.Path.save ~create:(`Exclusive 0o600) ligo_path source
-                with _ -> ()
-              in
-              let () =
-                Ligo_commands.compile_contract ~env ~lang ~filename_ligo
-                  ~filename_tz ()
-              in
-              let code = Eio.Path.load tz_path in
-              let storage =
-                Ligo_commands.compile_storage ~lang ~filename_ligo
-                  ~expression:storage ()
-              in
-              (code, storage)
-          | true ->
-              let code = Eio.Path.load tz_path in
-              let storage =
-                Ligo_commands.compile_storage ~lang ~filename_ligo
-                  ~expression:storage ()
-                |> String.trim
-              in
-              (code, storage))
+          let code = Eio.Path.load tz_path in
+          let storage =
+            Ligo_commands.compile_storage ~lang ~filename_ligo
+              ~expression:storage ()
+          in
+          let () = Eio.Path.unlink ligo_path in
+          let () = Eio.Path.unlink tz_path in
+          (code, storage)
     in
     (* TODO: better error messages in Tuna *)
     let show_tuna_error = function
@@ -263,17 +258,18 @@ module Compile_invocation : HANDLERS = struct
       | Michelson -> expression
       | _ ->
           let lang = lang_to_string lang in
-          let hash = Hash.make source in
+          let hash = Hash.make source (Nonce.take ()) in
           let filename_ligo = Printf.sprintf "%s.%s" hash lang in
           let ligo_path = Eio.Path.(Eio.Stdenv.cwd env / filename_ligo) in
-          let ligo_already_exists =
-            try Some (Eio.Path.load ligo_path) |> Option.is_some
-            with _ -> false
+          let () =
+            try Eio.Path.save ~create:(`Exclusive 0o600) ligo_path source
+            with _ -> ()
           in
-          (if not ligo_already_exists then
-           try Eio.Path.save ~create:(`Exclusive 0o600) ligo_path source
-           with _ -> ());
-          Ligo_commands.compile_parameter ~lang ~filename_ligo ~expression ()
+          let expression =
+            Ligo_commands.compile_parameter ~lang ~filename_ligo ~expression ()
+          in
+          let () = Eio.Path.unlink ligo_path in
+          expression
     in
     match get_compilation_target params with
     | Michelson_target -> Ok (Michelson_expression expression)

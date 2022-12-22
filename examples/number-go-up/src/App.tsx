@@ -2,7 +2,7 @@ import { DAppClient, NetworkType } from "@airgap/beacon-sdk";
 import { Contract, DekuCClient } from "@marigold-dev/deku";
 import { fromBeaconSigner } from "@marigold-dev/deku";
 import { useEffect, useState } from "react";
-const contractAddr = "DK1APjGycpfyE94s6MxGXUSaP7Qnznz7TrqX";
+const contractAddr = "DK1Nzaoym3o6LXxLGsbQwTDi3ZYPHMUiNTE5";
 const apiURL = "https://deku-canonical-vm0.deku-v1.marigold.dev";
 
 const connectBeaconWallet = async () => {

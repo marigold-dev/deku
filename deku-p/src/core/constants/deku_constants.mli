@@ -10,3 +10,4 @@ val async_on_error : exn -> unit
 val genesis_time : float
 val trusted_cycle : N.t
 val max_payload_chunks : int
+val request_timeout : float

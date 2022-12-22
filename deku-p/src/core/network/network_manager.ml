@@ -3,12 +3,14 @@ open Deku_concepts
 open Deku_gossip
 open Network_protocol
 
+type write = Network_message.message -> unit
+
 type network = {
   identity : Identity.t;
   mutable connection_id : Connection_id.t;
   (* TODO: Hashtbl would do a great job here *)
-  mutable connections : (Network_message.message -> unit) Connection_id.Map.t;
-  mutable connected_to : (Network_message.message -> unit) Key_hash.Map.t;
+  mutable connections : write Connection_id.Map.t;
+  mutable connected_to : (write * write list) Key_hash.Map.t;
 }
 
 type t = network
@@ -30,18 +32,30 @@ let set_connection ~connection_id ~owner ~write network =
   let key_hash = Key_hash.of_key owner in
   network.connections <-
     Connection_id.Map.add connection_id write network.connections;
-  network.connected_to <- Key_hash.Map.add key_hash write network.connected_to
+  network.connected_to <-
+    Key_hash.Map.update key_hash
+      (function
+        | Some (current_write, writes) -> Some (write, current_write :: writes)
+        | None -> Some (write, []))
+      network.connected_to
 
-let close_connection ~connection_id network =
+let close_connection ~connection_id ~owner network =
+  let key_hash = Key_hash.of_key owner in
   network.connections <-
-    Connection_id.Map.remove connection_id network.connections
+    Connection_id.Map.remove connection_id network.connections;
+  network.connected_to <-
+    Key_hash.Map.update key_hash
+      (function
+        | Some (_current_write, []) -> None
+        | Some (_current_write, previous_write :: writes) ->
+            Some (previous_write, writes)
+        | None -> None)
+      network.connected_to
 
 let with_connection ~on_connection ~on_request ~on_message network k =
   let connection_id = create_connection network in
-  let handler ~sw connection =
-    let write message =
-      Eio.Fiber.fork ~sw @@ fun () -> Connection.write connection message
-    in
+  let handler connection =
+    let write message = Connection.write connection message in
     let on_message message =
       match message with
       | Network_message.Message { raw_header; raw_content } ->
@@ -60,9 +74,10 @@ let with_connection ~on_connection ~on_request ~on_message network k =
     loop ()
   in
   let handler connection =
+    let owner = Connection.owner connection in
     Fun.protect
-      ~finally:(fun () -> close_connection ~connection_id network)
-      (fun () -> Eio.Switch.run @@ fun sw -> handler ~sw connection)
+      ~finally:(fun () -> close_connection ~connection_id ~owner network)
+      (fun () -> handler connection)
   in
   k handler
 
@@ -112,15 +127,14 @@ let connect ~net ~clock ~nodes ~on_connection ~on_request ~on_message network =
     nodes
 
 let send ~message ~write =
-  (* write always includes a fork *)
   try write message
   with exn ->
     Logs.warn (fun m -> m "write.error: %s" (Printexc.to_string exn))
 
 let broadcast message network =
-  Key_hash.Map.iter
-    (fun _connection write -> send ~message ~write)
-    network.connected_to
+  Eio.Fiber.List.iter
+    (fun (_connection, (write, _writes)) -> send ~message ~write)
+    (Key_hash.Map.bindings network.connected_to)
 
 let request ~raw_header ~raw_content network =
   let request = Network_message.request ~raw_header ~raw_content in

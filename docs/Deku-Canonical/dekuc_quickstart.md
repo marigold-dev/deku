@@ -128,7 +128,7 @@ DK1 address of the contract you deployed above.
 
 ```js live noInline
 const code = { source: incrementLigoCode, kind: "jsligo" };
-const myContract = dekuC.contract("DK14bVHNFE7QMQtQ8qdscz7w88RDsWoj7gqJ", code); // 👈 Replace with your contract address
+const myContract = dekuC.contract("DK1RJcZYhsgPeW8uQmyaSSP2syTJNsz8pv54", code); // 👈 Replace with your contract address
 
 println("Getting contract state...");
 myContract
