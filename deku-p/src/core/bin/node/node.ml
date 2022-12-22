@@ -51,50 +51,61 @@ let send_blocks ~connection ~above node =
   | None -> ()
 
 let rec apply_chain_actions ~sw ~env ~actions node =
-  Eio.Fiber.List.iter
+  Eio.Switch.run @@ fun switch ->
+  let fork name f =
+    Eio.Fiber.fork ~sw:switch @@ fun _ ->
+    try f ()
+    with exn ->
+      Logs.err (fun m ->
+          m "chain/action: action %s, exception %s" name
+            (Printexc.to_string exn))
+  in
+  List.iter
     (fun action ->
-      try apply_chain_action ~sw ~env ~action node
-      with exn ->
-        Logs.err (fun m ->
-            m "chain/action: action %a, exception %s" Chain.pp_action action
-              (Printexc.to_string exn)))
+      let open Chain in
+      let name = Chain.show_action action in
+      match action with
+      | Chain_timeout { until } ->
+          fork name @@ fun () -> start_timeout ~sw ~env ~until node
+      | Chain_broadcast { raw_header; raw_content } ->
+          fork name @@ fun () ->
+          Network_manager.broadcast ~raw_header ~raw_content node.network
+      | Chain_send_message { connection; raw_header; raw_content } ->
+          fork name @@ fun () ->
+          Network_manager.send ~connection ~raw_header ~raw_content node.network
+      | Chain_send_request { raw_header; raw_content } ->
+          fork name @@ fun () ->
+          Network_manager.request ~raw_header ~raw_content node.network
+      | Chain_fragment { fragment } ->
+          fork name @@ fun () -> apply_chain_fragment ~sw ~env ~fragment node
+      | Chain_save_block { block; network } -> (
+          fork name @@ fun () ->
+          match node.indexer with
+          | Some indexer ->
+              let (Block { level; _ }) = block in
+              Block_storage.save_block_and_votes ~level ~network indexer
+          | None -> ())
+      | Chain_send_blocks { connection; above } ->
+          fork name @@ fun () -> send_blocks ~connection ~above node
+      | Chain_commit
+          {
+            current_level;
+            payload_hash;
+            state_root_hash;
+            signatures;
+            validators;
+            withdrawal_handles_hash;
+          } -> (
+          fork name @@ fun () ->
+          match node.tezos_interop with
+          | Some tezos_interop ->
+              Tezos_interop.commit_state_hash ~block_level:current_level
+                ~block_payload_hash:payload_hash ~state_hash:state_root_hash
+                ~withdrawal_handles_hash ~signatures ~validators tezos_interop
+          | None -> ())
+      | Chain_sleep { duration } -> Deku_stdlib.Clock.sleep env duration)
     actions
 
-and apply_chain_action ~sw ~env ~action node =
-  let open Chain in
-  match action with
-  | Chain_timeout { until } -> start_timeout ~sw ~env ~until node
-  | Chain_broadcast { raw_header; raw_content } ->
-      Network_manager.broadcast ~raw_header ~raw_content node.network
-  | Chain_send_message { connection; raw_header; raw_content } ->
-      Network_manager.send ~connection ~raw_header ~raw_content node.network
-  | Chain_send_request { raw_header; raw_content } ->
-      Network_manager.request ~raw_header ~raw_content node.network
-  | Chain_fragment { fragment } -> apply_chain_fragment ~sw ~env ~fragment node
-  | Chain_save_block { block; network } -> (
-      match node.indexer with
-      | Some indexer ->
-          let (Block { level; _ }) = block in
-          Block_storage.save_block_and_votes ~level ~network indexer
-      | None -> ())
-  | Chain_send_blocks { connection; above } ->
-      Eio.Fiber.fork ~sw @@ fun () -> send_blocks ~connection ~above node
-  | Chain_commit
-      {
-        current_level;
-        payload_hash;
-        state_root_hash;
-        signatures;
-        validators;
-        withdrawal_handles_hash;
-      } -> (
-      match node.tezos_interop with
-      | Some tezos_interop ->
-          Eio.Fiber.fork ~sw @@ fun () ->
-          Tezos_interop.commit_state_hash ~block_level:current_level
-            ~block_payload_hash:payload_hash ~state_hash:state_root_hash
-            ~withdrawal_handles_hash ~signatures ~validators tezos_interop
-      | None -> ())
 (* FIXME: this is probably an indication of bad abstraction but being lazy right now *)
 (* failwith "Node was not initialized with Tezos interop enabled.") *)
 

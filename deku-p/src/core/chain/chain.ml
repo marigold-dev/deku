@@ -73,6 +73,7 @@ type action =
       validators : Key_hash.t list;
       withdrawal_handles_hash : Deku_ledger.Ledger.Withdrawal_handle.hash;
     }
+  | Chain_sleep of { duration : float }
 [@@deriving show]
 
 let make ~validators ~vm_state =
@@ -117,8 +118,6 @@ let minimum_block_latency =
   | Some x -> Option.value ~default:0.0 (Float.of_string_opt x)
   | None -> 0.0
 
-let last_sleep : float ref = ref @@ Unix.gettimeofday ()
-
 (* after gossip *)
 let apply_consensus_action chain consensus_action =
   let open Consensus in
@@ -136,14 +135,11 @@ let apply_consensus_action chain consensus_action =
       let fragment =
         Fragment_produce { producer; above; withdrawal_handles_hash }
       in
-      (match minimum_block_latency with
-      | 0. -> ()
-      | minimum_block_latency ->
-          let now = Unix.gettimeofday () in
-          let sleep = minimum_block_latency -. (now -. !last_sleep) in
-          if sleep > 0.0 then Unix.sleepf sleep;
-          last_sleep := Unix.gettimeofday ());
-      (chain, [ Chain_fragment { fragment } ])
+      ( chain,
+        [
+          Chain_sleep { duration = minimum_block_latency };
+          Chain_fragment { fragment };
+        ] )
   | Consensus_vote { level; vote } ->
       let content = Message.Content.vote ~level ~vote in
       let fragment = Gossip.broadcast_message ~content in
@@ -532,6 +528,7 @@ let test () =
             | Chain_commit _ ->
                 Printf.eprintf "FIXME: commit not implemented in Chain.test\n%!";
                 (chain, [])
+            | Chain_sleep _ -> (chain, [])
           in
           (chain, actions @ additional_actions))
         (chain, []) actions
