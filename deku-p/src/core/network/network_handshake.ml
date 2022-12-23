@@ -5,7 +5,7 @@ module Challenge = struct
   type challenge = Challenge of { hash : BLAKE2b.t }
   type t = challenge
 
-  include BLAKE2b.With_b58_and_encoding (struct
+  include BLAKE2b.With_b58_and_encoding_and_yojson (struct
     let name = "Network_handshake.Challenge"
     let prefix = Deku_repr.Prefix.deku_handshake_challenge_hash
   end)

@@ -1,5 +1,5 @@
 (library
  (name deku_stdlib)
- (libraries deku_repr zarith uri base eio eio_main)
+ (libraries deku_repr zarith uri base eio eio_main yojson)
  (preprocess
-  (pps ppx_let_binding ppx_deriving.show ppx_deriving.eq ppx_deriving.ord)))
+  (pps ppx_let_binding ppx_deriving.show ppx_deriving.eq ppx_deriving.ord ppx_yojson_conv)))

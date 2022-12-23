@@ -1,7 +1,7 @@
 open Deku_crypto
 open BLAKE2b
 
-type t [@@deriving ord, eq, show]
+type t [@@deriving ord, eq, show, yojson]
 
 val of_user_operation_hash : BLAKE2b_256.t -> t
 val to_b58 : t -> string

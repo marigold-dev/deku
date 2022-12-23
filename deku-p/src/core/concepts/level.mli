@@ -1,7 +1,7 @@
 open Deku_stdlib
 
 type level
-type t = level [@@deriving show, eq, ord]
+type t = level [@@deriving show, eq, ord, yojson]
 
 val zero : level
 val next : level -> level

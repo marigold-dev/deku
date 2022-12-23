@@ -37,8 +37,8 @@ module Initial : sig
         operation : operation;
       }
 
-  type t = initial_operation [@@deriving show]
-  type hash_repr = Nonce.t * Level.t * operation
+  type t = initial_operation [@@deriving show, yojson]
+  type hash_repr = Nonce.t * Level.t * operation [@@deriving yojson]
 
   val hash_encoding : (Nonce.t * Level.t * operation) Data_encoding.t
   val encoding : t Data_encoding.t

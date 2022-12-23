@@ -13,7 +13,7 @@ module Secret = struct
 
   let compare a b = Cstruct.compare (priv_to_cstruct a) (priv_to_cstruct b)
 
-  include With_b58_and_encoding (struct
+  include With_b58_and_encoding_and_yojson (struct
     type t = secret
 
     let name = "P256.Secret_key"
@@ -52,7 +52,7 @@ module Key = struct
   let compare a b = Cstruct.compare (pub_to_cstruct a) (pub_to_cstruct b)
   let to_raw key = Cstruct.to_string (pub_to_cstruct ~compress:true key)
 
-  include With_b58_and_encoding (struct
+  include With_b58_and_encoding_and_yojson (struct
     type t = key
 
     let name = "P256.Public_key"
@@ -84,7 +84,7 @@ module Key_hash = struct
   let compare = compare
   let of_key key = hash (Key.to_raw key)
 
-  include With_b58_and_encoding (struct
+  include With_b58_and_encoding_and_yojson (struct
     let name = "P256.Public_key_hash"
     let prefix = Prefix.p256_public_key_hash
   end)
@@ -99,7 +99,7 @@ module Signature = struct
   let size = 64
   let zero = String.make size '\x00'
 
-  include With_b58_and_encoding (struct
+  include With_b58_and_encoding_and_yojson (struct
     type t = signature
 
     let name = "P256.Signature"

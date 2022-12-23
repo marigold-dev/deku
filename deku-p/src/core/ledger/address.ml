@@ -5,7 +5,7 @@ type address =
   | Implicit of Key_hash.t
   | Originated of { address : Contract_address.t; entrypoint : string option }
 
-and t = address [@@deriving eq, ord, show]
+and t = address [@@deriving eq, ord, show, yojson]
 
 let of_key_hash key_hash = Implicit key_hash
 let to_key_hash = function Implicit x -> Some x | Originated _ -> None

@@ -8,7 +8,7 @@ and t = message_hash [@@deriving eq, ord]
 let to_blake2b message_hash = message_hash
 let of_blake2b message_hash = message_hash
 
-include With_b58_and_encoding (struct
+include With_b58_and_encoding_and_yojson (struct
   let name = "Deku_gossip.Message_hash"
   let prefix = Prefix.deku_message_hash
 end)

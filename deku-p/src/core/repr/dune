@@ -1,5 +1,5 @@
 (library
  (name deku_repr)
- (libraries zarith mirage-crypto data-encoding)
+ (libraries zarith mirage-crypto data-encoding yojson)
  (preprocess
-  (pps ppx_deriving.eq ppx_deriving.ord)))
+  (pps ppx_deriving.eq ppx_deriving.ord ppx_yojson_conv)))

@@ -5,7 +5,7 @@ type t = {
   operation : Operation.t;
   tickets : (Ticket_id.t * Amount.t) list; [@opaque]
 }
-[@@deriving show]
+[@@deriving show, yojson]
 
 let encoding =
   let open Data_encoding in

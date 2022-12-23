@@ -10,11 +10,13 @@
   deku_tezos
   deku_ledger
   deku_metrics
-  ocaml_wasm_vm)
+  ocaml_wasm_vm
+  yojson)
  (preprocess
   (pps
    ppx_let_binding
    ppx_deriving.eq
    ppx_deriving.show
    ppx_deriving.ord
-   ppx_expect)))
+   ppx_expect
+   ppx_yojson_conv)))

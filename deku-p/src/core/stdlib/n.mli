@@ -1,5 +1,5 @@
 type nat
-type t = nat [@@deriving show, eq, ord]
+type t = nat [@@deriving show, eq, ord, yojson]
 
 exception Not_a_natural
 

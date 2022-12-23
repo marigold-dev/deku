@@ -9,7 +9,8 @@
   mirage-crypto-rng.unix
   digestif
   mirage-crypto-ec
-  secp256k1-internal)
+  secp256k1-internal
+  yojson)
  (modules_without_implementation alg_intf hash_intf)
  (preprocess
-  (pps ppx_deriving.show ppx_deriving.eq ppx_deriving.ord)))
+  (pps ppx_deriving.show ppx_deriving.eq ppx_deriving.ord ppx_yojson_conv)))

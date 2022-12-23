@@ -1,7 +1,7 @@
 open Z_ext
 
 type nat = Z_ext.t
-and t = nat [@@deriving eq, ord]
+and t = nat [@@deriving eq, ord, yojson]
 
 let show n = Format.asprintf "%a" pp_print n
 let pp = pp_print

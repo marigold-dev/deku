@@ -1,0 +1,6 @@
+(executable
+ (public_name benchmarking)
+ (name benchmarking)
+ (libraries deku_concepts deku_protocol fmt.tty core core_bench core_unix.command_unix yojson)
+ (preprocess
+  (pps ppx_yojson_conv)))

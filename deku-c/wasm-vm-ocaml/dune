@@ -8,6 +8,7 @@
   deku_concepts
   digestif
   data-encoding
-  cstruct)
+  cstruct
+  yojson)
  (preprocess
-  (pps ppx_deriving.ord ppx_deriving.eq ppx_deriving.show ppx_let_binding)))
+  (pps ppx_deriving.ord ppx_deriving.eq ppx_deriving.show ppx_let_binding ppx_yojson_conv)))
