@@ -96,6 +96,10 @@ let transfer ~sender ~receiver ~ticket_id ~amount t =
   Ok t
 
 let withdraw ~sender ~ticket_id ~amount t =
+  let%ok () =
+    if Amount.equal Amount.zero amount then Error `Withdraw_zero_ticket
+    else Ok ()
+  in
   let%ok map =
     Address_map.find_opt sender t |> Option.to_result ~none:`Insufficient_funds
   in
