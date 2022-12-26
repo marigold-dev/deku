@@ -1,7 +1,7 @@
 module type S = sig
   module Secret : sig
     type secret
-    type t = secret [@@deriving eq, ord, yojson]
+    type t = secret [@@deriving eq, ord]
 
     (* repr *)
     val of_b58 : string -> secret option
@@ -18,7 +18,7 @@ module type S = sig
 
   module Key : sig
     type key
-    type t = key [@@deriving eq, ord, yojson]
+    type t = key [@@deriving eq, ord]
 
     (* repr *)
     val of_b58 : string -> key option
@@ -35,7 +35,7 @@ module type S = sig
 
   module Key_hash : sig
     type key_hash
-    type t = key_hash [@@deriving eq, ord, yojson]
+    type t = key_hash [@@deriving eq, ord]
 
     (* repr *)
     val of_b58 : string -> key_hash option
@@ -48,7 +48,7 @@ module type S = sig
 
   module Signature : sig
     type signature
-    type t = signature [@@deriving eq, ord, yojson]
+    type t = signature [@@deriving eq, ord]
 
     (* repr *)
     val of_b58 : string -> signature option

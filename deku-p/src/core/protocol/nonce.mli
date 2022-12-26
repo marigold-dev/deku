@@ -1,7 +1,7 @@
 open Deku_stdlib
 
 type nonce
-type t = nonce [@@deriving eq, ord, show, yojson]
+type t = nonce [@@deriving eq, ord, show]
 
 (* repr *)
 val of_n : N.t -> nonce

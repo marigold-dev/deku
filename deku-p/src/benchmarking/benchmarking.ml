@@ -5,7 +5,7 @@ open Deku_crypto
 
 module Get_level = struct
   type path = unit
-  type response = { level : Level.t } [@@deriving yojson]
+  type response = { level : Level.t }
 
   let response_encoding =
     let open Data_encoding in
@@ -16,7 +16,7 @@ module Get_level = struct
 end
 
 module Encode_operation = struct
-  type body = Operation.Initial.hash_repr [@@deriving yojson]
+  type body = Operation.Initial.hash_repr
 
   let body_encoding = Operation.Initial.hash_encoding
 end
@@ -27,7 +27,6 @@ module Operations = struct
     signature : Signature.t;
     initial : Operation.Initial.t;
   }
-  [@@deriving yojson]
 
   let obj_encoding =
     let open Data_encoding in
@@ -51,17 +50,13 @@ module Operations = struct
 end
 
 let () =
+  let json_level_encoding = {| { "level" : 548430 } |} in
   let level : Get_level.response =
-    {
-      level =
-        Level.next @@ Level.next @@ Level.next @@ Level.next @@ Level.next
-        @@ Level.next @@ Level.next @@ Level.next @@ Level.next @@ Level.next
-        @@ Level.next @@ Level.next @@ Level.next @@ Level.next @@ Level.next
-        @@ Level.next @@ Level.next @@ Level.next Level.zero;
-    }
+    Data_encoding.Json.from_string json_level_encoding
+    |> Result.get_ok
+    |> Data_encoding.Json.destruct Get_level.response_encoding
   in
-  let json_level_yojson = {| { "level" : "18" } |} in
-  let json_level_encoding = {| { "level" : 18 } |} in
+  (* let json_level_yojson = {| { "level" : "548430" } |} in *)
   let json_encode_operation_encoding =
     {| {"nonce":"495761182","level":289099,"operation":{"type":"vm_transaction","sender":"tz1KufAGaM2EM49bikm5VQfLNWT9rWsAWEHy","operation":{"operation":{"address":"DK1DpUMB44Ex3WXEUXPjp9DDkjiQ5cyvVwoU","argument":["Union",["Right",["Union",["Left",["Pair",[["Pair",[["Int","136331"],["String","tz1KufAGaM2EM49bikm5VQfLNWT9rWsAWEHy"]]],["Union",["Left",["Union",["Left",["Union",["Right",["Unit"]]]]]]]]]]]]]},"tickets":[]}}}|}
   in
@@ -70,9 +65,9 @@ let () =
     |> Result.get_ok
     |> Data_encoding.Json.destruct Encode_operation.body_encoding
   in
-  let json_encode_operation_yojson =
-    Yojson.Safe.to_string (Encode_operation.yojson_of_body encode_operation)
-  in
+  (* let json_encode_operation_yojson =
+       Yojson.Safe.to_string (Encode_operation.yojson_of_body encode_operation)
+     in *)
   let json_operation_encoding =
     {| {"key":"edpkuUADDrRjMHLq9ehcWJev6Gd9YLTX38vgXSizzghJ9NS5ceNg8v","signature":"edsigu48RihHyRN7XRm8YjdLzCcF8rMRwF6WWTzGcU3jQYguQhCCv1thksnMSrbEwEhHnRUovfKoSYLaacT6ek3iJLuBgfaARL2","initial":{"nonce":"735632897","level":291078,"operation":{"type":"vm_transaction","sender":"tz1KufAGaM2EM49bikm5VQfLNWT9rWsAWEHy","operation":{"operation":{"address":"DK1DpUMB44Ex3WXEUXPjp9DDkjiQ5cyvVwoU","argument":["Union",["Right",["Union",["Left",["Pair",[["Pair",[["Int","136331"],["String","tz1KufAGaM2EM49bikm5VQfLNWT9rWsAWEHy"]]],["Union",["Left",["Union",["Left",["Union",["Right",["Unit"]]]]]]]]]]]]]},"tickets":[]}}}}|}
   in
@@ -85,9 +80,9 @@ let () =
     Data_encoding.Binary.to_string_opt Operations.obj_encoding operation
     |> Option.get
   in
-  let json_operation_yojson =
-    Operations.yojson_of_t operation |> Yojson.Safe.to_string
-  in
+  (* let json_operation_yojson =
+       Operations.yojson_of_t operation |> Yojson.Safe.to_string
+     in *)
   let json_operation_tup =
     Data_encoding.Json.to_string
       (Data_encoding.Json.construct Operations.tup_encoding operation)
@@ -104,8 +99,8 @@ let () =
       [
         Bench.Test.create_group ~name:"level to JSON"
           [
-            Bench.Test.create ~name:"yojson" (fun () ->
-                ignore (Get_level.yojson_of_response level));
+            (* Bench.Test.create ~name:"yojson" (fun () ->
+                ignore (Get_level.yojson_of_response level)); *)
             Bench.Test.create ~name:"encoding" (fun () ->
                 ignore
                   (Data_encoding.Json.construct Get_level.response_encoding
@@ -113,8 +108,8 @@ let () =
           ];
         Bench.Test.create_group ~name:"Encode_operation to JSON"
           [
-            Bench.Test.create ~name:"yojson" (fun () ->
-                ignore (Encode_operation.yojson_of_body encode_operation));
+            (* Bench.Test.create ~name:"yojson" (fun () ->
+                ignore (Encode_operation.yojson_of_body encode_operation)); *)
             Bench.Test.create ~name:"encoding" (fun () ->
                 ignore
                   (Data_encoding.Json.construct Encode_operation.body_encoding
@@ -122,8 +117,8 @@ let () =
           ];
         Bench.Test.create_group ~name:"Operations to JSON"
           [
-            Bench.Test.create ~name:"yojson" (fun () ->
-                ignore (Operations.yojson_of_t operation));
+            (* Bench.Test.create ~name:"yojson" (fun () ->
+                ignore (Operations.yojson_of_t operation)); *)
             Bench.Test.create ~name:"encoding" (fun () ->
                 ignore
                   (Data_encoding.Json.construct Operations.obj_encoding
@@ -131,10 +126,10 @@ let () =
           ];
         Bench.Test.create_group ~name:"level from JSON"
           [
-            Bench.Test.create ~name:"yojson" (fun () ->
+            (* Bench.Test.create ~name:"yojson" (fun () ->
                 ignore
                   (Get_level.response_of_yojson
-                  @@ Yojson.Safe.from_string json_level_yojson));
+                  @@ Yojson.Safe.from_string json_level_yojson)); *)
             Bench.Test.create ~name:"encoding" (fun () ->
                 ignore
                   (Data_encoding.Json.from_string json_level_encoding
@@ -143,10 +138,10 @@ let () =
           ];
         Bench.Test.create_group ~name:"Encode_operation from JSON"
           [
-            Bench.Test.create ~name:"yojson" (fun () ->
+            (* Bench.Test.create ~name:"yojson" (fun () ->
                 ignore
                   (Encode_operation.body_of_yojson
-                  @@ Yojson.Safe.from_string json_encode_operation_yojson));
+                  @@ Yojson.Safe.from_string json_encode_operation_yojson)); *)
             Bench.Test.create ~name:"encoding" (fun () ->
                 ignore
                   (Data_encoding.Json.from_string json_encode_operation_encoding
@@ -156,10 +151,10 @@ let () =
           ];
         Bench.Test.create_group ~name:"Operations from JSON"
           [
-            Bench.Test.create ~name:"yojson" (fun () ->
+            (* Bench.Test.create ~name:"yojson" (fun () ->
                 ignore
                   (Operations.t_of_yojson
-                  @@ Yojson.Safe.from_string json_operation_yojson));
+                  @@ Yojson.Safe.from_string json_operation_yojson)); *)
             Bench.Test.create ~name:"encoding" (fun () ->
                 ignore
                   (Data_encoding.Json.from_string json_operation_encoding
@@ -168,10 +163,10 @@ let () =
           ];
         Bench.Test.create_group ~name:"Operations from JSON + to_SIGNED"
           [
-            Bench.Test.create ~name:"yojson" (fun () ->
+            (* Bench.Test.create ~name:"yojson" (fun () ->
                 ignore
                   (Operations.to_signed @@ Operations.t_of_yojson
-                  @@ Yojson.Safe.from_string json_operation_yojson));
+                  @@ Yojson.Safe.from_string json_operation_yojson)); *)
             Bench.Test.create ~name:"encoding" (fun () ->
                 ignore
                   (Data_encoding.Json.from_string json_operation_encoding

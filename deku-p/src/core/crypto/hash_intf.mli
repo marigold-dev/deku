@@ -35,15 +35,13 @@ module type S = sig
     val verify : key -> signature -> hash -> bool
   end
 
-  module With_b58_and_encoding_and_yojson (_ : sig
+  module With_b58_and_encoding (_ : sig
     val name : string
     val prefix : Prefix.t
   end) : sig
     val of_b58 : string -> hash option
     val to_b58 : hash -> string
     val encoding : hash Data_encoding.t
-    val t_of_yojson : [> `String of string ] -> hash
-    val yojson_of_t : hash -> [> `String of string ]
 
     module Set : Set.S with type elt = hash
     module Map : Map.S with type key = hash

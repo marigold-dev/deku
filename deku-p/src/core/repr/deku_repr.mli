@@ -39,21 +39,7 @@ end) : sig
   val to_b58 : P.t -> string
 end
 
-(* yojson exceptions *)
-exception Not_a_string
-exception Not_a_b58
-
-module With_yojson_of_b58 (P : sig
-  type t
-
-  val of_b58 : string -> t option
-  val to_b58 : t -> string
-end) : sig
-  val t_of_yojson : [> `String of string ] -> P.t
-  val yojson_of_t : P.t -> [> `String of string ]
-end
-
-module With_b58_and_encoding_and_yojson (P : sig
+module With_b58_and_encoding (P : sig
   type t
 
   val name : string
@@ -65,8 +51,6 @@ end) : sig
   val encoding : P.t Data_encoding.t
   val of_b58 : string -> P.t option
   val to_b58 : P.t -> string
-  val t_of_yojson : [> `String of string ] -> P.t
-  val yojson_of_t : P.t -> [> `String of string ]
 end
 
 val decode_variant : (string -> 'a option) list -> string -> 'a option

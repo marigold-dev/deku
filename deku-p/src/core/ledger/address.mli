@@ -2,7 +2,7 @@ open Deku_stdlib
 open Deku_crypto
 
 type address
-type t = address [@@deriving eq, ord, show, yojson]
+type t = address [@@deriving eq, ord, show]
 
 (* repr *)
 val of_key_hash : Key_hash.t -> address

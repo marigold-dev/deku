@@ -2,7 +2,7 @@ open Deku_stdlib
 open Deku_crypto
 
 type operation_hash
-type t = operation_hash [@@deriving eq, ord, show, yojson]
+type t = operation_hash [@@deriving eq, ord, show]
 
 (* repr *)
 val to_blake2b : operation_hash -> BLAKE2b.t

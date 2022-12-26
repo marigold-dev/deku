@@ -25,7 +25,7 @@ type operation =
     }
   | Operation_noop of { sender : Address.t }
 
-and t = operation [@@deriving show, yojson]
+and t = operation [@@deriving show]
 
 let encoding =
   (* TODO: bench Data_encoding.union vs Data_encoding.matching*)
@@ -154,9 +154,9 @@ module Initial = struct
         operation : operation;
       }
 
-  and t = initial_operation [@@deriving show, yojson]
+  and t = initial_operation [@@deriving show]
 
-  type hash_repr = Nonce.t * Level.t * operation [@@deriving yojson]
+  type hash_repr = Nonce.t * Level.t * operation
 
   let hash_encoding : hash_repr Data_encoding.t =
     let open Data_encoding in

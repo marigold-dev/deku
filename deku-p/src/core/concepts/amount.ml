@@ -2,7 +2,7 @@ open Deku_stdlib
 open N
 
 type amount = N.t
-and t = amount [@@deriving show, eq, ord, yojson]
+and t = amount [@@deriving show, eq, ord]
 
 let zero = zero
 let one = one

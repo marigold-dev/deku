@@ -6,7 +6,7 @@ type key_hash =
   | Secp256k1 of Secp256k1.Key_hash.t
   | P256 of P256.Key_hash.t
 
-type t = key_hash [@@deriving eq, ord, show, yojson]
+type t = key_hash [@@deriving eq, ord, show]
 
 (* repr *)
 val of_b58 : string -> key_hash option

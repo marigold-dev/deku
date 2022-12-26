@@ -15,7 +15,7 @@ module Withdrawal_handle = struct
 
     type t = BLAKE2b.t [@@deriving show]
 
-    include With_b58_and_encoding_and_yojson (struct
+    include With_b58_and_encoding (struct
       let name = "Ledger.Withdrawal_handle_hash"
       let prefix = Deku_repr.Prefix.deku_withdrawal_hash
     end)
