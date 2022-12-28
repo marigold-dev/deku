@@ -24,7 +24,7 @@
   "scripts": {
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
-    "deploy": "surge --domain number-go-up.surge.sh build",
+    "deploy": "surge --domain deku-plays-pokemon.surge.sh build",
     "test": "react-app-rewired test",
     "eject": "react-app-rewired eject"
   },

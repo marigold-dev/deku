@@ -2,7 +2,7 @@ import { DAppClient, NetworkType } from "@airgap/beacon-sdk";
 import { DekuPClient } from "@marigold-dev/deku";
 import { fromBeaconSigner } from "@marigold-dev/deku";
 import { useState } from "react";
-const apiURL = "http://localhost:8080";
+const apiURL = "http://dpp.hines.house";
 
 const connectBeaconWallet = async () => {
   const dAppClient = new DAppClient({
@@ -72,7 +72,7 @@ export const App = () => {
       <h2>Welcome to Deku Plays Pokemon!</h2>
       <h2>Instructions</h2>
       The primary way to play the game is in the{" "}
-      <a href="https://twitch.tv/d4hines">twitch stream</a>. You can input votes
+      <a href="https://twitch.tv/deku_plays_pokemon">twitch stream</a>. You can input votes
       in the chat, but first you need to connect your Tezos wallet to your
       Twitch account.
       <h4>Step 1: Connecting your Wallet to Twitch</h4>
@@ -87,7 +87,7 @@ export const App = () => {
       <br />
       {inputEnabled ? input_button() : connectButton()}
       <h4>Step 2: Connect your Twitch account to your Wallet</h4>
-      Go to the <a href="https://twitch.tv/d4hines">twitch stream</a> and attest
+      Go to the <a href="https://twitch.tv/deku_plays_pokemon">twitch stream</a> and attest
       your TZ1 address by entering this command into the chat:
       <br />
       <code>!attest {tz1_address}</code>
