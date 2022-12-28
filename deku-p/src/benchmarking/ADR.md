@@ -50,10 +50,10 @@ Operations from binary/encoding: Total time taken 10.070946216583252s (656 sampl
 
 The main goal, is to have some data around `Yojson` VS `Data_encoding`, and also between `Data_encoding.Json` and `Data_encoding.Binary`.
 
-We haven't tested all the record types we defined in Deku, but only the record types, managed by the HTTP API, and which will be called a lot:
+We haven't tested all the record types we defined in Deku, but only the record types managed by the HTTP API, and which will be called a lot:
 
 - `/level`: a basic JSON like `{"level":"30"}` but it is called by the toolkit each time we want to submit an operation.
-- `/encode-operation`: basically, adding the `0x80` prefix for Deku operations, to your submitted operation translated into hexadecimal.
+- `/encode-operation`: basically, adding the `0x80` prefix for Deku operations, to the operation you want to submit, then returns its hexadecimal value.
 - `/operations`: finally submit the operation to Deku
 
 ## /level
@@ -96,10 +96,10 @@ Hence, we create two different constants, which are representative to what we ar
 `json_level_encoding` is a quoted string representing the `Get_level.response` encoded into a JSON. We "cheat" and decode it to a `Get_level.reponse` using `Data_encoding`, our goal is not to test that the encoding is correct, but how fast it is.
 
 ```OCaml
-  let json_level_yojson = {| { "level" : "18" } |} in
+  let json_level_yojson = {| { "level" : "548430" } |} in
 ```
 
-Finally, we defined the exact same `Get_level.response` but from a `yojson` version (TODO: this is only because the current branch doesn't contain a rc-6 commit, which is fixing this breaking change on the HTTP API, once this branch is rebased, remove the previous line).
+Finally, we defined the exact same `Get_level.response` but from a `yojson` version (TODO: this is only because the current branch doesn't contain a rc-6 commit, which is fixing this breaking change on the HTTP API, once this branch is rebased, remove the previous constant).
 
 ### Creating the tests
 
@@ -180,7 +180,7 @@ But, in the same time, we can encode `2246186` at best using `Data_encoding`.
 
 Which leads to an average `time per run` lower by around 25% in favor of `Data_encoding`: 60.72ns for Yojson VS 44.62ns for Data_encoding.
 
-`mWd/Run` is the amount of words allocated on the minor heap, while `mGC/Run` is the number of `minor collections`.
+`mWd/Run` is the amount of words allocated on the minor heap, while `mGC/Run` is the number of minor collections.
 
 On our example, we see that `Data_encoding` is 25% faster than `Yojson`, but in the mean, time, it is using 3.5 times more words in the minor heap, and so, needing 3.8 times more minor collections.
 
@@ -223,7 +223,7 @@ The corresponding `encoding` is already defined in `Operation.Initial`, so we ar
 
 ### Creating the tests
 
-Once again, because the encoding of `level` is different between `Yojson` and `Data_encoding` (TODO: remove), we need to define two different sample:
+Once again, because the encoding of `level` is different between `Yojson` and `Data_encoding` (TODO: remove, due to previous missing commit of rc-6), we need to define two different samples:
 
 ```OCaml
 let json_encode_operation_encoding =
@@ -267,57 +267,56 @@ Bench.Test.create_group ~name:"Operations to JSON"
 ```bash
 Encode_operation to JSON/yojson: Total time taken 10.008656024932861s (528 samples, max runs 4061).
 Encode_operation to JSON/encoding: Total time taken 10.010571002960205s (648 samples, max runs 13285).
-┌───────────────────────────────────────────┬────────────────┬───────────────┬────────────┬────────────┬─────────────┬──────────┐
-│ Name                                      │       Time/Run │       mWd/Run │   mjWd/Run │   Prom/Run │     mGC/Run │ mjGC/Run │
-├───────────────────────────────────────────┼────────────────┼───────────────┼────────────┼────────────┼─────────────┼──────────┤
-│ Encode_operation to JSON/yojson           │    23_642.19ns │    15_284.51w │    150.76w │    150.76w │    58.93e-3 │  0.62e-3 │
-│ Encode_operation to JSON/encoding         │     7_413.65ns │     2_869.19w │     44.74w │     44.74w │    11.10e-3 │  0.15e-3 │
-└───────────────────────────────────────────┴────────────────┴───────────────┴────────────┴────────────┴─────────────┴──────────┘
-
+┌─────────────────────────────────────┬──────────────┬─────────────┬───────────┬───────────┬──────────┬──────────┐
+│ Name                                │     Time/Run │     mWd/Run │  mjWd/Run │  Prom/Run │  mGC/Run │ mjGC/Run │
+├─────────────────────────────────────┼──────────────┼─────────────┼───────────┼───────────┼──────────┼──────────┤
+│ Encode_operation to JSON/yojson     │  23_642.19ns │  15_284.51w │   150.76w │   150.76w │ 58.93e-3 │  0.62e-3 │
+│ Encode_operation to JSON/encoding   │   7_413.65ns │   2_869.19w │    44.74w │    44.74w │ 11.10e-3 │  0.15e-3 │
+└─────────────────────────────────────┴──────────────┴─────────────┴───────────┴───────────┴──────────┴──────────┘
 ```
 
 Some new colums are displayed, because these two tests make significant changes on these values, which was not the case for the `Get_level.response`.
 
-As already seen in the previous tests, `Data_encoding` is around 3.2 times faster to encode such a type, but unlike `Get_level.response`, it is also allocating less `minor words` into the heap and ~5.3 times less and needing ~5.3 times less minor collections.
+As already seen in the previous tests, `Data_encoding` is around 3.2 times faster to encode such a type, but unlike `Get_level.response`, it is also allocating less `minor words` into the heap around ~5.3 times less and needing around ~5.3 less times minor collections.
 
 The new colums are:
 
-- `mjWd/Run`: amount of words allocated in the major heap
-- `Prom/Run`:
-- `mjGC/Run`: amount of major collections
+- `mjWd/Run`: amount of words allocated in the major heap per run
+- `Prom/Run`: amount of words promoted from minor to major heap per run
+- `mjGC/Run`: amount of major collections per run
 
-For all these columns, the figures are also in favor of `Data_encoding.
+For all these columns, the figures are also in favor of `Data_encoding`.
 
 ### Results of `from JSON`
 
 ```bash
 Encode_operation from JSON/yojson: Total time taken 10.066035985946655s (126 samples, max runs 126).
 Encode_operation from JSON/encoding: Total time taken 10.131572008132935s (127 samples, max runs 127).
-┌───────────────────────────────────────────┬────────────────┬───────────────┬────────────┬────────────┬─────────────┬──────────┐
-│ Name                                      │       Time/Run │       mWd/Run │   mjWd/Run │   Prom/Run │     mGC/Run │ mjGC/Run │
-├───────────────────────────────────────────┼────────────────┼───────────────┼────────────┼────────────┼─────────────┼──────────┤
-│ Encode_operation from JSON/yojson         │ 1_275_840.60ns │ 1_548_138.67w │ 14_092.03w │ 14_092.03w │ 5_937.15e-3 │ 31.47e-3 │
-│ Encode_operation from JSON/encoding       │ 1_266_042.20ns │ 1_547_947.82w │ 13_986.71w │ 13_986.71w │ 5_934.20e-3 │ 29.27e-3 │
-└───────────────────────────────────────────┴────────────────┴───────────────┴────────────┴────────────┴─────────────┴──────────┘
+┌──────────────────────────────────────┬────────────────┬───────────────┬────────────┬────────────┬─────────────┬──────────┐
+│ Name                                 │       Time/Run │       mWd/Run │   mjWd/Run │   Prom/Run │     mGC/Run │ mjGC/Run │
+├──────────────────────────────────────┼────────────────┼───────────────┼────────────┼────────────┼─────────────┼──────────┤
+│ Encode_operation from JSON/yojson    │ 1_275_840.60ns │ 1_548_138.67w │ 14_092.03w │ 14_092.03w │ 5_937.15e-3 │ 31.47e-3 │
+│ Encode_operation from JSON/encoding  │ 1_266_042.20ns │ 1_547_947.82w │ 13_986.71w │ 13_986.71w │ 5_934.20e-3 │ 29.27e-3 │
+└──────────────────────────────────────┴────────────────┴───────────────┴────────────┴────────────┴─────────────┴──────────┘
 ```
 
-Unlike the previous figures, there is not significant "winner" in this match. `Data_encoding` is globally a bit better, but it is really closed.
+Unlike the previous figures, there is not significant "winner" in this match. `Data_encoding` is globally a bit better, but it is really tight.
 
 ### Conclusion
 
 Benchmarking this "complex" record type had lead to display new columns of `core_bench` result because of use of the major heap.
 
-**Looking for performance, `Data_encoding` is better than `Yojson`**
+**Globally, `Data_encoding` is better than `Yojson` for this more complex record type.**
 
 ## /operations
 
-This endpoint is used to submit an operation to Deku. Hence, it is called a lot, and since it is carrying a lot of data, it is interesting to benchmark its body.
+This endpoint is used to submit an operation to Deku. Hence, it is called a lot and since it is carrying a lot of data, it is interesting to benchmark its body.
 
 On this body, we also want to benchmark:
 
 - `obj` and `tup` from `Data_encoding`.
-- If the verification of the signature is taking a lot of time or of resources.
-- `Data_encoding.Json` VS `Data_encoding.Binary`
+- If the verification of the signature is taking a lot of time or of resources(`to_signed` function).
+- `Data_encoding.Json` VS `Data_encoding.Binary` to see if it could be interesting to submit bytes instead of plain JSON.
 
 ### Creating the types
 
@@ -356,8 +355,8 @@ Once again, we duplicate the body type from `operations` endpoint in `Handlers.m
 
 Then we define two different encoding functions:
 
-- `obj_encoding` using `obj` from `Data_encoding`
-- `tup_encoding` using `tup` from `Data_encoding`
+- `obj_encoding` using `obj`
+- `tup_encoding` using `tup`
 
 And finally, we define the exact same `to_signed` function, which verifiy the signature.
 
@@ -454,7 +453,7 @@ Operations to JSON/encoding: Total time taken 10.017661809921265s (538 samples, 
 └───────────────────────────────────────────┴────────────────┴───────────────┴────────────┴────────────┴─────────────┴──────────┘
 ```
 
-Once again, this is a victory for `Data_encoding`, wich is twice ~2 times faster, and also needing less words in minor and major heap, and so, less collections.
+Once again, it is a victory for `Data_encoding`, wich is around ~2 times faster, and also needing less words in minor and major heap, and so, less collections.
 
 ### Results of `from JSON`
 
@@ -479,23 +478,29 @@ Operations from binary/encoding: Total time taken 10.070946216583252s (656 sampl
 
 #### Yojson VS Data_encoding
 
-There is no significant winner, but `Data_encoding` is faster than `Yojson`
+**There is no significant winner, but `Data_encoding` is globally faster than `Yojson`.**
 
 #### With `to_signed` VS without `to_signed`
 
-Unlike previously, when calling `to_signed` function, `Yojson` is faster than `Data_encoding`. In the other hand, there is not a significant win by avoinding to call `to_signed`, 1_285_833.38ns with `Data_encoding` without `to_signed` VS 1_339_803.92ns with `Data_encoding` with `to_signed`
+Unlike previously, when calling `to_signed` function, `Yojson` is faster than `Data_encoding`. In the other hand, there is not a significant win by avoinding to call `to_signed` (around 4%), 1_285_833.38ns with `Data_encoding` without `to_signed` VS 1_339_803.92ns with `Data_encoding` with `to_signed`.
 
 #### `obj` VS `tup`
 
-1_285_833.38ns for `obj_encoding` and 1_286_578.90ns for `tup_encoding`, and other figures are also in favor of `obj`.
+1_285_833.38ns for `obj_encoding` and 1_286_578.90ns for `tup_encoding`, and other figures are also in favor of `obj`. But the difference is really small.
 
 #### `Data_encoding.Json` VS `Data_encoding.Binary`
 
-This is a clear win for `Data_encoding.Binary`, where the average `Time/Run` is 6_904.63ns, when it is 1_285_833.38ns for the `Data_encoding.Json`!
+This is a clear win for `Data_encoding.Binary`, where the average `Time/Run` is 6_904.63ns, when it is 1_285_833.38ns for the `Data_encoding.Json`, which means `Data_encoding.Binary` is around 186 times faster!
+
+### Other inputs
+
+- Unlike `Yojson`, `Data_encoding` allows us to use encode and decode to `Binary`. It is not only using JSON.
+
+- `Yojson` is part of the `OCaml-community` repository, while `Data_encoding` is maintained by Nomadic Labs.
 
 ### Conclusion
 
-Once again, `Data_encoding.Json` was globally better than `Yojson`.
+Once again, `Data_encoding.Json` was globally better than `Yojson`. Even if when calling `to_signed` function, `Yojson` is a bit better.
 
 Inside `Data_encoding`, there is no win to switch from `obj` to `tup.
 
@@ -503,4 +508,4 @@ As expected, decoding with calling the `to_signed` function needs more time and 
 
 **The most interesting figure, is about `Data_encoding.Json` VS `Data_encoding.Binary`. This is a clear and neat win for `Data_encoding.Binary`.**
 
-**If we want to improve performances on our HTTP API, we could/should switch the `/operations` endpoint to `Data_encoding.Binary`, however, this would imply to provide a decode/encode function to `Data_encoding.Binary` in our toolkit and without calling our API (because if we simply move it to an other endpoint, we simply move the results).**
+**If we want to improve performances on our HTTP API, we could/should switch the `/operations` endpoint to `Data_encoding.Binary`, however, this would imply to submit bytes with the deku-prefix.**
