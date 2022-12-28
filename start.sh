@@ -24,8 +24,8 @@ export DEKU_TEZOS_CONSENSUS_ADDRESS="KT1LHcxdRTgyFp1TdrgodVekLFkQwzFnTJcY"
 export DEKU_DUMMYT_TICKET="KT1Us9LZaG8F6cskmMg1hB2FPRwakWkegkPi"
 export DEKU_API_PORT=8080
 export DEKU_DEFAULT_BLOCK_SIZE=${DEKU_DEFAULT_BLOCK_SIZE:-10000}
-# export DEKU_LOG_VERBOSITY=${DEKU_LOG_VERBOSITY:-info}
-# export DEKU_API_LOG_VERBOSITY=${DEKU_API_LOG_VERBOSITY:-info}
+export DEKU_LOG_VERBOSITY=${DEKU_LOG_VERBOSITY:-info}
+export DEKU_API_LOG_VERBOSITY=${DEKU_API_LOG_VERBOSITY:-info}
 
 export DEKU_TWITCH_ORACLE_ADDRESS="tz1cTyRNTn3c83gKkrGXKtYWTeVfKaxxt8s5"
 # Starting only one API node
@@ -58,7 +58,7 @@ start_node() {
     --port "444$N" \
     --database-uri "sqlite3:./flextesa_chain/data/$N/database.db" \
     --data-folder "./flextesa_chain/data/$N" \
-    --color=always 2> >(awk "{ print \"$N: \" \$0 }" >&2) &
+    --color=always 2> >(awk "{ print \"$N: \" \$0 }" >&2) 2>&1 | tee "logs_$N" &
   sleep 0.1
 }
 
@@ -68,7 +68,7 @@ then
 
   ## The api needs its own vm
   _build/install/default/bin/deku-api \
-    --color=always 2> >(awk "{ print \"A: \" \$0 }" >&2) &
+    --color=always 2> >(awk "{ print \"A: \" \$0 }" >&2) 2>&1 | tee "logs_api" &
 
   for N in 0 1 2 3; do
     start_node $N

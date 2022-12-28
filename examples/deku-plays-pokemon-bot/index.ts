@@ -29,10 +29,10 @@ const dekuSigner = fromMemorySigner(new InMemorySigner(deku_secret));
   });
 
   const client = new tmi.Client({
-    channels: ["d4hines"],
+    channels: ["deku_plays_pokemon"],
     options: { debug: true, messagesLogLevel: "debug" },
     identity: {
-      username: "d4hines",
+      username: "deku_plays_pokemon",
       password: twitch_secret,
     },
   });
