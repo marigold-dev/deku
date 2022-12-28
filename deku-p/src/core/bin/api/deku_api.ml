@@ -155,7 +155,10 @@ let start_api ~env ~sw ~port ~state =
   in
   let config = Piaf.Server.Config.create port in
   let server = Piaf.Server.create ~config request_handler in
-  let _ = Piaf.Server.Command.start ~sw env server in
+  let _ =
+    Piaf.Server.Command.start ~bind_to_address:Eio.Net.Ipaddr.V4.any ~sw env
+      server
+  in
   ()
 
 type params = {
