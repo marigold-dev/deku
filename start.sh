@@ -27,11 +27,11 @@ export DEKU_DEFAULT_BLOCK_SIZE=${DEKU_DEFAULT_BLOCK_SIZE:-10000}
 # export DEKU_LOG_VERBOSITY=${DEKU_LOG_VERBOSITY:-info}
 # export DEKU_API_LOG_VERBOSITY=${DEKU_API_LOG_VERBOSITY:-info}
 
-export DEKU_TWITCH_ORACLE_ADDRESS="tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"
+export DEKU_TWITCH_ORACLE_ADDRESS="tz1cTyRNTn3c83gKkrGXKtYWTeVfKaxxt8s5"
 # Starting only one API node
 export DEKU_API_NODE_URI="127.0.0.1:4440"
 export DEKU_API_PORT=8080
-export DEKU_API_DATABASE_URI="sqlite3:/tmp/api_database.db"
+export DEKU_API_DATABASE_URI="sqlite3:./flextesa_chain/dpp_api_database.db"
 export DEKU_API_DOMAINS=8
 export DEKU_API_VM="./flextesa_chain/data/0/api_vm_pipe"
 export DEKU_API_DATA_FOLDER="./flextesa_chain/data/0/"

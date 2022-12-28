@@ -12,9 +12,15 @@ const twitch_secret = fs
   })
   .trim();
 
-const dekuSigner = fromMemorySigner(
-  new InMemorySigner("edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq")
-);
+const deku_secret = JSON.parse(
+  fs
+    .readFileSync("../../networks/betanets/dpp/twitch_oracle.json", {
+      encoding: "utf-8",
+    })
+    .trim()
+).priv_key;
+
+const dekuSigner = fromMemorySigner(new InMemorySigner(deku_secret));
 
 (async () => {
   const deku = new DekuPClient({

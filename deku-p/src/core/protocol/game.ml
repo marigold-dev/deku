@@ -210,7 +210,7 @@ let empty ?twitch_oracle_address () =
     match twitch_oracle_address with
     | Some address -> address
     | None ->
-        Key_hash.of_b58 "tz1gwS6Z98uXXXTKiMwn2Hccb7HUA2EMpCZk"
+        Key_hash.of_b58 "tz1cTyRNTn3c83gKkrGXKtYWTeVfKaxxt8s5"
         |> Option.get |> Address.of_key_hash
   in
   {
