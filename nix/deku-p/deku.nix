@@ -98,20 +98,6 @@ in
           ppx_expect
           ppx_deriving_encoding
         ]
-        ++ (with pkgs; [
-          # Rust gameboy deps
-          pkg-config
-          cargo
-          rustc
-          libiconv
-          xorg.libX11
-          xorg.libXcursor
-          xorg.libXrandr
-          xorg.libXi
-          xorg.libXext
-          libGLU
-          alsa-lib
-        ])
         # checkInputs are here because when cross compiling dune needs test dependencies
         # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
         ++ checkInputs;

@@ -20,6 +20,19 @@ in
       export RUST_SRC_PATH="${rust-src}"
     '';
     packages = [
+      # Rust gameboy deps
+      pkg-config
+      cargo
+      rustc
+      libiconv
+      xorg.libX11
+      xorg.libXcursor
+      xorg.libXrandr
+      xorg.libXi
+      xorg.libXext
+      libGLU
+      alsa-lib
+
       # Formatters
       alejandra
       ocamlformat
