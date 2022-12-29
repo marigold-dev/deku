@@ -85,7 +85,7 @@ const calculateCPS =
    return cursor + grandma + farm + mine + factory + bank + temple};
 
 const force_access = 
-  (key: address, cookieBakers: storage) => {return match(Map.
+  (key: address, cookieBakers: storage) => {return match(Big_map.
    find_opt(key, cookieBakers), {Some: cookieBaker => 
       cookieBaker,
     None: () => newCookieBaker})};

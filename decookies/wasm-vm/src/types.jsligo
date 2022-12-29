@@ -21,7 +21,7 @@ type cookieBaker =
     authorizedKeys: set<address>
   };
 
-type storage = map<address, cookieBaker>;
+type storage = big_map<address, cookieBaker>;
 
 type actions =
   | ["Cookie"]
@@ -60,4 +60,4 @@ type return_ =
   [list<operation>,
    storage];
 
-const init_storage: storage = Map.empty;
+const init_storage: storage = Big_map.empty;

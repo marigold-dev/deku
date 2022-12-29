@@ -7,17 +7,18 @@
                   (or (or (unit %farm) (unit %grandma)) (or (unit %mine) (unit %temple)))))
             (pair %transfer (pair (nat %amount) (address %onBehalfOf)) (address %recipient)))) ;
   storage
-    (map address
-         (pair (pair (pair (pair (pair (set %authorizedKeys address) (nat %bankCost)) (nat %banks) (nat %cookies))
-                           (pair (nat %cursorCost) (nat %cursors))
-                           (nat %eatenCookies)
-                           (nat %factories))
-                     (pair (pair (nat %factoryCost) (nat %farmCost)) (nat %farms) (nat %grandmaCost))
-                     (pair (nat %grandmas) (nat %mineCost))
-                     (nat %mines)
-                     (nat %passiveCPS))
-               (nat %templeCost)
-               (nat %temples))) ;
+    (big_map
+       address
+       (pair (pair (pair (pair (pair (set %authorizedKeys address) (nat %bankCost)) (nat %banks) (nat %cookies))
+                         (pair (nat %cursorCost) (nat %cursors))
+                         (nat %eatenCookies)
+                         (nat %factories))
+                   (pair (pair (nat %factoryCost) (nat %farmCost)) (nat %farms) (nat %grandmaCost))
+                   (pair (nat %grandmas) (nat %mineCost))
+                   (nat %mines)
+                   (nat %passiveCPS))
+             (nat %templeCost)
+             (nat %temples))) ;
   code { LAMBDA
            (pair nat nat)
            nat
@@ -387,14 +388,15 @@
          LAMBDA
            (pair (pair nat nat nat nat nat nat nat)
                  (pair address
-                       (map address
-                            (pair (pair (pair (pair (pair (set address) nat) nat nat) (pair nat nat) nat nat)
-                                        (pair (pair nat nat) nat nat)
-                                        (pair nat nat)
-                                        nat
-                                        nat)
-                                  nat
-                                  nat))))
+                       (big_map
+                          address
+                          (pair (pair (pair (pair (pair (set address) nat) nat nat) (pair nat nat) nat nat)
+                                      (pair (pair nat nat) nat nat)
+                                      (pair nat nat)
+                                      nat
+                                      nat)
+                                nat
+                                nat))))
            (pair (pair (pair (pair (pair (set address) nat) nat nat) (pair nat nat) nat nat)
                        (pair (pair nat nat) nat nat)
                        (pair nat nat)

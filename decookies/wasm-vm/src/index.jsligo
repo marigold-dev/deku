@@ -14,7 +14,7 @@ const main =
         if(isAuthorized) {let cookies = 
            cookieBaker.cookies + (m.amount as nat);
          let cookieBakers = 
-           Map.update(player as address, Some
+           Big_map.update(player as address, Some
              ({...cookieBaker, cookies: cookies}), cookieBakers);
          return cookieBakers} else {return cookieBakers}},
        Cursor: () => {let player = m.onBehalfOf;
@@ -41,7 +41,7 @@ const main =
              cursorCost: cursorCost,
              passiveCPS: passiveCPS};
           let cookieBakers = 
-            Map.update(player as address, Some
+            Big_map.update(player as address, Some
               (updatedCookieBaker), cookieBakers);
           return cookieBakers} else {return cookieBakers}} else {return cookieBakers}},
        Grandma: () => {let player = m.onBehalfOf;
@@ -68,7 +68,7 @@ const main =
              grandmaCost: grandmaCost,
              passiveCPS: passiveCPS};
           let cookieBakers = 
-            Map.update(player as address, Some
+            Big_map.update(player as address, Some
               (updatedCookieBaker), cookieBakers);
           return cookieBakers} else {return cookieBakers}} else {return cookieBakers}},
        Farm: () => {let player = m.onBehalfOf;
@@ -93,7 +93,7 @@ const main =
              farmCost: farmCost,
              passiveCPS: passiveCPS};
           let cookieBakers = 
-            Map.update(player as address, Some
+            Big_map.update(player as address, Some
               (updatedCookieBaker), cookieBakers);
           return cookieBakers} else {return cookieBakers}} else {return cookieBakers}},
        Mine: () => {let player = m.onBehalfOf;
@@ -118,7 +118,7 @@ const main =
              mineCost: mineCost,
              passiveCPS: passiveCPS};
           let cookieBakers = 
-            Map.update(player as address, Some
+            Big_map.update(player as address, Some
               (updatedCookieBaker), cookieBakers);
           return cookieBakers} else {return cookieBakers}} else {return cookieBakers}},
        Factory: () => {let player = m.onBehalfOf;
@@ -145,7 +145,7 @@ const main =
              factoryCost: factoryCost,
              passiveCPS: passiveCPS};
           let cookieBakers = 
-            Map.update(player as address, Some
+            Big_map.update(player as address, Some
               (updatedCookieBaker), cookieBakers);
           return cookieBakers} else {return cookieBakers}} else {return cookieBakers}},
        Bank: () => {let player = m.onBehalfOf;
@@ -170,7 +170,7 @@ const main =
              bankCost: bankCost,
              passiveCPS: passiveCPS};
           let cookieBakers = 
-            Map.update(player as address, Some
+            Big_map.update(player as address, Some
               (updatedCookieBaker), cookieBakers);
           return cookieBakers} else {return cookieBakers}} else {return cookieBakers}},
        Temple: () => {let player = m.onBehalfOf;
@@ -197,7 +197,7 @@ const main =
              templeCost: templeCost,
              passiveCPS: passiveCPS};
           let cookieBakers = 
-            Map.update(player as address, Some
+            Big_map.update(player as address, Some
               (updatedCookieBaker), cookieBakers);
           return cookieBakers} else {return cookieBakers}} else {return cookieBakers}}})},
      Eat: eat => {let player = eat.onBehalfOf;
@@ -213,7 +213,7 @@ const main =
         let cookies = 
           abs(cookieBaker.cookies - (eat.amount as nat));
         let cookieBakers = 
-          Map.update(player as address, Some
+          Big_map.update(player as address, Some
             ({...cookieBaker,
              cookies: cookies,
              eatenCookies: eatenCookies}), cookieBakers);
@@ -236,18 +236,19 @@ const main =
         let recipientCookies = 
           recipient.cookies + cookiesToTransfer;
         let cookieBakers = 
-          Map.update(player as address, Some
+          Big_map.update(player as address, Some
             ({...sender, cookies: abs(senderCookies)}), cookieBakers);
         let cookieBakers = 
-          Map.update(rawRecipient as address, Some
+          Big_map.update(rawRecipient as address, Some
             ({...recipient, cookies: recipientCookies}), cookieBakers);
         return cookieBakers} else {return cookieBakers}} else {return cookieBakers}},
-     Delegate: delegation => {let player = Tezos.get_sender();
+     Delegate: delegation => {let player = 
+        Tezos.get_sender();
       let cookieBaker: cookieBaker = 
         force_access(player as address, cookieBakers);
       let authorizedKeys = 
         Set.add(delegation.authorizedKey, cookieBaker.authorizedKeys);
       let cookieBakers = 
-        Map.update(player as address, Some
+        Big_map.update(player as address, Some
           ({...cookieBaker, authorizedKeys: authorizedKeys}), cookieBakers);
       return cookieBakers}})]};
