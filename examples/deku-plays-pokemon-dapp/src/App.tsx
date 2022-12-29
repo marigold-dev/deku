@@ -45,7 +45,7 @@ export const App = () => {
         connect wallet
       </button>
 
-      <h2>(only works with AirGap and Temple Mobile for now)</h2>
+      <p>(only works with AirGap and Temple Mobile for now)</p>
     </>
   );
   const input_button = () => (
@@ -72,32 +72,50 @@ export const App = () => {
       <h2>Welcome to Deku Plays Pokemon!</h2>
       <h2>Instructions</h2>
       The primary way to play the game is in the{" "}
-      <a target="_blank" href="https://twitch.tv/deku_plays_pokemon">twitch stream</a>. You can input votes
-      in the chat, but first you need to connect your Tezos wallet to your
-      Twitch account.
-      <h4>Step 1: Connecting your Wallet to Twitch</h4>
+      <a target="_blank" href="https://twitch.tv/deku_plays_pokemon">
+        twitch stream
+      </a>
+      . You can input votes in the chat, but first you need to connect your
+      Tezos wallet to your Twitch account.
+      <h4>Step 1: Get your Twitch handle</h4>
       <p>
-        Click on the button below to connect via Beacon (only works with AirGap,
-        Kukai, and Temple Mobile for now).
+        Make a <a href="https://twitch.tv">Twitch</a> account if you don't have
+        one already.
+      </p>
+      <p>
+        Get your Twitch handle by clicking your profile pick and copying it to
+        your clipboard.
+      </p>
+      <p>
+        <i>
+          You must enter your twitch handle exactly as it appears in the Twitch
+          chat, else it will not work!
+        </i>
+      </p>
+      <h4>Step 2: Connecting your Wallet to Twitch</h4>
+      <p>
+        Click on the button below to connect via Beacon.
       </p>
       <p>
         Once connected, submit a signed operation attesting your Twitch handle
-        by entering your handle into the input box and clicking "Submit".
+        by pasting your handle into the input box and clicking "Submit".
       </p>
-      <br />
       {inputEnabled ? input_button() : connectButton()}
-      <h4>Step 2: Connect your Twitch account to your Wallet</h4>
-      Go to the <a target="_blank" href="https://twitch.tv/deku_plays_pokemon">twitch stream</a> and attest
-      your TZ1 address by entering this command into the chat:
+      <h4>Step 3: Connect your Twitch account to your Wallet</h4>
+      Go to the{" "}
+      <a target="_blank" href="https://twitch.tv/deku_plays_pokemon">
+        twitch stream
+      </a>{" "}
+      and attest your TZ1 address by entering this command into the chat:
       <br />
       <code>!attest {tz1_address}</code>
-      <h4>Step 3: Play the Game!</h4>
-        Vote on the next move Deku will perform by typing commands into the
-        chat. Votes are resolved after each block - about one second; however,
-        the Twitch stream adds about 10 seconds of lag.
+      <h4>Step 4: Play the Game!</h4>
+      Vote on the next move Deku will perform by typing commands into the chat.
+      Votes are resolved after each block - about one second; however, the
+      Twitch stream adds about 10 seconds of lag.
       <ul>
         <li>
-           The follow commands vote on the next input:
+          The follow commands vote on the next input:
           <ul>
             <li>
               <code>!up</code> - send input Up
