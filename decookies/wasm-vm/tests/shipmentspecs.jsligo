@@ -1,35 +1,33 @@
 
-const _test_mint_temple = 
+const _test_mint_shipment = 
   (): bool => {let _ = 
-     Test.log(["START: Executing _test_mint_temple"]);
+     Test.log(["START: Executing _test_mint_shipment"]);
    let initial_storage: storage = Map.empty;
    let [taddr, _, _] = 
      Test.originate(main, initial_storage, 0 as tez);
    let contr = Test.to_contract(taddr);
    let _ = 
-     Test.transfer_to_contract_exn(contr, (Delegate
-        ({authorizedKey: "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
-          as address})), 1 as mutez);
-   let _ = 
      Test.transfer_to_contract_exn(contr, (Mint
         ({operation: Cookie(),
-         amount: 20000000 as nat,
+         amount: 5100000000 as nat,
          onBehalfOf: "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
           as address})), 1 as mutez);
    let _ = 
      Test.transfer_to_contract_exn(contr, (Mint
-        ({operation: Temple(),
+        ({operation: Shipment(),
          amount: 1 as nat,
          onBehalfOf: "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
           as address})), 1 as mutez);
    let authorizedKeys: set<address> = Set.empty;
-   let authorizedKeys: set<address> = 
+      let authorizedKeys: set<address> = 
      Set.add("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
-      as address, authorizedKeys);
+      as address, authorizedKeys)
    let expectedStorage: storage = 
      Map.update("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
       as address, Some
-       ({bankCost: initialBankCost,
+       ({wizards: 0 as nat,
+        wizardCost: initialWizardCost,
+        bankCost: initialBankCost,
         banks: 0 as nat,
         cookies: 0 as nat,
         cursorCost: initialCursorCost,
@@ -43,27 +41,25 @@ const _test_mint_temple =
         grandmas: 0 as nat,
         mineCost: initialMineCost,
         mines: 0 as nat,
-        passiveCPS: 7800 as nat,
-        templeCost: 23000000 as nat,
-        temples: 1 as nat,
+        passiveCPS: 260000 as nat,
+        templeCost: initialTempleCost,
+        temples: 0 as nat,
+        shipmentCost: 5865000000 as nat,
+        shipments: 1 as nat,
         authorizedKeys: authorizedKeys}), initial_storage);
    let actualStorage = Test.get_storage(taddr);
    let _ = Test.log(["actual   storage: ", actualStorage]);
    let _ = Test.log(["expected storage: ", expectedStorage]);
-   let _ = Test.log(["END: Executing _test_mint_temple"]);
+   let _ = Test.log(["END: Executing _test_mint_shipment"]);
    return (actualStorage == expectedStorage)};
 
-const _test_cannot_mint_temple = 
+const _test_cannot_mint_shipment = 
   (): bool => {let _ = 
-     Test.log(["START: Executing _test_cannot_mint_temple"]);
+     Test.log(["START: Executing _test_cannot_mint_shipment"]);
    let initial_storage: storage = Map.empty;
    let [taddr, _, _] = 
      Test.originate(main, initial_storage, 0 as tez);
    let contr = Test.to_contract(taddr);
-   let _ = 
-     Test.transfer_to_contract_exn(contr, (Delegate
-        ({authorizedKey: "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
-          as address})), 1 as mutez);
    let _ = 
      Test.transfer_to_contract_exn(contr, (Mint
         ({operation: Cookie(),
@@ -72,14 +68,10 @@ const _test_cannot_mint_temple =
           as address})), 1 as mutez);
    let _ = 
      Test.transfer_to_contract_exn(contr, (Mint
-        ({operation: Temple(),
+        ({operation: Shipment(),
          amount: 1 as nat,
          onBehalfOf: "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
           as address})), 1 as mutez);
-   let authorizedKeys: set<address> = Set.empty;
-   let authorizedKeys: set<address> = 
-     Set.add("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
-      as address, authorizedKeys);
    let expectedStorage: storage = 
      Map.update("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
       as address, Some
@@ -100,14 +92,19 @@ const _test_cannot_mint_temple =
         passiveCPS: 0 as nat,
         templeCost: initialTempleCost,
         temples: 0 as nat,
+        wizardCost: initialWizardCost,
+        wizards: 0 as nat,
+        shipmentCost: initialShipmentCost,
+        shipments: 0 as nat,
         authorizedKeys: authorizedKeys}), initial_storage);
    let actualStorage = Test.get_storage(taddr);
    let _ = Test.log(["actual   storage: ", actualStorage]);
    let _ = Test.log(["expected storage: ", expectedStorage]);
    let _ = 
-     Test.log(["END: Executing _test_cannot_mint_temple"]);
+     Test.log(["END: Executing _test_cannot_mint_shipment"]);
    return (actualStorage == expectedStorage)};
 
-const test_mint_temple = _test_mint_temple();
+const test_mint_shipment = _test_mint_shipment();
 
-const test_cannot_mint_temple = _test_cannot_mint_temple();
+const test_cannot_mint_shipment = 
+  _test_cannot_mint_shipment();

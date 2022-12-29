@@ -17,10 +17,11 @@ type cookieBaker =
     factoryCost: nat,
     bankCost: nat,
     templeCost: nat,
-    eatenCookies: nat
+    eatenCookies: nat,
+    authorizedKeys: set<address>
   };
 
-type storage = map<address, cookieBaker>;
+type storage = big_map<address, cookieBaker>;
 
 type actions =
   | ["Cookie"]
@@ -32,19 +33,31 @@ type actions =
   | ["Bank"]
   | ["Temple"];
 
-type operationType = | ["Mint"] | ["Transfer"] | ["Eat"];
+type operationType =
+  | ["Mint"]
+  | ["Transfer"]
+  | ["Eat"]
+  | ["Delegate"];
+
+type mint =
+  {operation: actions, amount: nat, onBehalfOf: address};
+
+type transfer =
+  {amount: nat, recipient: address, onBehalfOf: address};
+
+type eat = {amount: nat, onBehalfOf: address};
+
+type delegate = {authorizedKey: address};
 
 type parameter =
-  {
-    operationType,
-    operation: option<actions>,
-    amount: nat,
-    recipient: option<address>
-  };
+  | ["Mint", mint]
+  | ["Transfer", transfer]
+  | ["Eat", eat]
+  | ["Delegate", delegate];
 
 type return_ =
 
   [list<operation>,
    storage];
 
-const init_storage: storage = Map.empty;
+const init_storage: storage = Big_map.empty;

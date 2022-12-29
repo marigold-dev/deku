@@ -1,3 +1,13 @@
-dune exec bin/tunacc_test_operation.exe invoke 'ADDRESS' '(Pair (Pair 1 (Some (Left (Right (Left Unit))))) (Left (Right Unit)) None)'
+// dune exec ./tunacc_test_operation.exe invoke 'tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD' '(Left (Right (Pair 1 "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD")))'
 
-{"operation":"{ \"address\": \"ADDRESS\",\n  \"argument\":\n    [ \"Pair\",\n      [ [ \"Pair\", [ [ \"Int\", \"1\" ], [ \"Option\", [ \"None\", {} ] ] ] ],\n        [ \"Pair\",\n          [ [ \"Union\", [ \"Left\", [ \"Union\", [ \"Left\", [ \"Unit\" ] ] ] ] ],\n            [ \"Option\", [ \"None\", {} ] ] ] ] ] ] }","tickets":[]}
+{ "operation":
+    { "address": "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD",
+      "argument":
+        [ "Union",
+          [ "Left",
+            [ "Union",
+              [ "Right",
+                [ "Pair",
+                  [ [ "Int", "1" ],
+                    [ "String", "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" ] ] ] ] ] ] ] },
+  "tickets": [] }

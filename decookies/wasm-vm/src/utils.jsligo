@@ -1,6 +1,5 @@
 #import "math-lib-core/math.mligo" "Math"
 #include "types.jsligo"
-
 const newCookieBaker: cookieBaker = 
   {passiveCPS: 0 as nat,
    cookies: 0 as nat,
@@ -18,7 +17,8 @@ const newCookieBaker: cookieBaker =
    factoryCost: initialFactoryCost,
    bankCost: initialBankCost,
    templeCost: initialTempleCost,
-   eatenCookies: 0 as nat};
+   eatenCookies: 0 as nat,
+   authorizedKeys: Set.empty};
 
 const calculateCost = 
   (ope: actions, cookieBaker: cookieBaker): nat => {match(ope, {Cookie: () => {return (0
@@ -27,43 +27,50 @@ const calculateCost =
        Math.power(115 as nat, cookieBaker.cursors);
      const first: nat = initialCursorCost * firstOperation;
      const second: nat = 
-       first / Math.power(100 as nat, cookieBaker.cursors as nat);
+       first / Math.power(100 as nat, cookieBaker.cursors
+          as nat);
      return second},
     Grandma: () => {let firstOperation = 
        Math.power(115 as nat, cookieBaker.grandmas);
      const first: nat = initialGrandmaCost * firstOperation;
      const second: nat = 
-       first / Math.power(100 as nat, cookieBaker.grandmas as nat);
+       first / Math.power(100 as nat, cookieBaker.grandmas
+          as nat);
      return second},
     Farm: () => {let firstOperation = 
        Math.power(115 as nat, cookieBaker.farms);
      const first: nat = initialFarmCost * firstOperation;
      const second: nat = 
-       first / Math.power(100 as nat, cookieBaker.farms as nat);
+       first / Math.power(100 as nat, cookieBaker.farms
+          as nat);
      return second},
     Mine: () => {let firstOperation = 
        Math.power(115 as nat, cookieBaker.mines);
      const first: nat = initialMineCost * firstOperation;
      const second: nat = 
-       first / Math.power(100 as nat, cookieBaker.mines as nat);
+       first / Math.power(100 as nat, cookieBaker.mines
+          as nat);
      return second},
     Factory: () => {let firstOperation = 
        Math.power(115 as nat, cookieBaker.factories);
      const first: nat = initialFactoryCost * firstOperation;
      const second: nat = 
-       first / Math.power(100 as nat, cookieBaker.factories as nat);
+       first / Math.power(100 as nat, cookieBaker.factories
+          as nat);
      return second},
     Bank: () => {let firstOperation = 
        Math.power(115 as nat, cookieBaker.banks);
      const first: nat = initialBankCost * firstOperation;
      const second: nat = 
-       first / Math.power(100 as nat, cookieBaker.banks as nat);
+       first / Math.power(100 as nat, cookieBaker.banks
+          as nat);
      return second},
     Temple: () => {let firstOperation = 
        Math.power(115 as nat, cookieBaker.temples);
      const first: nat = initialTempleCost * firstOperation;
      const second: nat = 
-       first / Math.power(100 as nat, cookieBaker.temples as nat);
+       first / Math.power(100 as nat, cookieBaker.temples
+          as nat);
      return second}})};
 
 const calculateCPS = 
@@ -78,7 +85,7 @@ const calculateCPS =
    return cursor + grandma + farm + mine + factory + bank + temple};
 
 const force_access = 
-  (key: address, cookieBakers: storage) => {return match(Map.
+  (key: address, cookieBakers: storage) => {return match(Big_map.
    find_opt(key, cookieBakers), {Some: cookieBaker => 
       cookieBaker,
     None: () => newCookieBaker})};

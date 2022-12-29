@@ -1,3 +1,18 @@
-dune exec bin/tunacc_test_operation.exe invoke 'ADDRESS' '(Pair (Pair 1 None) (Right Unit) (Some "recipient"))'
+// dune exec ./tunacc_test_operation.exe invoke 'tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD' '(Right
+   (Right
+      (Pair (Pair 1 "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD")
+            "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ")))'
 
-{"operation":"{ \"address\": \"DK1NmndDdhkWdWpX7NMArqEjjnWR3xLfM4Kf\",\n  \"argument\":\n    [ \"Pair\",\n      [ [ \"Pair\", [ [ \"Int\", \"1\" ], [ \"Option\", [ \"None\", {} ] ] ] ],\n        [ \"Pair\",\n          [ [ \"Union\", [ \"Right\", [ \"Unit\" ] ] ],\n            [ \"Option\", [ \"Some\", [ \"String\", \"recipient\" ] ] ] ] ] ] ] }","tickets":[]}
+{ "operation":
+    { "address": "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD",
+      "argument":
+        [ "Union",
+          [ "Right",
+            [ "Union",
+              [ "Right",
+                [ "Pair",
+                  [ [ "Pair",
+                      [ [ "Int", "1" ],
+                        [ "String", "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD" ] ] ],
+                    [ "String", "tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ" ] ] ] ] ] ] ] },
+  "tickets": [] }

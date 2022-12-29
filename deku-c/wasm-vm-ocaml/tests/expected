@@ -1,0 +1,16 @@
+Map (Value.V.String "tz1YFPsRsmDL8kNtfk82QUyBKs5t3uXZmHhb") (
+Value.V.Pair (
+  (Value.V.Pair (
+     (Value.V.Pair (
+        (Value.V.Pair (
+           (Value.V.Pair (
+              Set (Value.V.String "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw"),
+              1400000)),
+           (Value.V.Pair (0, 0)))),
+        (Value.V.Pair ((Value.V.Pair (15, 0)), (Value.V.Pair (0, 0)))))),
+     (Value.V.Pair (
+        (Value.V.Pair ((Value.V.Pair (130000, 1100)), (Value.V.Pair (0, 100))
+           )),
+        (Value.V.Pair ((Value.V.Pair (0, 12000)), (Value.V.Pair (0, 0))))))
+     )),
+  (Value.V.Pair (20000000, 0))))
