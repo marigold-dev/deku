@@ -92,10 +92,12 @@ export const App = () => {
       <br />
       <code>!attest {tz1_address}</code>
       <h4>Step 3: Play the Game!</h4>
+        Vote on the next move Deku will perform by typing commands into the
+        chat. Votes are resolved after each block - about one second; however,
+        the Twitch stream adds about 10 seconds of lag.
       <ul>
         <li>
-          Vote on the next move Deku will perform by typing commands into the
-          chat:
+           The follow commands vote on the next input:
           <ul>
             <li>
               <code>!up</code> - send input Up
