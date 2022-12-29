@@ -8,6 +8,7 @@ open Api_state
 open Deku_protocol
 open Deku_consensus
 open Deku_concepts
+open Deku_crypto
 
 let make_dump_loop ~sw ~env ~data_folder =
   let resolver_ref = Atomic.make None in
@@ -71,10 +72,11 @@ let apply_block ~sw ~state ~block =
           match receipt with
           | Ticket_transfer_receipt { operation; _ }
           | Withdraw_receipt { operation; _ }
-          | Vm_origination_receipt { operation; _ }
-          | Vm_transaction_receipt { operation; _ } ->
+          | Attest_twitch_handle { operation; _ }
+          | Attest_deku_address { operation; _ }
+          | Game_vote { operation; _ }
+          | Delegated_game_vote { operation; _ } ->
               operation
-          | Vm_transaction_error { operation; _ } -> operation
         in
         Operation_hash.Map.add hash receipt receipts)
       state.receipts receipts
@@ -140,8 +142,8 @@ let start_api ~env ~sw ~port ~state =
        |> Server.with_body (module Helpers_operation_message)
        |> Server.with_body (module Helpers_hash_operation)
        |> Server.with_body (module Post_operation)
-       |> Server.without_body (module Get_vm_state)
-       |> Server.without_body (module Get_vm_state_key)
+       (* |> Server.without_body (module Get_vm_state)
+          |> Server.without_body (module Get_vm_state_key) *)
        |> Server.without_body (module Get_stats)
        |> Server.with_body (module Encode_operation)
        |> Server.with_body (module Decode_operation)
@@ -153,7 +155,10 @@ let start_api ~env ~sw ~port ~state =
   in
   let config = Piaf.Server.Config.create port in
   let server = Piaf.Server.create ~config request_handler in
-  let _ = Piaf.Server.Command.start ~sw env server in
+  let _ =
+    Piaf.Server.Command.start ~bind_to_address:Eio.Net.Ipaddr.V4.any ~sw env
+      server
+  in
   ()
 
 type params = {
@@ -165,6 +170,7 @@ type params = {
   database_uri : Uri.t; [@env "DEKU_API_DATABASE_URI"]
   domains : int; [@default 8] [@env "DEKU_API_DOMAINS"]
   data_folder : string; [@env "DEKU_API_DATA_FOLDER"]
+  twitch_oracle_address : Key_hash.t; [@env "DEKU_TWITCH_ORACLE_ADDRESS"]
 }
 [@@deriving cmdliner]
 
@@ -194,6 +200,7 @@ let main params style_renderer log_level =
     database_uri;
     domains;
     data_folder;
+    twitch_oracle_address;
   } =
     params
   in
@@ -229,8 +236,11 @@ let main params style_renderer log_level =
   let state =
     match state with
     | None ->
-        let vm_state = Ocaml_wasm_vm.State.empty in
-        let protocol = Protocol.initial_with_vm_state ~vm_state in
+        (* FIXME: *)
+        let twitch_oracle_address =
+          Deku_ledger.Address.of_key_hash twitch_oracle_address
+        in
+        let protocol = Protocol.initial ~twitch_oracle_address () in
         let current_block = Genesis.block in
         let receipts = Operation_hash.Map.empty in
         let (Block { level; _ }) = current_block in

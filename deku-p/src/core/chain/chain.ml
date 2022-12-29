@@ -30,6 +30,7 @@ type fragment =
       producer : Producer.t;
       above : Block.t;
       withdrawal_handles_hash : BLAKE2b.t;
+      game_decision : Deku_gameboy.Joypad.t option;
     }
   | Fragment_apply of {
       (* TODO: votes here is weird, only happens to commit after fragment *)
@@ -75,10 +76,10 @@ type action =
     }
 [@@deriving show]
 
-let make ~validators ~vm_state =
+let make ~validators ?twitch_oracle_address () =
   let gossip = Gossip.initial in
   let validators = Validators.of_key_hash_list validators in
-  let protocol = Protocol.initial_with_vm_state ~vm_state in
+  let protocol = Protocol.initial ?twitch_oracle_address () in
   let consensus = Consensus.make ~validators in
   let producer = Producer.empty in
   Chain { gossip; protocol; consensus; producer }
@@ -127,12 +128,14 @@ let apply_consensus_action chain consensus_action =
   | Consensus_timeout { until } -> (chain, [ Chain_timeout { until } ])
   | Consensus_produce { above } ->
       let (Chain { protocol; producer; _ }) = chain in
-      let (Protocol { ledger; _ }) = protocol in
+      let (Protocol { ledger; game; _ }) = protocol in
       let withdrawal_handles_hash =
         Deku_ledger.Ledger.withdrawal_handles_root_hash ledger
       in
+      let game_decision = Game.get_decision game in
       let fragment =
-        Fragment_produce { producer; above; withdrawal_handles_hash }
+        Fragment_produce
+          { producer; above; withdrawal_handles_hash; game_decision }
       in
       (match minimum_block_latency with
       | 0. -> ()
@@ -178,7 +181,7 @@ let apply_consensus_actions chain consensus_actions =
 
 (* core *)
 let incoming_block ~identity ~current ~block chain =
-  Logs.info (fun m -> m "Incoming block %a" Block.pp block);
+  Logs.debug (fun m -> m "Incoming block %a" Block.pp block);
   let (Chain ({ consensus; _ } as chain)) = chain in
   let consensus, actions =
     Consensus.incoming_block ~identity ~current ~block consensus
@@ -210,8 +213,13 @@ let incoming_operation ~operation chain =
     match operation with
     | Operation_ticket_transfer _ ->
         Logs.info (fun m -> m "Incoming ticket transfer: %s" hash)
-    | Operation_vm_transaction _ ->
-        Logs.info (fun m -> m "Incoming vm transaction: %s" hash)
+    | Operation_attest_twitch_handle _ ->
+        Logs.info (fun m -> m "Incoming attest twitch handle: %s" hash)
+    | Operation_attest_deku_address _ ->
+        Logs.info (fun m -> m "Incoming attest twitch handle: %s" hash)
+    | Operation_vote _ -> Logs.info (fun m -> m "Incoming vote: %s" hash)
+    | Operation_delegated_vote _ ->
+        Logs.info (fun m -> m "Incoming delegated vote: %s" hash)
     | Operation_withdraw _ ->
         Logs.info (fun m -> m "Incoming vm withdraw: %s" hash)
     | Operation_noop _ -> Logs.info (fun m -> m "Incoming noop: %s" hash)
@@ -250,6 +258,13 @@ let incoming_request ~connection ~above chain =
 let apply_gossip_action ~identity ~current ~gossip_action chain =
   match gossip_action with
   | Gossip.Gossip_apply_and_broadcast { content; network } ->
+      let () =
+        match content with
+        | Message.Content.Content_operation operation ->
+            Format.printf "Node: got operation %a\n%!" Operation.Signed.pp
+              operation
+        | _ -> ()
+      in
       let chain, actions = incoming_message ~identity ~current ~content chain in
       let broadcast =
         let (Network_message { raw_header; raw_content }) = network in
@@ -379,10 +394,11 @@ let compute ~identity ~default_block_size fragment =
   | Fragment_gossip { fragment } ->
       let outcome = Gossip.compute fragment in
       Outcome_gossip { outcome }
-  | Fragment_produce { producer; above; withdrawal_handles_hash } ->
+  | Fragment_produce { producer; above; withdrawal_handles_hash; game_decision }
+    ->
       let block =
         Producer.produce ~identity ~default_block_size ~above
-          ~withdrawal_handles_hash producer
+          ~withdrawal_handles_hash ~game_decision producer
       in
       Outcome_produce { block }
   | Fragment_apply { protocol; votes; block } ->
@@ -457,7 +473,7 @@ let test () =
     [ key_hash ]
   in
 
-  let chain = make ~validators ~vm_state:Ocaml_wasm_vm.State.empty in
+  let chain = make ~validators () in
   let block =
     let (Block { hash = current_block; level = current_level; _ }) =
       Genesis.block

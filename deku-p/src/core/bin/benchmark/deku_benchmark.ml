@@ -15,7 +15,7 @@ let block ~default_block_size =
   let withdrawal_handles_hash = BLAKE2b.hash "potato" in
   let producer = Producer.empty in
   Producer.produce ~identity ~default_block_size ~above ~withdrawal_handles_hash
-    producer
+    ~game_decision:None producer
 
 module type BENCH = sig
   type t

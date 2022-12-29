@@ -27,10 +27,11 @@ export DEKU_DEFAULT_BLOCK_SIZE=${DEKU_DEFAULT_BLOCK_SIZE:-10000}
 export DEKU_LOG_VERBOSITY=${DEKU_LOG_VERBOSITY:-info}
 export DEKU_API_LOG_VERBOSITY=${DEKU_API_LOG_VERBOSITY:-info}
 
+export DEKU_TWITCH_ORACLE_ADDRESS="tz1cTyRNTn3c83gKkrGXKtYWTeVfKaxxt8s5"
 # Starting only one API node
 export DEKU_API_NODE_URI="127.0.0.1:4440"
 export DEKU_API_PORT=8080
-export DEKU_API_DATABASE_URI="sqlite3:/tmp/api_database.db"
+export DEKU_API_DATABASE_URI="sqlite3:./flextesa_chain/dpp_api_database.db"
 export DEKU_API_DOMAINS=8
 export DEKU_API_VM="./flextesa_chain/data/0/api_vm_pipe"
 export DEKU_API_DATA_FOLDER="./flextesa_chain/data/0/"
@@ -53,11 +54,11 @@ start_node() {
 
   # Starts the Node
   _build/install/default/bin/deku-node \
-    --default-block-size=10000 \
+    --default-block-size=10 \
     --port "444$N" \
     --database-uri "sqlite3:./flextesa_chain/data/$N/database.db" \
     --data-folder "./flextesa_chain/data/$N" \
-    --color=always 2> >(awk "{ print \"$N: \" \$0 }" >&2) &
+    --color=always 2> >(awk "{ print \"$N: \" \$0 }" >&2) 2>&1 | tee "logs_$N" &
   sleep 0.1
 }
 
@@ -67,7 +68,7 @@ then
 
   ## The api needs its own vm
   _build/install/default/bin/deku-api \
-    --color=always 2> >(awk "{ print \"A: \" \$0 }" >&2) &
+    --color=always 2> >(awk "{ print \"A: \" \$0 }" >&2) 2>&1 | tee "logs_api" &
 
   for N in 0 1 2 3; do
     start_node $N

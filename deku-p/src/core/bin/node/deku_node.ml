@@ -52,6 +52,7 @@ type params = {
       [@env "DEKU_TEZOS_CONSENSUS_ADDRESS"]
       (** The address of the consensus contract on Tezos.  *)
   api_uri : string; [@env "DEKU_API_URI"] [@default "127.0.0.1:5550"]
+  twitch_oracle_address : Key_hash.t; [@env "DEKU_TWITCH_ORACLE_ADDRESS"]
 }
 [@@deriving cmdliner]
 
@@ -86,6 +87,7 @@ let main params style_renderer log_level =
     tezos_secret;
     tezos_consensus_address;
     api_uri;
+    twitch_oracle_address;
   } =
     params
   in
@@ -95,6 +97,9 @@ let main params style_renderer log_level =
   Parallel.Pool.run ~env ~domains @@ fun () ->
   Logs.info (fun m -> m "Using %d domains" domains);
   Logs.info (fun m -> m "Default block size: %d" default_block_size);
+  let twitch_oracle_address =
+    Deku_ledger.Address.of_key_hash twitch_oracle_address
+  in
   let indexer =
     let domains = Eio.Stdenv.domain_mgr env in
     let worker = Parallel.Worker.make ~domains ~sw in
@@ -117,10 +122,9 @@ let main params style_renderer log_level =
   let validator_uris =
     if port = 4440 then api_uri :: validator_uris else validator_uris
   in
-
-  (* The VM must be started before the node because this call is blocking
-     Logs.info (fun m ->
-         m "Starting IPC with external vm at path %s" named_pipe_path); *)
+  let net = Eio.Stdenv.net env in
+  (* Initialize network connection with emulator *)
+  Deku_gameboy.init net;
   let identity = Identity.make (Secret.Ed25519 secret) in
   Logs.info (fun m ->
       m "Running as validator %s" (Identity.key_hash identity |> Key_hash.to_b58));
@@ -131,9 +135,7 @@ let main params style_renderer log_level =
   let chain =
     match chain with
     | Some chain -> chain
-    | None ->
-        let vm_state = Ocaml_wasm_vm.State.empty in
-        Chain.make ~validators ~vm_state
+    | None -> Chain.make ~validators ~twitch_oracle_address ()
   in
   let dump = make_dump_loop ~sw ~env ~folder:data_folder in
   let node =
@@ -143,10 +145,8 @@ let main params style_renderer log_level =
   let (Chain { consensus; _ }) = chain in
   let (Block { level; _ }) = Deku_consensus.Consensus.trusted_block consensus in
   Logs.info (fun m -> m "Chain started at level: %a" Level.pp level);
-  let tezos =
-    (tezos_rpc_node, Secret.Ed25519 tezos_secret, tezos_consensus_address)
-  in
-  Node.start ~sw ~env ~port ~nodes:validator_uris ~tezos:(Some tezos) node
+  ignore (tezos_consensus_address, tezos_rpc_node, tezos_secret);
+  Node.start ~sw ~env ~port ~nodes:validator_uris ~tezos:None node
 
 let main () =
   let open Cmdliner in

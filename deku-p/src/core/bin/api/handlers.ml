@@ -350,49 +350,49 @@ module Post_operation : HANDLERS = struct
         Ok { hash = operation_hash }
 end
 
-module Get_vm_state : NO_BODY_HANDLERS = struct
-  type path = unit
-  type response = Ocaml_wasm_vm.State.t
+(* module Get_vm_state : NO_BODY_HANDLERS = struct
+     type path = unit
+     type response = Ocaml_wasm_vm.State.t
 
-  let response_encoding = Ocaml_wasm_vm.State.api_encoding
-  let meth = `GET
-  let path = Routes.(version / s "state" / s "unix" /? nil)
-  let route = Routes.(path @--> ())
+     let response_encoding = Ocaml_wasm_vm.State.api_encoding
+     let meth = `GET
+     let path = Routes.(version / s "state" / s "unix" /? nil)
+     let route = Routes.(path @--> ())
 
-  let handler ~path:_ ~state =
-    let Api_state.{ protocol; _ } = state in
-    let (Protocol.Protocol { vm_state; _ }) = protocol in
-    Ok vm_state
-end
+     let handler ~path:_ ~state =
+       let Api_state.{ protocol; _ } = state in
+       let (Protocol.Protocol { vm_state; _ }) = protocol in
+       Ok vm_state
+   end *)
 
-module Get_vm_state_key : NO_BODY_HANDLERS = struct
-  open Deku_ledger
+(* module Get_vm_state_key : NO_BODY_HANDLERS = struct
+     open Deku_ledger
 
-  type path = Contract_address.t
-  type response = Ocaml_wasm_vm.State_entry.t option
+     type path = Contract_address.t
+     type response = Ocaml_wasm_vm.State_entry.t option
 
-  let response_encoding =
-    let open Data_encoding in
-    conv
-      (fun state_entry -> state_entry)
-      (fun state_entry -> state_entry)
-      (option Ocaml_wasm_vm.State_entry.encoding)
+     let response_encoding =
+       let open Data_encoding in
+       conv
+         (fun state_entry -> state_entry)
+         (fun state_entry -> state_entry)
+         (option Ocaml_wasm_vm.State_entry.encoding)
 
-  let meth = `GET
+     let meth = `GET
 
-  let path =
-    Routes.(
-      version / s "state" / s "unix" / Api_path.Contract_address.parser /? nil)
+     let path =
+       Routes.(
+         version / s "state" / s "unix" / Api_path.Contract_address.parser /? nil)
 
-  let route = Routes.(path @--> fun key -> key)
+     let route = Routes.(path @--> fun key -> key)
 
-  let handler ~path:key ~state =
-    let Api_state.{ protocol; _ } = state in
-    let (Protocol.Protocol { vm_state; _ }) = protocol in
-    Ok
-      (try Some (Ocaml_wasm_vm.State.fetch_contract vm_state key)
-       with _ -> None)
-end
+     let handler ~path:key ~state =
+       let Api_state.{ protocol; _ } = state in
+       let (Protocol.Protocol { vm_state; _ }) = protocol in
+       Ok
+         (try Some (Ocaml_wasm_vm.State.fetch_contract vm_state key)
+          with _ -> None)
+   end *)
 
 module Get_stats : NO_BODY_HANDLERS = struct
   type path = unit

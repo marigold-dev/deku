@@ -8,7 +8,8 @@ type protocol =
       included_operations : Included_operation_set.t;
       included_tezos_operations : Deku_tezos.Tezos_operation_hash.Set.t;
       ledger : Ledger.t;
-      vm_state : Ocaml_wasm_vm.State.t;
+      vm_state : Deku_gameboy.state;
+      game : Game.t;
     }
 
 and t = protocol
@@ -17,37 +18,49 @@ let encoding =
   let open Data_encoding in
   conv
     (fun (Protocol
-           { included_operations; included_tezos_operations; ledger; vm_state }) ->
-      (included_operations, included_tezos_operations, ledger, vm_state))
-    (fun (included_operations, included_tezos_operations, ledger, vm_state) ->
+           {
+             included_operations;
+             included_tezos_operations;
+             ledger;
+             vm_state;
+             game;
+           }) ->
+      (included_operations, included_tezos_operations, ledger, vm_state, game))
+    (fun (included_operations, included_tezos_operations, ledger, vm_state, game)
+         ->
       Protocol
-        { included_operations; included_tezos_operations; ledger; vm_state })
-    (tup4 Included_operation_set.encoding
+        {
+          included_operations;
+          included_tezos_operations;
+          ledger;
+          vm_state;
+          game;
+        })
+    (tup5 Included_operation_set.encoding
        Deku_tezos.Tezos_operation_hash.Set.encoding Ledger.encoding
-       Ocaml_wasm_vm.State.encoding)
+       Deku_gameboy.state_encoding Game.encoding)
 
-let initial =
+let initial ?twitch_oracle_address () =
   Protocol
     {
       included_operations = Included_operation_set.empty;
       included_tezos_operations = Deku_tezos.Tezos_operation_hash.Set.empty;
       ledger = Ledger.initial;
-      vm_state = Ocaml_wasm_vm.State.empty;
+      vm_state = Deku_gameboy.empty;
+      game = Game.empty ?twitch_oracle_address ();
     }
-
-let initial_with_vm_state ~vm_state =
-  let (Protocol
-        { included_operations; included_tezos_operations; ledger; vm_state = _ })
-      =
-    initial
-  in
-  Protocol { included_operations; included_tezos_operations; ledger; vm_state }
 
 let apply_operation ~current_level protocol operation :
     (t * Receipt.t option * exn option) option =
   let open Operation.Initial in
   let (Protocol
-        { included_operations; ledger; included_tezos_operations; vm_state }) =
+        {
+          included_operations;
+          ledger;
+          included_tezos_operations;
+          vm_state;
+          game;
+        }) =
     protocol
   in
   let (Initial_operation { hash; nonce = _; level; operation = content }) =
@@ -63,86 +76,53 @@ let apply_operation ~current_level protocol operation :
       let included_operations =
         Included_operation_set.add operation included_operations
       in
-      let ledger, receipt, vm_state, error =
+      let ledger, receipt, game, error =
         match content with
         | Operation_ticket_transfer { sender; receiver; ticket_id; amount } -> (
             let receipt = Ticket_transfer_receipt { operation = hash } in
             match
               Ledger.transfer ~sender ~receiver ~ticket_id ~amount ledger
             with
-            | Ok ledger -> (ledger, Some receipt, vm_state, None)
-            | Error error -> (ledger, Some receipt, vm_state, Some error))
-        | Operation_vm_transaction { sender; operation } -> (
-            let open Deku_ledger in
-            let receipt =
-              match operation.operation with
-              | View { address; _ } ->
-                  Receipt.Vm_transaction_receipt
-                    { operation = hash; contract_address = address }
-              | Originate _ ->
-                  (* TODO: wrap this in a function exposed from the VM *)
-                  let contract_address =
-                    Contract_address.of_user_operation_hash
-                    @@ Operation_hash.to_blake2b hash
-                  in
-                  Receipt.Vm_origination_receipt
-                    { operation = hash; contract_address }
-              | Call { address; _ } -> (
-                  match Deku_ledger.Address.to_contract_address address with
-                  | Some (contract_address, _) ->
-                      Receipt.Vm_origination_receipt
-                        { operation = hash; contract_address }
-                  | None ->
-                      (* TODO: in the future we should return a Vm_trnasaction_error here *)
-                      failwith
-                        (Format.sprintf "Invalid contract address '%s'"
-                           (Address.to_b58 address)))
-            in
-            let result () =
-              let%ok ledger =
-                if operation.tickets = [] then Ok ledger
-                else
-                  Ledger.with_ticket_table ledger (fun ~get_table ~set_table ->
-                      let tickets = operation.tickets in
-                      let result =
-                        Ticket_table.take_tickets ~sender ~ticket_ids:tickets
-                          (get_table ())
-                      in
-                      match result with
-                      | Ok (_, table) -> Ok (set_table table)
-                      | Error err -> (
-                          match err with
-                          | `Insufficient_funds -> Error "Insufficient_funds"))
-              in
-              let source = sender in
-              match
-                Ocaml_wasm_vm.(
-                  Env.execute
-                    (Env.make ~state:vm_state ~ledger ~sender ~source)
-                    ~operation:operation.operation
-                    ~tickets:
-                      (List.map
-                         (fun (k, v) -> (k, Deku_concepts.Amount.to_n v))
-                         operation.tickets)
-                    ~operation_hash:(Operation_hash.to_blake2b hash)
-                  |> Env.finalize)
-              with
-              | Ok (vm_state, ledger) ->
-                  Ok (ledger, Some receipt, vm_state, None)
-              | Error err -> Error err
-            in
-            match result () with
-            | Ok result -> result
-            | Error err ->
+            | Ok ledger -> (ledger, Some receipt, game, None)
+            | Error error -> (ledger, Some receipt, game, Some error))
+        | Operation_attest_twitch_handle { sender; twitch_handle } ->
+            let game = Game.attest_twitch_handle ~sender ~twitch_handle game in
+            ( ledger,
+              Some
+                (Receipt.Attest_twitch_handle
+                   { operation = hash; deku_address = sender; twitch_handle }),
+              game,
+              None )
+        | Operation_attest_deku_address { sender; deku_address; twitch_handle }
+          -> (
+            match
+              Game.attest_deku_address ~sender ~deku_address ~twitch_handle game
+            with
+            | Some game ->
                 ( ledger,
-                  Some receipt,
-                  vm_state,
                   Some
-                    (Failure
-                       (Format.sprintf
-                          "Error while executing external vm transaction : %s"
-                          err)) ))
-        | Operation_noop { sender = _ } -> (ledger, None, vm_state, None)
+                    (Receipt.Attest_deku_address
+                       { operation = hash; deku_address; twitch_handle }),
+                  game,
+                  None )
+            | None -> (ledger, None, game, None))
+        | Operation_vote { sender; vote } ->
+            let game = Game.vote ~sender ~vote game in
+            ( ledger,
+              Some (Receipt.Game_vote { operation = hash; sender; vote }),
+              game,
+              None )
+        | Operation_delegated_vote { sender; twitch_handle; vote } -> (
+            match Game.delegated_vote ~sender ~twitch_handle ~vote game with
+            | Some game ->
+                ( ledger,
+                  Some
+                    (Receipt.Delegated_game_vote
+                       { operation = hash; delegator = twitch_handle; vote }),
+                  game,
+                  None )
+            | None -> (ledger, None, game, None))
+        | Operation_noop { sender = _ } -> (ledger, None, game, None)
         | Operation_withdraw { sender; owner; amount; ticket_id } -> (
             match
               Ledger.withdraw ~sender ~destination:owner ~amount ~ticket_id
@@ -151,20 +131,32 @@ let apply_operation ~current_level protocol operation :
             | Ok (ledger, handle) ->
                 ( ledger,
                   Some (Withdraw_receipt { handle; operation = hash }),
-                  vm_state,
+                  game,
                   None )
-            | Error error -> (ledger, None, vm_state, Some error))
+            | Error error -> (ledger, None, game, Some error))
       in
       Some
         ( Protocol
-            { included_operations; included_tezos_operations; ledger; vm_state },
+            {
+              included_operations;
+              included_tezos_operations;
+              ledger;
+              vm_state;
+              game;
+            },
           receipt,
           error )
   | false -> None
 
 let apply_tezos_operation protocol tezos_operation =
   let (Protocol
-        { included_operations; included_tezos_operations; ledger; vm_state }) =
+        {
+          included_operations;
+          included_tezos_operations;
+          ledger;
+          vm_state;
+          game;
+        }) =
     protocol
   in
   let Tezos_operation.{ hash; operations } = tezos_operation in
@@ -177,7 +169,13 @@ let apply_tezos_operation protocol tezos_operation =
       in
       let protocol =
         Protocol
-          { included_operations; included_tezos_operations; ledger; vm_state }
+          {
+            included_operations;
+            included_tezos_operations;
+            ledger;
+            vm_state;
+            game;
+          }
       in
       List.fold_left
         (fun protocol tezos_operation ->
@@ -189,6 +187,7 @@ let apply_tezos_operation protocol tezos_operation =
                       included_operations;
                       included_tezos_operations;
                       vm_state;
+                      game;
                     }) =
                 protocol
               in
@@ -203,6 +202,7 @@ let apply_tezos_operation protocol tezos_operation =
                   included_operations;
                   included_tezos_operations;
                   vm_state;
+                  game;
                 })
         protocol operations
   | false -> protocol
@@ -240,19 +240,41 @@ let apply_payload ~current_level ~payload protocol =
 
 let clean ~current_level protocol =
   let (Protocol
-        { included_operations; included_tezos_operations; ledger; vm_state }) =
+        {
+          included_operations;
+          included_tezos_operations;
+          ledger;
+          vm_state;
+          game;
+        }) =
     protocol
   in
   let included_operations =
     Included_operation_set.drop ~current_level included_operations
   in
-  Protocol { included_operations; included_tezos_operations; ledger; vm_state }
+  Protocol
+    { included_operations; included_tezos_operations; ledger; vm_state; game }
 
 let prepare ~parallel ~payload = parallel parse_operation payload
 
 let apply ~current_level ~payload ~tezos_operations protocol =
   let protocol, receipts, errors =
     apply_payload ~current_level ~payload protocol
+  in
+  let (Protocol
+        {
+          included_operations;
+          included_tezos_operations;
+          ledger;
+          vm_state;
+          game;
+        }) =
+    protocol
+  in
+  let game = Game.new_round game in
+  let protocol =
+    Protocol
+      { included_operations; included_tezos_operations; ledger; vm_state; game }
   in
   let protocol = clean ~current_level protocol in
   (* TODO: how to clean the set of tezos operations in memory? *)

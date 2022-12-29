@@ -66,14 +66,20 @@ let broadcast_message ~content =
   Fragment_broadcast_message { fragment }
 
 let incoming_message ~raw_header ~raw_content gossip =
+  if String.starts_with ~prefix:{|["Content_operation|} raw_content then
+    Format.printf "Node: Decoding operation message\n%!";
   let (Gossip { pending_request; message_pool }) = gossip in
   let message_pool, fragment =
     Message_pool.decode ~raw_header ~raw_content message_pool
   in
+
   let gossip = Gossip { pending_request; message_pool } in
   let fragment =
     match fragment with
-    | Some fragment -> Some (Fragment_broadcast_message { fragment })
+    | Some fragment ->
+        if String.starts_with ~prefix:{|["Content_operation|} raw_content then
+          Format.printf "successfully decoded: %s\n%!" raw_content;
+        Some (Fragment_broadcast_message { fragment })
     | None -> None
   in
   (gossip, fragment)

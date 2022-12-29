@@ -1,0 +1,35 @@
+{
+  "name": "deku-plays-pokemon-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node-esm index.ts",
+    "build": "tsc index.ts",
+    "test": "jest --watch"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@marigold-dev/deku": "0.1.3",
+    "@taquito/signer": "^14.0.0",
+    "@taquito/taquito": "^14.0.0",
+    "axios": "^0.27.2",
+    "dotenv": "^16.0.2",
+    "tmi.js": "^1.8.5"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.3",
+    "@types/express": "^4.17.14",
+    "@types/jest": "^28.1.3",
+    "@types/node": "^18.11.17",
+    "@types/tmi.js": "^1.8.2",
+    "jest": "^28.1.1",
+    "prettier": "^2.7.1",
+    "ts-jest": "^28.0.5",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.0.0",
+    "tsconfig-paths-jest": "^0.0.1",
+    "typescript": "^4.7.4"
+  }
+}

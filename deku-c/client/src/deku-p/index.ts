@@ -8,10 +8,14 @@ import {
   KeyHash,
   TicketId,
   Level,
+  Vote,
   Operation_json,
   Initial_operation_hash_encoding,
   createTicketTransfer,
-  createVmOperation,
+  createAttestTwitchHandle,
+  createAttestDekuAddress,
+  createVote,
+  createDelegatedVote,
   createWithdraw,
   createNoop,
 } from "./core/operation-encoding";
@@ -288,25 +292,94 @@ export class DekuPClient {
   }
 
   /**
-   * Submits an operation to the vm
-   * @param payload the string (TODO: is it better to have a json instead of a string ?)
-   * @param options {level, nonce} optional options
-   * @returns the hash the submitted operation
+   * Attest this wallet's twitch handle
+   * @param twitch_handle
+   * @param options to define a custom level/nonce
+   * @returns the operation hash
    */
-  async submitVmOperation(
-    payload: JSONType,
-    tickets: { ticket_id: TicketId; amount: number }[],
+  async attestTwitchHandle(
+    twitch_handle: string,
     options?: OptOptions
   ): Promise<OperationHashType> {
     const { source, level, nonce } = await this.parseOperationOptions(options);
     // Create the vm transaction
-    const vmOperation = await createVmOperation(
+    const vmOperation = await createAttestTwitchHandle(
       this.encodeOperation,
       level,
       nonce,
       source,
-      payload,
-      tickets
+      twitch_handle
+    );
+    return this.submitOperation(vmOperation);
+  }
+
+  /**
+   * Attest the Deku address of a Twitch user
+   * (Only used by the designated Twitch oracle)
+   * @param twitch_handle The Twitch handle of the user
+   * @param deku_address The key hash of the Deku user
+   * @param options to define a custom level/nonce
+   * @returns the operation hash
+   */
+  async attestDekuAddress(
+    twitch_handle: string,
+    deku_address: string,
+    options?: OptOptions
+  ): Promise<OperationHashType> {
+    const { source, level, nonce } = await this.parseOperationOptions(options);
+    // Create the vm transaction
+    const vmOperation = await createAttestDekuAddress(
+      this.encodeOperation,
+      level,
+      nonce,
+      source,
+      twitch_handle,
+      KeyHash(deku_address)
+    );
+    return this.submitOperation(vmOperation);
+  }
+
+  /**
+   * Vote on the next operation to be executed
+   * @param vote A vote for a governance mode or Gameboy input
+   * @param options to define a custom level/nonce
+   * @returns the operation hash
+   */
+  async vote(vote: Vote, options?: OptOptions): Promise<OperationHashType> {
+    const { source, level, nonce } = await this.parseOperationOptions(options);
+    // Create the vm transaction
+    const vmOperation = await createVote(
+      this.encodeOperation,
+      level,
+      nonce,
+      source,
+      vote
+    );
+    return this.submitOperation(vmOperation);
+  }
+
+  /**
+   * A vote on another users behalf
+   * (Only used by the designated Twitch oracle)
+   * @param vote A vote for a governance mode or Gameboy input
+   * @param twitch_handle the Twitch handle on behalf of whom the oracle is voting
+   * @param options to define a custom level/nonce
+   * @returns the operation hash
+   */
+  async delegatedVote(
+    vote: Vote,
+    twitch_handle: string,
+    options?: OptOptions
+  ): Promise<OperationHashType> {
+    const { source, level, nonce } = await this.parseOperationOptions(options);
+    // Create the vm transaction
+    const vmOperation = await createDelegatedVote(
+      this.encodeOperation,
+      level,
+      nonce,
+      source,
+      vote,
+      twitch_handle
     );
     return this.submitOperation(vmOperation);
   }

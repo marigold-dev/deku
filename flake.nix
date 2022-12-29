@@ -45,9 +45,9 @@
       ];
       systems = [
         "x86_64-linux"
-        "aarch64-darwin"
-        "x86_64-darwin"
-        "aarch64-linux"
+        # "aarch64-darwin"
+        # "x86_64-darwin"
+        # "aarch64-linux"
       ];
       perSystem = {
         config,
@@ -122,6 +122,10 @@
                   # dune build @fmt --auto-promote does not comply with treefmt spec
                   includes = ["*.ml" ".mli"];
                 };
+                rust = {
+                  command = "${rustfmt}/bin/rustfmt";
+                  includes = ["*.rs"];
+                };
               };
             };
             projectRootFile = "flake.nix";
@@ -141,7 +145,7 @@
           sshUser = "root";
         };
 
-        checks = builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
+        # checks = builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
       };
     };
 }

@@ -5,16 +5,27 @@ open Deku_ledger
 exception Invalid_signature
 exception Invalid_source
 
-type operation = private
+type operation =
   | Operation_ticket_transfer of {
       sender : Address.t;
       receiver : Address.t;
       ticket_id : Ticket_id.t;
       amount : Amount.t;
     }
-  | Operation_vm_transaction of {
+  | Operation_attest_twitch_handle of {
       sender : Address.t;
-      operation : Ocaml_wasm_vm.Operation_payload.t;
+      twitch_handle : string;
+    }
+  | Operation_attest_deku_address of {
+      sender : Address.t;
+      deku_address : Address.t;
+      twitch_handle : string;
+    }
+  | Operation_vote of { sender : Address.t; vote : Game.Vote.t }
+  | Operation_delegated_vote of {
+      sender : Address.t;
+      twitch_handle : Game.Twitch_handle.t;
+      vote : Game.Vote.t;
     }
   | Operation_withdraw of {
       sender : Address.t;
@@ -86,13 +97,36 @@ module Signed : sig
     amount:Amount.t ->
     signed_operation
 
-  val vm_transaction :
+  val noop :
+    identity:Identity.t -> nonce:Nonce.t -> level:Level.t -> signed_operation
+
+  val vote :
     nonce:Nonce.t ->
     level:Level.t ->
-    content:Ocaml_wasm_vm.Operation_payload.t ->
+    vote:Game.Vote.t ->
     identity:Identity.t ->
     signed_operation
 
-  val noop :
-    identity:Identity.t -> nonce:Nonce.t -> level:Level.t -> signed_operation
+  val delegated_vote :
+    nonce:Nonce.t ->
+    level:Level.t ->
+    vote:Game.Vote.t ->
+    twitch_handle:string ->
+    identity:Identity.t ->
+    signed_operation
+
+  val attest_twitch_handle :
+    nonce:Nonce.t ->
+    level:Level.t ->
+    twitch_handle:string ->
+    identity:Identity.t ->
+    signed_operation
+
+  val attest_deku_address :
+    nonce:Nonce.t ->
+    level:Level.t ->
+    deku_address:Address.t ->
+    twitch_handle:string ->
+    identity:Identity.t ->
+    signed_operation
 end

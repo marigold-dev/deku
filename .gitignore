@@ -7,4 +7,6 @@ result
 chain*.json
 *-node-*-deku_state_*.tar.gz
 tezos_js_bridge.bundle.js
-flextesa_chain/data
+flextesa_chain
+target
+logs_*
