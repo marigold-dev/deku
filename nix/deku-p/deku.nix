@@ -55,7 +55,7 @@ in
         runHook postBuild
       '';
 
-      nativeBuildInputs = [nodejs removeReferencesTo] ++ npmPackages;
+      nativeBuildInputs = [nodejs removeReferencesTo core_bench] ++ npmPackages;
 
       checkPhase = ''
         runHook preInstall
@@ -97,6 +97,7 @@ in
           core_unix
           ppx_expect
           ppx_deriving_encoding
+          core_bench
         ]
         # checkInputs are here because when cross compiling dune needs test dependencies
         # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
