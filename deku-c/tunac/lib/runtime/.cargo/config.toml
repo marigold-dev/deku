@@ -1,0 +1,5 @@
+[build]
+rustflags = [
+    "-C", "link-arg=--relocatable",
+    "-C", "link-arg=--no-gc-sections"
+]

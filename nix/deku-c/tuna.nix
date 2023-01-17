@@ -29,9 +29,11 @@ buildDunePackage rec {
     tezos-micheline
     binaryen
     proto-alpha-utils
-    llvm
+    # llvm
     pkgs.gdb
-    # llvmPackages_14.lldb
+    pkgs.cargo
+    pkgs.rustup
+    pkgs.wabt
   ];
 
   buildInputs = [
