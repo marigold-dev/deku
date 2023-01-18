@@ -17,88 +17,110 @@ fn handle_panic(_: &PanicInfo) -> ! {
 static mut __heap_start: usize = 0;
 
 #[no_mangle]
+#[inline]
 pub unsafe extern "C" fn malloc(size: usize) -> usize {
     let ptr = __heap_start;
     __heap_start += size;
     ptr
 }
 
+#[inline]
+fn alloc<'a, T>() -> &'a mut T {
+    unsafe {
+        // TODO: check pointer
+        let ptr = malloc(core::mem::size_of::<T>()) as *mut T;
+        &mut *ptr
+    }
+}
+
 #[repr(C)]
-struct StackNode {
+#[derive(Clone, Copy)]
+struct StackNode<'a> {
     value: *mut u8,
-    next: *mut StackNode
+    next: &'a StackNode<'a>
+}
+
+impl<'a> StackNode<'a> {
+    pub fn new(value: *mut u8, next: &'a StackNode<'a>) -> &'a StackNode<'a> {
+        let mut node = alloc::<StackNode<'a>>();
+        node.value = value;
+        node.next = next;
+        node
+    }
+
+    pub fn value(&'a self) -> *mut u8 {
+        self.value
+    }
+
+    pub fn next(&'a self) -> &'a StackNode<'a> {
+        self.next
+    }
+
+    pub fn push(&'a self, value: *mut u8) -> &'a StackNode<'a>  {
+        StackNode::new(value, self)
+    }
+
+    pub fn drop(&'a self, n: u32) -> &'a StackNode<'a>  {
+        if n == 0 {
+            return self;
+        }
+
+        self.next().drop(n - 1)
+    }
+
+    pub fn dup(&'a self, n: u32) -> &'a StackNode<'a> {
+        self.push(self.drop(n).value())
+    }
+
+    pub fn push_nth(&'a self, n: u32, value: *mut u8) -> &'a StackNode<'a> {
+        if n == 0 {
+            return self.push(value)
+        }
+
+        self.next().push_nth(n - 1, value).push(self.value())
+    }
+
+    pub fn pop_nth(&'a self, n: u32) -> (*mut u8, &'a StackNode<'a>) {
+        if n == 0 {
+            let digged = self.next();
+            return (digged.value(), digged.next().push(self.value()))
+        }
+
+        let (value, next) = self.next().pop_nth(n - 1);
+        (value, next.push(self.value()))
+    }
 }
 
 extern "C" {
-    // #[no_mangle]
-    static mut __michelson_stack: *mut StackNode;
+    static mut __michelson_stack: &'static mut StackNode<'static>;
 
-    #[no_mangle]
     fn main();
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn michelson_push(value: *mut u8) {
-    let ptr = malloc(core::mem::size_of::<StackNode>()) as *mut StackNode;
-    let mut node = &mut *ptr;
-    node.value = value;
-    node.next = __michelson_stack;
-    __michelson_stack = ptr;
+    *__michelson_stack = *__michelson_stack.push(value)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn michelson_drop_n(n: u32) {
-    let mut node = __michelson_stack;
-    let mut n = n;
-    while n != 0 {
-        n -= 1;
-        node = (*node).next;
-    }
-    __michelson_stack = node;
+    *__michelson_stack = *__michelson_stack.drop(n);
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn michelson_dup_n(n: u32) {
-    let mut node = __michelson_stack;
-    let mut n = n;
-    while n != 0 {
-        n -= 1;
-        node = (*node).next;
-    }
-    michelson_push((*node).value);
+    *__michelson_stack = *__michelson_stack.dup(n)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn michelson_dug_n(n: u32) {
-    let mut node = __michelson_stack;
-    let head = __michelson_stack;
-    let mut n = n;
-
-    while n != 0 {
-        n -= 1;
-        node = (*node).next;
-    }
-
-    __michelson_stack = (*head).next;
-    (*head).next = (*node).next;
-    (*node).next = head;
+    *__michelson_stack = *__michelson_stack.push_nth(n, __michelson_stack.value())
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn michelson_dig_n(n: u32) {
-    let mut node = __michelson_stack;
-    let mut n = n;
-
-    while n != 0 {
-        n -= 1;
-        node = (*node).next;
-    }
-
-    // TODO: This shouldn't use mutability
-    let mut a = (*node).next;
-    (*node).next = (*a).next;
-    (*a).next = __michelson_stack;
-    __michelson_stack = a;
+    let (value, stack) = __michelson_stack.pop_nth(n);
+    *__michelson_stack = *stack.push(value)
 }
 
 #[no_mangle]
