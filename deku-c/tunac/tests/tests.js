@@ -132,7 +132,7 @@ async function eval(code, parameter, storage, context = {}) {
 
     const imports = {
         env: {
-            log(ptr) {
+            writev(ptr) {
                 console.log('Log from contract %d', ptr)
             },
             parameter_size() {

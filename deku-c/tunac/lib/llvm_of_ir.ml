@@ -10,16 +10,24 @@ let new_label () =
   incr label_count;
   Printf.sprintf "L%d" !label_count
 
-let compile_wasm_operation output op args =
+let compile_wasm_operation output typ op args =
+  let typ =
+    match typ with
+    | I32 -> "i32"
+    | U32 -> "u32"
+    | I8 -> "i8"
+    | U8 -> "u8"
+  in
+
   let op2 op a b =
     let a' = new_reg () in
     let b' = new_reg () in
     let c' = new_reg () in
     let c'' = new_reg () in
-    Format.fprintf output "\t%s = ptrtoint ptr %s to i32\n" a' a; 
-    Format.fprintf output "\t%s = ptrtoint ptr %s to i32\n" b' b;
-    Format.fprintf output "\t%s = %s i32 %s, %s\n" c' op a' b';
-    Format.fprintf output "\t%s = inttoptr i32 %s to ptr\n" c'' c';
+    Format.fprintf output "\t%s = ptrtoint ptr %s to %s\n" a' a typ;
+    Format.fprintf output "\t%s = ptrtoint ptr %s to %s\n" b' b typ;
+    Format.fprintf output "\t%s = %s %s %s, %s\n" c' op typ a' b';
+    Format.fprintf output "\t%s = inttoptr %s %s to ptr\n" c'' typ c';
     c''
   in
 
@@ -98,9 +106,9 @@ let rec compile_expression output expr =
     Format.fprintf output "\t%s = call ptr @%s(%s)\n" reg name args;
     reg
 
-  | Cop (Cwasm (op, _), args) ->
+  | Cop (Cwasm (op, typ), args) ->
     let args = List.map (compile_expression output) args in
-    compile_wasm_operation output op args
+    compile_wasm_operation output typ op args
 
   | _ ->
     Format.fprintf output "%a\n" IR.pp_expression expr;
@@ -188,21 +196,77 @@ let rec compile_statement output statement =
     Format.fprintf output "\tcall void @failwith(ptr %s)\n" failure;
     Format.fprintf output "\tunreachable\n"
 
-let compile_function output name fn =
-  Format.fprintf output "\ndefine void @%s() {\n" name;
-
-  let IR_of_michelson.{ body; locals } = fn in
-
+let compile_function_body output arguments body locals =
   for i = 0 to locals do
     Format.fprintf output "\t%%local_%d = alloca ptr\n" i;
   done;
+  for i = 0 to arguments - 1 do
+    Format.fprintf output "\tstore ptr %%%d, ptr %%local_%d\n" i i;
+  done;
+  compile_statement output body
 
-  compile_statement output body;
-
+let compile_function output name fn =
+  Format.fprintf output "\ndefine void @%s() {\n" name;
+  let IR_of_michelson.{ body; locals } = fn in
+  compile_function_body output 0 body locals;
   Format.fprintf output "\tret void\n}"
 
+let compile_compare_function output name ret fn =
+  Format.fprintf output "\ndefine ptr @%s(ptr %%0, ptr %%1) {\n" name;
+  let IR_of_michelson.{ body; locals } = fn in
+
+  compile_function_body output 2 body locals;
+  let ret_reg = new_reg () in
+  Format.fprintf output "\t%s = load ptr, ptr %%local_%d\n" ret_reg ret;
+  Format.fprintf output "\tret ptr %s\n }" ret_reg
+
+let compile_main_compare_function output functions =
+  let functions = List.rev functions in
+  List.iteri
+    (fun idx (ret, fn) ->
+      let name = Printf.sprintf "michelson_compare_function_%d" idx in
+      compile_compare_function output name ret fn)
+    functions;
+
+  Format.fprintf output "\ndefine i32 @michelson_dynamic_compare(ptr %%0, ptr %%1, ptr %%2) {\n";
+
+  let return_value = new_reg () in
+  Format.fprintf output "\n%s = alloca i32\n" return_value;
+  let switch = new_label () in
+  let default = new_label () in
+  let key = new_reg () in
+  Format.fprintf output "br label %%%s\n" switch;
+  Format.fprintf output "%s:\n" switch;
+  Format.fprintf output "\t%s = ptrtoint ptr %%0 to i32\n" key;
+  Format.fprintf output "\tswitch i32 %s, label %%%s [\n" key default;
+  List.iteri
+      (fun idx _ ->
+        Format.fprintf output "\t\ti32 %d, label %%branch_%d\n" idx idx)
+      functions;
+
+  Format.fprintf output "\t]\n";
+  Format.fprintf output "%s:\n" default;
+  Format.fprintf output "\tunreachable\n";
+
+  let return_point = new_label () in
+
+  List.iteri
+        (fun idx _ ->
+          let value = new_reg () in
+          Format.fprintf output "\nbranch_%d:\n" idx;
+          Format.fprintf output "\t%s = call i32 @michelson_compare_function_%d(ptr %%1, ptr %%2)\n" value idx;
+          Format.fprintf output "\tstore i32 %s, ptr %s\n" value return_value;
+          Format.fprintf output "\tbr label %%%s\n" return_point)
+        functions;
+
+  Format.fprintf output "%s:\n" return_point;
+  let value = new_reg () in
+  Format.fprintf output "\t%s = load i32, ptr %s\n" value return_value;
+  Format.fprintf output "\tret i32 %s\n" value;
+  Format.fprintf output "}\n"
+
 let compile_ir output contract =
-  let IR_of_michelson.{ main; _ } = contract in
+  let IR_of_michelson.{ main; compare; _ } = contract in
 
   Format.fprintf output "@__michelson_stack = global ptr null\n";
   Format.fprintf output "declare ptr @malloc(i32)\n";
@@ -220,13 +284,18 @@ let compile_ir output contract =
   Format.fprintf output "declare void @michelson_dug_n(ptr)\n";
   Format.fprintf output "declare void @michelson_dig_n(ptr)\n";
 
+  Format.fprintf output "declare ptr @michelson_map_get(ptr, ptr)\n";
+  Format.fprintf output "declare ptr @michelson_map_update(ptr, ptr, ptr)\n";
+
   (* TODO: Remove these while we don't have a better design for logging *)
-  Format.fprintf output "declare void @log(ptr)\n";
+  Format.fprintf output "declare void @writev(ptr)\n";
   Format.fprintf output "declare void @inspect_stack()\n";
 
 
+  (* TODO: add lambdas *)
   Format.fprintf output "define ptr @exec(ptr %%0) { ret ptr null }\n";
 
+  compile_main_compare_function output compare;
   compile_function output "main" main
 
 let compile_llvm_to_wasm input output =

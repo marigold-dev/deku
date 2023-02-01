@@ -1,6 +1,8 @@
 open IR
 open Binaryen
 
+(* This is not being maintained in favor of llvm_of_ir, do not rely on this. *)
+
 let gensym_count = ref 0
 let gensym name =
   incr gensym_count;
@@ -185,7 +187,7 @@ let compile_malloc wasm_mod =
     Function.add_function wasm_mod "malloc" Type.int32 Type.int32 [| Type.int32 |] body
 
 let compile_ir ~memory ~optimize ~debug ~shared_memory wasm_mod contract =
-  let IR_of_michelson.{ main; lambdas; static_data } = contract in
+  let IR_of_michelson.{ main; lambdas; static_data; _ } = contract in
   add_function wasm_mod "main" main;
 
   if lambdas <> [] then

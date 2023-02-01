@@ -23,6 +23,7 @@ type function_ =
 type contract =
   { main : function_
   ; lambdas : (int * function_) list
+  ; compare : (int * function_) list
   ; static_data : bytes }
 
 module Env = struct
@@ -154,7 +155,7 @@ let compile_dip ~env n block =
 let lambdas = ref []
 let static_data = ref Bytes.empty
 
-let rec compile_compare: type a b. Env.t -> expression -> expression -> int -> (a, b) ty -> statement = fun env x y var typ ->
+let rec compile_static_compare: type a b. Env.t -> expression -> expression -> int -> (a, b) ty -> statement = fun env x y var typ ->
   let compare_i32 typ var x y =
     Cblock
       [ Cassign (var, Cop (Cwasm (Wasm_sub, typ), [ x; y ]))
@@ -178,13 +179,15 @@ let rec compile_compare: type a b. Env.t -> expression -> expression -> int -> (
     let b = Env.alloc_local env in
     let block =
       Cblock
-        [ compile_compare env (Data.car x) (Data.car y) a fst
-        ; compile_compare env (Data.cdr x) (Data.cdr y) b snd
+        [ compile_static_compare env (Data.car x) (Data.car y) a fst
+        ; compile_static_compare env (Data.cdr x) (Data.cdr y) b snd
         ; Cifthenelse
             (Cop (Cwasm (Wasm_eqz, I32), [ Cvar a ])
             , Cassign (var, Cvar b)
             , Cassign (var, Cvar a)) ]
     in
+    Env.free_local env a;
+    Env.free_local env b;
     block
 
   | Bool_t ->
@@ -205,41 +208,24 @@ let rec compile_compare: type a b. Env.t -> expression -> expression -> int -> (
 
   | _ -> assert false
 
-let compile_map_get env key_type map key value =
-  let compare = Env.alloc_local env in
-  let block =
-    Cblock
-      [ Cassign (value, Cconst_i32 0l)
-      ; Cwhile
-          (Cvar map
-          , Cblock
-              [ compile_compare env (Cvar key) (Data.car (Data.car (Cvar map))) compare key_type
-              ; Cifthenelse
-                  (Cop (Cwasm (Wasm_eqz, I32), [ Cvar compare ])
-                  , Cblock
-                      [ Cassign (value, Data.cdr (Data.car (Cvar map)))
-                      ; Cassign (map, Cconst_i32 0l) ]
-                  , Cassign (map, Data.cdr (Cvar map))) ]) ]
-  in
-  Env.free_local env compare;
-  block
+let compile_dynamic_compare compare_key v a b =
+  Cassign (v, Cop (Capply "michelson_dynamic_compare", [ compare_key; a; b ]))
 
-let compile_update_map env map key value =
-  let head = Env.alloc_local env in
-  let entry = Env.alloc_local env in
-  let block =
-    Cblock
-    [ Cassign (entry, Cop (Calloc 2, []))
-    ; Cstore (0, Cvar entry, Cvar key)
-    ; Cstore (1, Cvar entry, Cvar value)
-    ; Cassign (head, Cop (Calloc 2, []))
-    ; Cstore (0, Cvar head, Cvar entry)
-    ; Cstore (1, Cvar head, Cvar map)
-    ; Cassign (map, Cvar head) ]
-  in
-  Env.free_local env head;
-  Env.free_local env entry;
-  block
+let compare_functions = ref []
+
+let compile_compare_function: type a. a comparable_ty -> int = fun typ ->
+  let env = Env.make () in
+  let ret = Env.alloc_local env in
+  let statement = compile_static_compare env (Cvar 0) (Cvar 1) ret typ in
+  let fn = { body = statement; locals = Env.max env + 1 } in
+  compare_functions := (ret, fn) :: !compare_functions;
+  List.length !compare_functions - 1
+
+let compile_map_get _env map key value =
+  Cassign (value, Cop (Capply "michelson_map_get", [ Cvar map; Cvar key ]))
+
+let compile_update_map _env map key value =
+  Cassign (map, Cop (Capply "michelson_map_update", [ Cvar map; Cvar key; Cvar value ]))
 
 let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> statement = fun env instr ->
   let int_operation typ op =
@@ -615,12 +601,14 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
     let statement = compile_push ~env (Cconst_i32 (if v then -1l else 0l)) in
     Cblock [ statement; compile_instruction env k ]
 
-  | IEmpty_map (_, _, _, k) ->
-    let statement = compile_push ~env (Cconst_i32 0l) in
+  | IEmpty_map (_, key_type, _, k) ->
+    let key = compile_compare_function key_type in
+    let statement = compile_push ~env (Cconst_i32 (Int32.of_int key)) in
     Cblock [ statement; compile_instruction env k ]
 
-  | IEmpty_set (_, _, k) ->
-    let statement = compile_push ~env (Cconst_i32 0l) in
+  | IEmpty_set (_, key_type, k) ->
+    let key = compile_compare_function key_type in
+    let statement = compile_push ~env (Cconst_i32 (Int32.of_int key)) in
     Cblock [ statement; compile_instruction env k ]
   
   | IDig (_, n, _, k) ->
@@ -780,7 +768,7 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
       Cblock
         [ compile_pop x
         ; compile_pop y
-        ; compile_compare env (Cvar x) (Cvar y) v typ
+        ; compile_static_compare env (Cvar x) (Cvar y) v typ
         ; compile_push ~env (Cvar v) ]
     in
     Env.free_local env v;
@@ -874,7 +862,7 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
     let map = Env.alloc_local env in
     let key = Env.alloc_local env in
     let value = Env.alloc_local env in
-    let map_get = compile_map_get env Int_t map key value in
+    let map_get = compile_map_get env map key value in
     let push = compile_push ~env (Cvar value) in
     let block =
       Cblock
@@ -1363,7 +1351,7 @@ let compile_contract contract =
     |> List.rev
     |> List.mapi (fun idx (body, env) -> (idx, { body; locals = Env.max env + 1 }))
   in
-  { main; lambdas; static_data = !static_data }
+  { main; lambdas; static_data = !static_data; compare = !compare_functions }
 
 let compile_contract contract =
   try Ok (compile_contract contract)
